@@ -346,7 +346,8 @@ var GP_API = {
 (function () {
   if (window.__GP_LOGGING_OUT__) return;
 
-  function logoutRedirect() {
+  function logoutRedirect(reason) {
+    if (reason) { try { alert('Sent back to login. Reason: ' + reason); } catch (e) {} }
     GP_API.setToken('');
     try { sessionStorage.clear(); } catch (e) {}
     window.location.replace('index.html?t=' + Date.now());
@@ -355,12 +356,12 @@ var GP_API = {
   function check() {
     var cached = null;
     try { cached = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null'); } catch (e) {}
-    if (!cached || !cached.username) { logoutRedirect(); return; }
+    if (!cached || !cached.username) { logoutRedirect('no saved session (log in again)'); return; }
 
     GP_API.me().then(function (data) {
-      if (!data || !data.user) { logoutRedirect(); return; }
+      if (!data || !data.user) { logoutRedirect('server returned no user'); return; }
       if (data.user.role !== 'admin' && data.user.role !== 'developer') {
-        logoutRedirect(); return;
+        logoutRedirect('role is ' + data.user.role + ', admin/developer required'); return;
       }
       // keep the cache fresh
       try {
@@ -376,11 +377,12 @@ var GP_API = {
         }));
       } catch (e) {}
     }).catch(function (err) {
-      if (err && (err.status === 401 || err.status === 403)) logoutRedirect();
+      if (err && (err.status === 401 || err.status === 403)) logoutRedirect('server said ' + err.status + ': ' + (err.message || 'invalid login'));
+      else showToast('Cannot reach server: ' + ((err && err.message) || 'error'), 'error');
     });
   }
 
-  if (!GP_API.getToken()) { logoutRedirect(); return; }
+  if (!GP_API.getToken()) { logoutRedirect('no login token saved in this browser (log in again from the login page)'); return; }
   check();
   window.addEventListener('pageshow', check);
   document.addEventListener('visibilitychange', function () {
