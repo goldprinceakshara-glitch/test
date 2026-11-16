@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Designs Bank · GP Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="designs.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="gp-chat.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- PWA & Web App Icon Setup -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+<script src="gp-chat.js"></script>
+</head>
+<body>
+
+<div id="globalErrorBanner" style="display:none;background:#f8d7da;color:#8a1c24;border-bottom:2px solid #b3261e;padding:10px 16px;font-family:monospace;font-size:12px;white-space:pre-wrap"></div>
+
+<!-- ===== PRINT AREA (Silver CAD Order) - MUST BE OUTSIDE #app ===== -->
+<div id="silverPrintArea">
+  <div class="silver-left">
+    <div class="silver-title">SILVER CAD ORDER</div>
+    <table class="silver-table">
+      <tr><td>ISSUE DATE</td><td>-</td><td id="spDate">—</td></tr>
+      <tr><td>RUNNIG DATE</td><td>-</td><td id="spRunningDate">—</td></tr>
+      <tr><td>ART NO</td><td>-</td><td id="spArtNo">—</td></tr>
+      <tr><td>ITEM</td><td>-</td><td id="spName">—</td></tr>
+      <tr><td>SIZE</td><td>-</td><td id="spSize">—</td></tr>
+      <tr><td>ESTIMATED WEIGHT</td><td>-</td><td id="spGrossWeight">—</td></tr>
+      <tr><td>FINAL WEIGHT</td><td>-</td><td id="spNetWeight">—</td></tr>
+      <tr><td style="vertical-align: top;">CHANGES</td><td style="vertical-align: top;">-</td><td id="spChanges" style="white-space: pre-wrap; line-height: 1.3;">—</td></tr>
+      <tr><td>Delivery Date</td><td>-</td><td id="spDeliveryDate">—</td></tr>
+      <tr><td>Cad artist</td><td>-</td><td id="spArtist">—</td></tr>
+      <tr><td>Branch</td><td>-</td><td id="spBranch">—</td></tr>
+      <tr id="spCadCompletedRow" style="display:none"><td>CAD Completed Date</td><td>-</td><td id="spCadCompleted">—</td></tr>
+    </table>
+  </div>
+
+  <div class="silver-right">
+    <div class="silver-img-wrapper" id="spImageWrapper">
+      <img id="spImage" src="" alt="Design Image">
+    </div>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+
+<header class="topbar">
+  <div class="brand">
+    <h1><img src="images/gplogo1.png" alt="GoldPrince" onerror="this.style.display='none'"></h1>
+    <p>JEWEL INDUSTRY INDIA PVT LTD</p>
+  </div>
+  <div class="branch-pill" id="branchPill">
+    <i class="fas fa-store" id="branchIcon"></i>
+    <span id="branchName">Designs</span>
+  </div>
+  <div class="top-actions">
+    <button id="headerBellBtn" class="header-bell" type="button" title="New items across sections">
+      <i class="fas fa-bell"></i> <span>Reminders</span>
+      <span class="bell-count hidden" id="headerBellCount">0</span>
+    </button>
+    <button id="logoutBtn" type="button"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <h2 id="workflowTitle"><i class="fas fa-palette"></i> Designs Bank &amp; Workflow</h2>
+
+  <div class="tabs" id="mainTabs">
+    <button class="tab active" data-tab="bank" data-role="designs">Designs Bank</button>
+    <button class="tab" data-tab="cad" data-role="cad">CAD Section</button>
+    <button class="tab" data-tab="cam" data-role="cam">CAM Section</button>
+    <button class="tab" data-tab="casting" data-role="casting">Casting Section</button>
+    <button class="tab" data-tab="samples" data-role="samples">Samples</button>
+    <button class="tab" data-tab="orderpending" data-role="samples">Order Pending</button>
+    <button class="tab" data-tab="reports" data-role="admin">Reports</button>
+    <button class="tab" data-tab="report" data-role="admin">Quick Report</button>
+    <button class="tab" data-tab="tracking" data-role="admin">Design Tracking</button>
+  </div>
+
+  <!-- ==================== DESIGNS BANK ==================== -->
+  <div id="tab-bank" class="tab-panel">
+    <div class="subtabs" id="bankSubtabs">
+      <button class="subtab active" data-subtab="bank-add" type="button"><i class="fas fa-plus-circle"></i> Add New Design</button>
+      <button class="subtab" data-subtab="bank-artist-report" type="button"><i class="fas fa-user-pen"></i> Artist Wise Reports</button>
+    </div>
+
+    <div id="subtab-bank-add">
+    <div class="card">
+      <h3><i class="fas fa-plus-circle"></i> Add New Design</h3>
+      <div class="form-grid">
+        <div>
+          <label>Category <span class="req">*</span></label>
+          <select id="fCategory">
+            <option value="3D IDOLS">3D Idols</option>
+            <option value="2D IDOLS">2D Idols</option>
+            <option value="JEWELLERY">Jewellery</option>
+          </select>
+        </div>
+        <div>
+          <label>Product Group</label>
+          <select id="fGroup">
+            <option value="Regular">Regular</option>
+            <option value="Premium">Premium</option>
+            <option value="Premium GJ">Premium GJ</option>
+            <option value="Premium Kundan">Premium Kundan</option>
+            <option value="Jadau Kundan">Jadau Kundan</option>
+            <option value="Gatti">Gatti</option>
+            <option value="Meenakari">Meenakari</option>
+            <option value="Pachi">Pachi</option>
+          </select>
+        </div>
+        <div id="nameWrap">
+          <label>Product Name <span class="req" id="fNameReq">*</span></label>
+          <input type="text" id="fName" placeholder="Product name">
+        </div>
+        <div>
+          <label>Date</label>
+          <input type="date" id="fDate">
+        </div>
+        <div>
+          <label>Artist Name</label>
+          <input type="text" id="fArtist" placeholder="Artist name">
+        </div>
+        <div style="grid-column:1/-1">
+          <label>Image <span class="req">*</span></label>
+          <input type="file" id="fImage" accept="image/*">
+          <img id="imgPreview" class="img-preview hidden" alt="Preview">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn primary" id="saveDesignBtn" type="button"><i class="fas fa-save"></i> Save Design</button>
+      </div>
+      <div class="message" id="bankMessage"></div>
+    </div>
+
+    <div class="filter-bar">
+      <div><label><i class="fas fa-search"></i> Product Name</label><input type="text" id="bankFilterName" placeholder="Search by name..."></div>
+      <div>
+        <label><i class="fas fa-th-large"></i> Category</label>
+        <select id="bankFilterCategory">
+          <option value="all">All Categories</option>
+          <option value="3D IDOLS">3D Idols</option>
+          <option value="2D IDOLS">2D Idols</option>
+          <option value="JEWELLERY">Jewellery</option>
+        </select>
+      </div>
+      <div>
+        <label><i class="fas fa-layer-group"></i> Product Group</label>
+        <select id="bankFilterGroup">
+          <option value="all">All Groups</option>
+          <option value="Regular">Regular</option>
+          <option value="Premium">Premium</option>
+          <option value="Premium GJ">Premium GJ</option>
+          <option value="Premium Kundan">Premium Kundan</option>
+          <option value="Jadau Kundan">Jadau Kundan</option>
+          <option value="Gatti">Gatti</option>
+          <option value="Meenakari">Meenakari</option>
+          <option value="Pachi">Pachi</option>
+        </select>
+      </div>
+      <div><label><i class="fas fa-calendar"></i> Date</label><input type="date" id="bankFilterDate"></div>
+      <div class="filter-actions">
+        <button class="btn primary" id="bankApplyFilter" type="button"><i class="fas fa-filter"></i> Apply</button>
+        <button class="btn" id="bankResetFilter" type="button"><i class="fas fa-redo"></i> Reset</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>SL</th><th>NAME</th><th>CATEGORY</th><th>GROUP</th>
+            <th>DATE</th><th>ARTIST</th><th>IMAGE</th><th>STAGE</th><th>EDIT / DELETE</th><th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="bankBody"></tbody>
+      </table>
+    </div>
+
+    </div><!-- /subtab-bank-add -->
+
+    <div id="subtab-bank-artist-report" class="hidden">
+      <h3 style="margin-top:14px"><i class="fas fa-user-pen"></i> Artist Wise Reports</h3>
+      <p style="font-size:12px;color:#555;margin-bottom:10px">How many images uploaded per artist, grouped with product group / name / date.</p>
+      <div class="reports-filter-bar" style="margin-bottom:14px">
+        <div><label><i class="fas fa-calendar"></i> From Date</label><input type="date" id="artistRptFromDate"></div>
+        <div><label><i class="fas fa-calendar"></i> To Date</label><input type="date" id="artistRptToDate"></div>
+        <div>
+          <label><i class="fas fa-layer-group"></i> Product Group</label>
+          <select id="artistRptGroup">
+            <option value="all">All Groups</option>
+            <option value="Regular">Regular</option>
+            <option value="Premium">Premium</option>
+            <option value="Premium GJ">Premium GJ</option>
+            <option value="Premium Kundan">Premium Kundan</option>
+            <option value="Jadau Kundan">Jadau Kundan</option>
+            <option value="Gatti">Gatti</option>
+            <option value="Meenakari">Meenakari</option>
+            <option value="Pachi">Pachi</option>
+          </select>
+        </div>
+        <div><label><i class="fas fa-search"></i> Product Name</label><input type="text" id="artistRptName" placeholder="Search name..."></div>
+        <div>
+          <label><i class="fas fa-user-pen"></i> Artist</label>
+          <select id="artistRptArtist"><option value="all">All Artists</option></select>
+        </div>
+        <div class="reports-actions">
+          <button class="btn primary" id="artistRptApplyBtn" type="button"><i class="fas fa-filter"></i> Apply</button>
+          <button class="btn" id="artistRptResetBtn" type="button"><i class="fas fa-redo"></i> Reset</button>
+        </div>
+      </div>
+      <div id="artistReportContent"></div>
+    </div>
+  </div>
+
+  <!-- ==================== CAD SECTION ==================== -->
+  <div id="tab-cad" class="tab-panel hidden">
+    <div class="subtabs" id="cadSubtabs">
+      <button class="subtab active" data-subtab="cad-received" type="button"><i class="fas fa-inbox"></i> Designs Received</button>
+      <button class="subtab" data-subtab="cad-updates" type="button"><i class="fas fa-history"></i> Update Status</button>
+      <button class="subtab" data-subtab="cad-designer-report" type="button"><i class="fas fa-chart-bar"></i> Designer Wise Report</button>
+    </div>
+
+    <div id="subtab-cad-received">
+      <h3 style="margin-top:14px"><i class="fas fa-drafting-compass"></i> CAD Section — Designs Received</h3>
+
+      <div class="filter-bar" id="cadReceivedFilterBar" style="margin-bottom:14px">
+        <div><label><i class="fas fa-barcode"></i> Art No.</label><input type="text" id="cadFilterArtNo" placeholder="Search Art No..."></div>
+        <div><label><i class="fas fa-search"></i> Product Name</label><input type="text" id="cadFilterName" placeholder="Search name..."></div>
+        <div>
+          <label><i class="fas fa-th-large"></i> Category</label>
+          <select id="cadFilterCategory">
+            <option value="all">All Categories</option>
+            <option value="3D IDOLS">3D Idols</option>
+            <option value="2D IDOLS">2D Idols</option>
+            <option value="JEWELLERY">Jewellery</option>
+          </select>
+        </div>
+        <div>
+          <label><i class="fas fa-user-tag"></i> Assignee</label>
+          <div class="searchable-select-wrap" id="cadFilterAssigneeWrap" style="position:relative">
+            <input type="text" id="cadFilterAssigneeSearch" placeholder="Type to search..." autocomplete="off" style="width:100%;padding:7px 9px;border:1.5px solid #c6cbd3;border-radius:6px;font-size:12px;background:#fff;color:#111">
+            <input type="hidden" id="cadFilterAssigneeValue" value="">
+            <div class="searchable-dropdown" id="cadFilterAssigneeDropdown" style="position:absolute;top:100%;left:0;right:0"></div>
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn primary" id="cadApplyFilter" type="button"><i class="fas fa-filter"></i> Apply</button>
+          <button class="btn" id="cadResetFilter" type="button"><i class="fas fa-redo"></i> Reset</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>SL</th><th>ART NO.</th><th>NAME</th><th>CATEGORY</th><th>GROUP</th>
+              <th>EST. WT (g)</th><th>FORWARD DATE</th><th>IMAGE</th>
+              <th>ASSIGNEE</th><th>STATUS</th><th>EDIT / DELETE</th><th>ALLOTMENT</th><th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody id="cadBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="subtab-cad-updates" class="hidden">
+      <h3 style="margin-top:14px"><i class="fas fa-history"></i> CAD Updates — Design Progress</h3>
+      <p style="font-size:12px;color:#555;margin-bottom:10px">Upload progress images for each CAD design. Art Number comes automatically from the allotment.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>SL</th><th>ART NO.</th><th>NAME</th><th>SIZE (MM)</th>
+              <th>ASSIGNEE</th><th>LAST IMAGE</th><th>LAST UPDATED</th><th>UPLOAD</th><th>HISTORY</th><th>PRINT</th>
+            </tr>
+          </thead>
+          <tbody id="cadUpdatesBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== CAD DESIGNER WISE REPORT ===== -->
+    <div id="subtab-cad-designer-report" class="hidden">
+      <h3 style="margin-top:14px"><i class="fas fa-chart-bar"></i> CAD Designer Wise Report</h3>
+      <p style="font-size:12px;color:#555;margin-bottom:10px">Completed designs (forwarded to CAM) grouped by CAD designer. Filter by date range.</p>
+
+      <div class="reports-filter-bar" style="margin-bottom:14px">
+        <div><label><i class="fas fa-calendar"></i> From Date</label><input type="date" id="cadRptFromDate"></div>
+        <div><label><i class="fas fa-calendar"></i> To Date</label><input type="date" id="cadRptToDate"></div>
+        <div>
+          <label><i class="fas fa-user-tag"></i> Designer</label>
+          <select id="cadRptDesigner"><option value="all">All Designers</option></select>
+        </div>
+        <div class="reports-actions">
+          <button class="btn primary" id="cadRptApplyBtn" type="button"><i class="fas fa-filter"></i> Apply</button>
+          <button class="btn" id="cadRptResetBtn" type="button"><i class="fas fa-redo"></i> Reset</button>
+        </div>
+      </div>
+
+      <div id="cadDesignerReportContent"></div>
+    </div>
+  </div>
+
+  <!-- ==================== CAM ==================== -->
+  <div id="tab-cam" class="tab-panel hidden">
+    <h3><i class="fas fa-cogs"></i> CAM Section — Designs Ready for Machining</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>SL</th><th>ART NO.</th><th>NAME</th><th>CATEGORY</th><th>GROUP</th>
+            <th>SIZE (MM)</th><th>WEIGHT (g)</th><th>BRANCH</th><th>FORWARD DATE</th><th>IMAGE</th><th>EDIT / DELETE</th><th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="camBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== CASTING ==================== -->
+  <div id="tab-casting" class="tab-panel hidden">
+    <h3><i class="fas fa-fire"></i> Casting Section — Sample Preparation</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>SL</th><th>ART NO.</th><th>NAME</th><th>CATEGORY</th><th>GROUP</th>
+            <th>SIZE (MM)</th><th>WEIGHT (g)</th><th>BRANCH</th><th>FORWARD DATE</th><th>IMAGE</th><th>EDIT / DELETE</th><th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="castingBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== SAMPLES ==================== -->
+  <div id="tab-samples" class="tab-panel hidden">
+    <h3><i class="fas fa-cube"></i> Samples Section — Ready for HO Dispatch</h3>
+    <div class="order-pending-banner" style="background:#eef7ff;border-color:#a8c8e8;color:#094d9c">
+      <i class="fas fa-info-circle"></i>
+      <span>Samples prepared in Casting. Click <b>Forward to HO</b> to dispatch.</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>SL</th><th>ART NO.</th><th>NAME</th><th>CATEGORY</th><th>GROUP</th>
+            <th>SIZE (MM)</th><th>WEIGHT (g)</th><th>BRANCH</th><th>SAMPLE DATE</th><th>IMAGE</th><th>EDIT / DELETE</th><th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="samplesBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== ORDER PENDING ==================== -->
+  <div id="tab-orderpending" class="tab-panel hidden">
+    <h3><i class="fas fa-hourglass-half"></i> Order Pending — Samples Sent to HO</h3>
+    <div class="order-pending-banner">
+      <i class="fas fa-info-circle"></i>
+      <span>Waiting for HO order. Hidden automatically once order received in ORDERFORM.html.</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>SL</th><th>ART NO.</th><th>NAME</th><th>CATEGORY</th><th>GROUP</th>
+            <th>SIZE (MM)</th><th>BRANCH</th><th>SENT TO HO DATE</th><th>IMAGE</th><th>EDIT / DELETE</th><th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="orderPendingBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== REPORTS ==================== -->
+  <div id="tab-reports" class="tab-panel hidden">
+    <h2><i class="fas fa-chart-line"></i> Detailed Reports</h2>
+    <div class="reports-filter-bar">
+      <div><label>From Date</label><input type="date" id="rFromDate"></div>
+      <div><label>To Date</label><input type="date" id="rToDate"></div>
+      <div>
+        <label>Section</label>
+        <select id="rSection">
+          <option value="all">All Sections</option>
+          <option value="BANK">Designs Bank</option>
+          <option value="CAD">CAD Section</option>
+          <option value="CAM">CAM Section</option>
+          <option value="CASTING">Casting Section</option>
+          <option value="SAMPLES">Samples Section</option>
+          <option value="SAMPLE">HO Sent / Sample Received</option>
+          <option value="PENDING">Order Pending</option>
+          <option value="ORDERED">Order Placed</option>
+        </select>
+      </div>
+      <div>
+        <label>Category</label>
+        <select id="rCategory">
+          <option value="all">All Categories</option>
+          <option value="3D IDOLS">3D Idols</option>
+          <option value="2D IDOLS">2D Idols</option>
+          <option value="JEWELLERY">Jewellery</option>
+        </select>
+      </div>
+      <div class="reports-actions">
+        <button class="btn primary" id="rApplyBtn" type="button"><i class="fas fa-filter"></i> Apply</button>
+        <button class="btn" id="rResetBtn" type="button"><i class="fas fa-redo"></i> Reset</button>
+      </div>
+    </div>
+    <div id="reportsContent"></div>
+  </div>
+
+  <!-- ==================== QUICK REPORT ==================== -->
+  <div id="tab-report" class="tab-panel hidden">
+    <h2><i class="fas fa-chart-bar"></i> Design Tracking Report</h2>
+    <div class="report-grid" id="reportGrid"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ART NO.</th><th>NAME</th><th>CATEGORY</th><th>GROUP</th>
+            <th>DESIGNS BANK</th><th>CAD SECTION</th><th>CAM SECTION</th><th>CASTING</th>
+            <th>SAMPLES</th><th>SAMPLE RECEIVED</th><th>ORDER PLACED</th><th>PENDING</th>
+          </tr>
+        </thead>
+        <tbody id="reportBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== TRACKING ==================== -->
+  <div id="tab-tracking" class="tab-panel hidden">
+    <h2><i class="fas fa-route"></i> Design Tracking</h2>
+    <div class="track-search">
+      <div>
+        <label><i class="fas fa-barcode"></i> Art Number</label>
+        <input type="text" id="trackArtNo" placeholder="Enter Art Number">
+      </div>
+      <div>
+        <label><i class="fas fa-search"></i> Or Search Product Name</label>
+        <input type="text" id="trackName" placeholder="Search by product name...">
+      </div>
+      <div class="track-actions">
+        <button class="btn primary" id="trackApplyBtn" type="button"><i class="fas fa-search"></i> Track</button>
+        <button class="btn" id="trackResetBtn" type="button"><i class="fas fa-redo"></i> Reset</button>
+      </div>
+    </div>
+    <div id="trackingContent"></div>
+  </div>
+</main>
+
+<!-- ===== MODAL: EDIT DESIGN ===== -->
+<div class="modal hidden" id="editModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeEditModal" type="button">×</button>
+    <h2 style="color:#8c004c;margin-bottom:12px"><i class="fas fa-edit"></i> Edit Design</h2>
+    <div id="editStageInfo" style="background:#fbf2f7;border:1px solid #e0c7c7;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#8c004c"></div>
+    <div class="edit-section">
+      <h4><i class="fas fa-info-circle"></i> Base Details</h4>
+      <div class="form-grid">
+        <div>
+          <label>Category</label>
+          <select id="eCategory">
+            <option value="3D IDOLS">3D Idols</option>
+            <option value="2D IDOLS">2D Idols</option>
+            <option value="JEWELLERY">Jewellery</option>
+          </select>
+        </div>
+        <div>
+          <label>Product Group</label>
+          <select id="eGroup">
+            <option value="Regular">Regular</option>
+            <option value="Premium">Premium</option>
+            <option value="Premium GJ">Premium GJ</option>
+            <option value="Premium Kundan">Premium Kundan</option>
+            <option value="Jadau Kundan">Jadau Kundan</option>
+            <option value="Gatti">Gatti</option>
+            <option value="Meenakari">Meenakari</option>
+            <option value="Pachi">Pachi</option>
+          </select>
+        </div>
+        <div><label>Art Number</label><input type="text" id="eArtNo"></div>
+        <div id="eNameWrap"><label>Product Name</label><input type="text" id="eName"></div>
+        <div><label>Size (MM)</label><input type="text" id="eSize"></div>
+        <div><label>Size (Inches)</label><input type="text" id="eSizeIn"></div>
+        <div><label>Date</label><input type="date" id="eDate"></div>
+        <div><label>Artist</label><input type="text" id="eArtist"></div>
+        <div style="grid-column:1/-1">
+          <label>Change Image (optional)</label>
+          <input type="file" id="eImage" accept="image/*">
+          <img id="eImgPreview" class="img-preview hidden" alt="Preview">
+        </div>
+      </div>
+    </div>
+    <div class="edit-section hidden" id="editCadSection">
+      <h4><i class="fas fa-drafting-compass"></i> CAD Details</h4>
+      <div class="form-grid">
+        <div><label>Estimated Weight (g)</label><input type="number" id="eCadGrossWt" step="0.01" min="0"></div>
+        <div><label>Net Weight (g)</label><input type="number" id="eCadNetWt" step="0.01" min="0"></div>
+        <div><label>CAD Artist</label><input type="text" id="eCadArtist"></div>
+        <div><label>CAD Branch</label>
+          <select id="eCadBranch">
+            <option value="">— Select —</option>
+            <option value="Kalimatha">Kalimatha</option>
+            <option value="Gomatha">Gomatha</option>
+            <option value="Vanisri">Vanisri</option>
+            <option value="Ambhaji">Ambhaji</option>
+          </select>
+        </div>
+        <div><label>Assigned Designer</label><input type="text" id="eCadAssignee" readonly class="edit-readonly"></div>
+        <div style="grid-column:1/-1"><label>CAD Required Changes</label><textarea id="eCadChanges"></textarea></div>
+        <div style="grid-column:1/-1">
+          <label>Change CAD Image (optional)</label>
+          <input type="file" id="eCadImage" accept="image/*">
+          <img id="eCadImgPreview" class="img-preview hidden" alt="CAD Preview">
+        </div>
+      </div>
+    </div>
+    <div class="edit-section hidden" id="editCamSection">
+      <h4><i class="fas fa-cogs"></i> CAM Details</h4>
+      <div class="form-grid">
+        <div><label>Weight (g)</label><input type="number" id="eCamGrossWt" step="0.01" min="0"></div>
+        <div><label>CAM Branch</label>
+          <select id="eCamBranch">
+            <option value="">— Select —</option>
+            <option value="Kalimatha">Kalimatha</option>
+            <option value="Gomatha">Gomatha</option>
+            <option value="Vanisri">Vanisri</option>
+            <option value="Ambhaji">Ambhaji</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1"><label>CAM Required Changes</label><textarea id="eCamChanges"></textarea></div>
+        <div style="grid-column:1/-1">
+          <label>Change CAM Image (optional)</label>
+          <input type="file" id="eCamImage" accept="image/*">
+          <img id="eCamImgPreview" class="img-preview hidden" alt="CAM Preview">
+        </div>
+      </div>
+    </div>
+    <div class="edit-section hidden" id="editCastingSection">
+      <h4><i class="fas fa-fire"></i> Casting Details</h4>
+      <div class="form-grid">
+        <div><label>Weight (g)</label><input type="number" id="eCastGrossWt" step="0.01" min="0"></div>
+        <div style="grid-column:1/-1">
+          <label>Change Sample Image (optional)</label>
+          <input type="file" id="eCastImage" accept="image/*">
+          <img id="eCastImgPreview" class="img-preview hidden" alt="Sample Preview">
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelEditBtn" type="button">Cancel</button>
+      <button class="btn primary" id="saveEditBtn" type="button"><i class="fas fa-save"></i> Save Changes</button>
+    </div>
+    <div class="message" id="editMessage"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: CAD FORWARD ===== -->
+<div class="modal hidden" id="cadModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeCadModal" type="button">×</button>
+    <h2 style="color:#8c004c;margin-bottom:12px"><i class="fas fa-drafting-compass"></i> Forward to CAD Section</h2>
+    <div id="cadDesignInfo" class="forward-info-box"></div>
+    <p style="font-size:12px;color:#555;margin-bottom:14px">The design image and details from the Designs Bank will be carried forward automatically.</p>
+    <div class="form-grid">
+      <div><label>Estimated Weight (g)</label><input type="number" id="cadGrossWt" step="0.01" min="0"></div>
+      <div style="grid-column:1/-1"><label>Required Changes</label><textarea id="cadChanges"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelCadBtn" type="button">Cancel</button>
+      <button class="btn primary" id="confirmCadBtn" type="button"><i class="fas fa-arrow-right"></i> Forward to CAD</button>
+    </div>
+    <div class="message" id="cadMessage"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: CAD ALLOTMENT ===== -->
+<div class="modal hidden" id="allotCadModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeAllotCadModal" type="button">×</button>
+    <h2 style="color:#8c004c;margin-bottom:12px"><i class="fas fa-user-tag"></i> Allot Design to CAD Designer</h2>
+    <div id="allotDesignInfo" class="forward-info-box"></div>
+    <div class="form-grid">
+      <div style="grid-column:1/-1">
+        <label>Art Number <span class="req">*</span></label>
+        <input type="text" id="allotArtNo" placeholder="e.g. 12345" autocomplete="off">
+        <div style="font-size:11px;color:#777;margin-top:3px">This Art Number will be used automatically when uploading CAD progress and forwarding to CAM.</div>
+      </div>
+      <div style="grid-column:1/-1">
+        <label>Assign to Designer <span class="req">*</span></label>
+        <div class="searchable-select-wrap" id="cadDesignerSearchWrap">
+          <input type="text" id="cadDesignerSearch" placeholder="Type to search CAD designer..." autocomplete="off">
+          <input type="hidden" id="cadDesignerValue" value="">
+          <div class="searchable-dropdown" id="cadDesignerDropdown"></div>
+        </div>
+        <div id="cadDesignerEmptyHint" class="hidden" style="margin-top:6px;font-size:11px;color:#8a1c24">
+          ⚠ No CAD designers found. Please add CAD designers in <b>adddesigners.html → CAD Designers</b> tab first.
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelAllotCadBtn" type="button">Cancel</button>
+      <button class="btn primary" id="confirmAllotCadBtn" type="button"><i class="fas fa-check"></i> Allot &amp; Print Order</button>
+    </div>
+    <div class="message" id="allotCadMessage"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: CAD UPDATE ===== -->
+<div class="modal hidden" id="cadUpdateModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeCadUpdateModal" type="button">×</button>
+    <h2 style="color:#8c004c;margin-bottom:12px"><i class="fas fa-upload"></i> Upload CAD Progress Image</h2>
+    <div id="cadUpdateInfo" class="forward-info-box"></div>
+    <div class="form-grid">
+      <div style="grid-column:1/-1;background:#fbf2f7;border:1px solid #e0c7c7;border-radius:6px;padding:8px 12px;font-size:12px;color:#8c004c">
+        <i class="fas fa-barcode"></i> Art Number (from allotment): <b id="cadUpdateArtDisplay">—</b>
+      </div>
+      <div><label>Size (MM)</label><input type="text" id="cadUpdateSizeMm"></div>
+      <div style="grid-column:1/-1">
+        <label>Progress Image <span class="req">*</span></label>
+        <input type="file" id="cadUpdateImage" accept="image/*">
+        <img id="cadUpdatePreview" class="img-preview hidden" alt="Preview">
+      </div>
+      <div style="grid-column:1/-1">
+        <label>Note (optional)</label>
+        <textarea id="cadUpdateNote"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelCadUpdateBtn" type="button">Cancel</button>
+      <button class="btn primary" id="confirmCadUpdateBtn" type="button"><i class="fas fa-upload"></i> Add Update</button>
+    </div>
+    <div class="message" id="cadUpdateMessage"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: CAM FORWARD ===== -->
+<div class="modal hidden" id="camModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeCamModal" type="button">×</button>
+    <h2 style="color:#8c004c;margin-bottom:12px"><i class="fas fa-cogs"></i> Forward to Casting Section</h2>
+    <div id="camDesignInfo" style="background:#fbf2f7;border:1px solid #e0c7c7;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#8c004c"></div>
+    <div class="form-grid">
+      <div><label>Art Number <span class="req">*</span></label><input type="text" id="camArtNo"></div>
+      <div><label>Size (MM)</label><input type="text" id="camSizeMm"></div>
+      <div><label>Weight (g) <span class="req">*</span></label><input type="number" id="camGrossWt" step="0.01" min="0"></div>
+      <div><label>Forward Date</label><input type="date" id="camForwardDate"></div>
+      <div><label>Branch <span class="req">*</span></label>
+        <select id="camBranch">
+          <option value="">— Select Branch —</option>
+          <option value="Kalimatha">Kalimatha</option>
+          <option value="Gomatha">Gomatha</option>
+          <option value="Vanisri">Vanisri</option>
+          <option value="Ambhaji">Ambhaji</option>
+        </select>
+      </div>
+      <div style="grid-column:1/-1"><label>Required Changes (CAM)</label><textarea id="camChanges"></textarea></div>
+      <div style="grid-column:1/-1">
+        <label>Image for CAM</label>
+        <div id="camDefaultImgBox" class="cam-default-img-box hidden">
+          <img id="camDefaultImg" src="" alt="Default image" onclick="openZoom(this.src)">
+          <div>
+            <div class="lbl"><i class="fas fa-check-circle"></i> Using last CAD update image as default</div>
+            <div class="sub">Upload a new file below to override.</div>
+          </div>
+        </div>
+        <input type="file" id="camImage" accept="image/*" style="margin-top:6px">
+        <img id="camImgPreview" class="img-preview hidden" alt="CAM Preview">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelCamBtn" type="button">Cancel</button>
+      <button class="btn primary" id="confirmCamBtn" type="button"><i class="fas fa-arrow-right"></i> Forward to Casting &amp; Print</button>
+    </div>
+    <div class="message" id="camMessage"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: CASTING → SAMPLES ===== -->
+<div class="modal hidden" id="castingModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeCastingModal" type="button">×</button>
+    <h2 style="color:#8c004c;margin-bottom:12px"><i class="fas fa-cube"></i> Forward to Samples Section</h2>
+    <div id="castDesignInfo" style="background:#fbf2f7;border:1px solid #e0c7c7;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#8c004c"></div>
+    <p style="font-size:13px;color:#555;margin-bottom:14px">Confirm the sample is prepared and forward to <b>Samples Section</b>.</p>
+    <div class="form-grid">
+      <div><label>Weight (g)</label><input type="number" id="castGrossWt" step="0.01" min="0"></div>
+      <div><label>Sample Date</label><input type="date" id="castSampleDate"></div>
+      <div style="grid-column:1/-1"><label>Upload Sample Image <span class="req">*</span></label><input type="file" id="castImage" accept="image/*"><img id="castImgPreview" class="img-preview hidden" alt="Sample Preview"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelCastingBtn" type="button">Cancel</button>
+      <button class="btn primary" id="confirmCastingBtn" type="button"><i class="fas fa-arrow-right"></i> Forward to Samples</button>
+    </div>
+    <div class="message" id="castingMessage"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: SAMPLES → HO ===== -->
+<div class="modal hidden" id="hoModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeHoModal" type="button">×</button>
+    <h2 style="color:#8c004c;margin-bottom:12px"><i class="fas fa-paper-plane"></i> Forward Sample to HO</h2>
+    <div id="hoDesignInfo" style="background:#fbf2f7;border:1px solid #e0c7c7;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#8c004c"></div>
+    <p style="font-size:13px;color:#555;margin-bottom:14px">Dispatch to Head Office. Appears in ORDERFORM.html → Received Orders.</p>
+    <div class="form-grid">
+      <div><label>Sent to HO Date</label><input type="date" id="hoDate"></div>
+      <div style="grid-column:1/-1"><label>Remarks (optional)</label><textarea id="hoRemarks"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelHoBtn" type="button">Cancel</button>
+      <button class="btn green" id="confirmHoBtn" type="button"><i class="fas fa-paper-plane"></i> Send to HO</button>
+    </div>
+    <div class="message" id="hoMessage"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: TELEGRAM NOTIFICATION RESULT ===== -->
+<div class="modal hidden" id="telegramResultModal">
+  <div class="modal-window" style="max-width:520px">
+    <button class="modal-close" id="closeTelegramResultModal" type="button">×</button>
+    <h2 style="color:#8c004c;margin-bottom:12px"><i class="fab fa-telegram-plane"></i> Telegram Notification</h2>
+    <div id="telegramResultBody" style="font-size:13px;line-height:1.7"></div>
+    <div class="modal-actions">
+      <button class="btn primary" id="telegramResultOkBtn" type="button">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: FULL-PAGE IMAGE ZOOM ===== -->
+<div class="zoom-modal hidden" id="zoomModal">
+  <span class="zoom-close" id="zoomClose" title="Close (Esc)">&times;</span>
+  <img id="zoomImg" src="" alt="Zoomed image">
+</div>
+
+</div><!-- /app -->
+
+<script src="designs.js"></script>
+</body>
+</html>

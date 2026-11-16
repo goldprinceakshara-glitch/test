@@ -1,0 +1,1559 @@
+:root {
+  --color-primary: #0073ff;
+  --color-white:#e9e9e9;
+  --color-black:#141d28;
+  --color-black-1:#212b38;
+}
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(240, 235, 241)
+    
+  }
+.add-btn{
+  margin-top:10px;
+  
+}
+.table-container {
+  margin-top:20px;
+
+}
+
+
+
+
+
+
+
+.neumorphic {
+  
+  background: #f7f4f6;  border-radius: 20px;
+  box-shadow: 10px 10px 20px #a3b1c6, -10px -10px 20px #ffffff;
+  font-family: Arial, Helvetica, sans-serif;
+  
+
+}
+/*Outer shadow and inner light*/
+.neumorphic-inset {
+  
+  box-shadow: inset 10px 10px 20px #c6a3b4, inset -10px -10px 20px #ffffff;
+ 
+
+}
+
+
+.neumorphic-card {
+  margin: 60px auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 80px; width: 500px;
+  text-align: center;
+  margin-top: 10%;
+  
+
+}
+
+h2 {
+  color:#6d7582;
+  margin-bottom: 20px;
+}
+
+.neumorphic-input {
+  padding: 15px;
+  width: 80%;
+  font-size: 16px;
+  color: #6d7582;
+  border:none;
+  outline: none;
+  margin-bottom: 25px;
+  
+  
+}
+.neumorphic-input::placeholder {
+  color: #a3b1c6;
+}
+
+.neumorphic-button {
+  padding: 15px 30px;
+  font-size: 16px;
+  color: #6d7582;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 12px;
+}
+
+.neumorphic-button:active {
+  box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+
+}
+.form-options {
+  margin-top: 20px;
+}
+
+.menu_bar{
+  list-style: list;
+  justify-content: space-between;
+}
+
+
+.logo img{
+  width:120px;height:4.5rem;object-fit:contain;
+  
+ 
+ 
+
+}
+.logo p{margin:3px 0 0;font-size:18px;font-weight:700;color:#4e4e4e}
+
+
+.logo span {
+  margin-left: 10px;
+  color: yellow;
+  display: relative;
+  font-family: "Arial";
+  
+  font-size: 25px;
+ 
+
+  
+}
+.menu_bar ul {
+  list-style: none;
+  display: flex;
+  
+}
+.menu_bar ul li {
+  padding: 10px 30px ;
+  position: relative;
+  display: flex;
+}
+.menu_bar ul li a {
+  color: var(--color-white);
+  text-decoration: none;
+  font-size: 15px;
+  transition: all 0.3s;
+}
+.menu_bar ul li a:hover {
+  color: yellow;
+}
+
+.dropdown_menu {
+  display: none;
+}
+.menu_bar ul li:hover  .dropdown_menu {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 100%;
+  background-color: var(--color-black);
+
+}
+.menu_bar ul li:hover .dropdown_menu ul {
+  display: block;
+  margin: 10px;
+}
+
+.menu_bar ul li:hover .dropdown_menu ul li {
+  width: 160px;
+  padding: 10px;
+}
+.fas {
+  float: right;
+  margin-left: 10px;
+  padding-top: 3px;
+
+}
+.dropdown_menu-1 {
+  display: none;
+
+}
+
+
+.dropdown_menu ul li:hover .dropdown_menu-1 {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 160px;
+  background-color: var(--color-black);
+}
+
+
+.menu_bar2 {
+  min-height: 78px;
+  margin-left: 0px;
+  background: linear-gradient(to right, #10787e, #065758);
+  align-items: center;
+  justify-content: center;
+  font-size: 30px ;
+  display: flex;
+  gap: 15px;
+  padding: 8px 22px;
+}
+
+.logo1-img {
+  height: 4.5rem;
+  margin-left: 10px;
+  
+ 
+}
+
+.logo1-heading {
+  color: var(--color-white);
+  margin: 0 ;
+  font-family: "URW Wood Type W01 D"; 
+  font-weight: 900;
+  
+}
+.logo1-heading span1 {
+
+  font-family: Arial;
+  color: rgb(223, 223, 8);
+  font-size: 30px ;
+}
+
+* {
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    .form-group {
+  
+                background: #e0e5ec;  border-radius: 20px;
+                
+                font-family: Arial, Helvetica, sans-serif;}
+    
+.login-card {
+      margin: 60px auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 80px; width: 500px;
+      text-align: center;
+      margin-top: 10%;
+      background: #e0e5ec;  border-radius: 20px;
+      box-shadow: 10px 10px 20px #a3b1c6, -10px -10px 20px #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+      
+      
+    }
+    
+
+    
+    .login-card h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #333;
+      
+    }
+    .form-group {
+      margin-bottom: 15px;
+      
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #666;
+      
+    }
+    .form-group input {
+      padding: 20px;
+      width: 100%;
+      font-size: 16px;
+      color: #6d7582;
+      border:none;
+      outline: none;
+      margin-bottom: 15px;
+      border-radius: 15px;
+      box-shadow: 10px 10px 20px #a3b1c6, -10px -10px 20px #ffffff;
+      
+      
+    }
+   
+    
+    
+    
+    .error {
+      color: #dc3545;
+      font-size: 14px;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+/* ==============================
+   RESET
+================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    
+    font-family: "Poppins", sans-serif;
+}
+
+
+/* ==============================
+   BODY
+================================ */
+
+body {
+    min-height: 100vh;
+    background-color: rgb(240, 235, 241)
+    
+}
+
+
+/* ==============================
+   SIDEBAR
+================================ */
+
+.side-bar {
+    background: linear-gradient(to right, #10787e, #065758);
+    width: 250px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: -250px;
+    overflow-y: auto;
+    transition: left 0.4s ease;
+    z-index: 1000;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Sidebar open */
+
+.side-bar.active {
+    left: 0;
+}
+
+/* Hide scrollbar */
+
+.side-bar::-webkit-scrollbar {
+    width: 0;
+}
+
+/* ==============================
+   HEADER
+================================ */
+
+.side-bar header {
+    background: #33363a;
+    padding-top: 10px;
+    padding-bottom: 15px;
+    position: relative;
+}
+
+
+/* Logo */
+
+.side-bar header img {
+    display: block;
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    margin: 15px auto;
+    border-radius: 50%;
+    border: 3px solid #b4b8b9;
+}
+
+
+/* Company name */
+
+.side-bar header h3 {
+    text-align: center;
+    font-family: "URW Wood Type W01 D";
+    font-weight: 500;
+    font-size: 25px;
+    letter-spacing: 2px;
+    color: #ffffff;
+}
+
+
+
+
+
+/* ==============================
+   MENU
+================================ */
+
+.side-bar .menu {
+    width: 100%;
+    margin-top: 15px;
+}
+
+
+/* Menu item */
+
+.side-bar .menu .item {
+    position: relative;
+    cursor: pointer;
+}
+
+
+/* Menu links */
+
+.side-bar .menu .item > a {
+    color: #ffffff;
+    font-size: 16px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    min-height: 60px;
+    padding: 0 25px;
+    transition: background 0.3s ease;
+}
+
+
+/* Hover */
+
+.side-bar .menu .item > a:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+
+/* Icons */
+
+.side-bar .menu .item > a > i:first-child {
+    width: 25px;
+    margin-right: 15px;
+    text-align: center;
+}
+
+
+/* ==============================
+   DROPDOWN ARROW
+================================ */
+
+.dropdown {
+    position: absolute;
+    right: 20px;
+    margin: 0 !important;
+    transition: transform 0.3s ease;
+}
+
+
+/* Rotate arrow */
+
+.dropdown.rotate {
+    transform: rotate(90deg);
+}
+
+
+/* ==============================
+   SUB MENU
+================================ */
+
+.sub-menu {
+    background: #262627;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+}
+
+
+/* Open submenu */
+
+.sub-menu.show {
+    max-height: 300px;
+}
+
+
+/* Sub menu links */
+
+.sub-menu a {
+    display: block;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 15px 20px 15px 65px;
+    font-size: 15px;
+    transition: background 0.3s ease;
+}
+
+
+/* Sub menu hover */
+
+.sub-menu a:hover {
+    background: #3a3a3a;
+}
+
+
+/* ==============================
+   HAMBURGER BUTTON
+================================ */
+
+.menu-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    color: #000000;
+    font-size: 32px;
+    cursor: pointer;
+    z-index: 900;
+    transition: 0.3s ease;
+    
+}
+
+
+.menu-btn:hover {
+    transform: scale(1.1);
+}
+
+
+/* ==============================
+   MAIN CONTENT
+================================ */
+
+.main {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 50px;
+    color: #333333;
+}
+
+
+.main .content {
+    text-align: center;
+}
+
+
+.main h1 {
+    font-size: 45px;
+    font-family: "URW Wood Type W01 D";
+    color: #10787e;
+    margin-bottom: 10px;
+    
+}
+
+
+.main p {
+    font-size: 18px;
+    color: #666666;
+}
+
+
+/* ==============================
+   MOBILE
+================================ */
+
+@media (max-width: 600px) {
+
+    .side-bar {
+        width: 280px;
+        left: -280px;
+    }
+
+    .side-bar.active {
+        left: 0;
+    }
+
+    .main h1 {
+        font-size: 30px;
+    }
+
+    .main {
+        padding: 30px 20px;
+    }
+
+}
+
+:root {
+    --color-primary: #0073ff;
+    --color-white: #e9e9e9;
+    --color-black: #141d28;
+    --color-black-1: #212b38;
+}
+
+
+/* ==============================
+   RESET
+================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    
+}
+
+
+/* ==============================
+   BODY
+================================ */
+
+body {
+    min-height: 100vh;
+    background-color: rgb(240, 235, 241);
+}
+
+
+/* ==============================
+   NEUMORPHIC
+================================ */
+
+.neumorphic {
+
+    background: #e0e5ec;
+
+    border-radius: 20px;
+
+    box-shadow:
+        10px 10px 20px #a3b1c6,
+        -10px -10px 20px #ffffff;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+
+/* ==============================
+   HEADER
+================================ */
+
+.menu_bar2 {
+
+    min-height: 78px;
+
+    margin-left: 0;
+
+    background:
+        linear-gradient(
+            to right,
+            #10787e,
+            #065758
+        );
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 30px;
+
+    display: flex;
+
+    gap: 15px;
+
+    padding: 8px 22px;
+}
+
+
+
+
+.logo1-heading {
+
+    color: var(--color-white);
+
+    margin: 0;
+
+    font-family:
+        "URW Wood Type W01 D";
+
+    font-weight: 900;
+}
+
+
+.logo1-heading span1 {
+
+    font-family: Arial;
+
+    color: rgb(223, 223, 8);
+
+    font-size: 30px;
+}
+
+
+/* ==============================
+   LOGIN CARD
+================================ */
+
+.login-card {
+
+    margin: 60px auto;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 80px;
+
+    width: 500px;
+
+    text-align: center;
+
+    margin-top: 10%;
+
+    background: #e0e5ec;
+
+    border-radius: 20px;
+
+    box-shadow:
+        10px 10px 20px #a3b1c6,
+        -10px -10px 20px #ffffff;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+
+/* ==============================
+   HEADING
+================================ */
+
+.login-card h2 {
+
+    margin-top: 0;
+
+    margin-bottom: 20px;
+
+    text-align: center;
+
+    color: #333;
+}
+
+
+/* ==============================
+   FORM
+================================ */
+
+.form-group {
+
+    margin-bottom: 15px;
+
+    background: #e0e5ec;
+
+    border-radius: 20px;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+
+.form-group input {
+
+    padding: 20px;
+
+    width: 100%;
+
+    font-size: 16px;
+
+    color: #6d7582;
+
+    border: none;
+
+    outline: none;
+
+    margin-bottom: 15px;
+
+    border-radius: 15px;
+
+    box-shadow:
+        10px 10px 20px #a3b1c6,
+        -10px -10px 20px #ffffff;
+}
+
+
+.neumorphic-input {
+
+    padding: 15px;
+
+    width: 80%;
+
+    font-size: 16px;
+
+    color: #6d7582;
+
+    border: none;
+
+    outline: none;
+
+    margin-bottom: 25px;
+}
+
+
+.neumorphic-input::placeholder {
+
+    color: #a3b1c6;
+}
+
+
+/* ==============================
+   LOGIN BUTTON
+================================ */
+
+.neumorphic-button {
+
+    padding: 15px 30px;
+
+    font-size: 16px;
+
+    color: #6d7582;
+
+    border: none;
+
+    cursor: pointer;
+
+    transition:
+        all 0.3s ease;
+
+    margin-top: 12px;
+}
+
+
+.neumorphic-button:hover {
+
+    transform: translateY(-2px);
+}
+
+
+.neumorphic-button:active {
+
+    box-shadow:
+        inset 5px 5px 10px #a3b1c6,
+        inset -5px -5px 10px #ffffff;
+
+    transform: translateY(0);
+}
+
+
+/* ==============================
+   ERROR
+================================ */
+
+.error {
+
+    color: #dc3545;
+
+    font-size: 14px;
+
+    margin-bottom: 15px;
+
+    display: none;
+}
+
+
+/* ==============================
+   OTP SCREEN
+================================ */
+
+.otp-step {
+
+    display: none;
+
+    width: 100%;
+
+    text-align: center;
+}
+
+
+.otp-message {
+
+    color: #666;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+
+    margin-bottom: 20px;
+}
+
+
+/* ==============================
+   OTP INPUT
+================================ */
+
+.otp-input {
+
+    width: 100% !important;
+
+    text-align: center;
+
+    font-size: 24px !important;
+
+    font-weight: bold;
+
+    letter-spacing: 8px;
+
+    margin-bottom: 15px !important;
+}
+
+
+/* ==============================
+   BACK BUTTON
+================================ */
+
+.back-button {
+
+    display: block;
+
+    margin: 20px auto 0;
+
+    border: none;
+
+    background: transparent;
+
+    color: #075758;
+
+    font-size: 14px;
+
+    cursor: pointer;
+}
+
+
+.back-button:hover {
+
+    text-decoration: underline;
+}
+
+
+/* ==============================
+   DEMO OTP
+================================ */
+
+.demo-otp {
+
+    margin-top: 18px;
+
+    color: #8a2525;
+
+    font-size: 13px;
+
+    font-weight: bold;
+}
+
+
+/* ==============================
+   MOBILE
+================================ */
+
+@media (max-width: 600px) {
+
+    .menu_bar2 {
+
+        min-height: 70px;
+
+        padding: 8px 10px;
+
+        gap: 8px;
+    }
+
+
+   
+
+
+    .logo1-heading {
+
+        font-size: 20px;
+    }
+
+
+    .logo1-heading span1 {
+
+        display: block;
+
+        font-size: 12px;
+    }
+
+
+    .login-card {
+
+        width: calc(100% - 30px);
+
+        padding: 40px 25px;
+
+        margin-top: 15%;
+
+        margin-left: auto;
+
+        margin-right: auto;
+    }
+
+
+    .form-group input {
+
+        padding: 16px;
+    }
+
+
+    .otp-input {
+
+        font-size: 22px !important;
+
+        letter-spacing: 6px;
+    }
+
+}
+
+/* ==============================
+   BODY
+================================ */
+
+body {
+    min-height: 100vh;
+    background-color: rgb(240, 235, 241)
+    
+}
+
+
+/* ==============================
+   SIDEBAR
+================================ */
+
+.side-bar {
+    background: linear-gradient(to right, #10787e, #065758);
+    width: 250px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: -250px;
+    overflow-y: auto;
+    transition: left 0.4s ease;
+    z-index: 1000;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Sidebar open */
+
+.side-bar.active {
+    left: 0;
+}
+
+/* Hide scrollbar */
+
+.side-bar::-webkit-scrollbar {
+    width: 0;
+}
+
+/* ==============================
+   HEADER
+================================ */
+
+.side-bar header {
+    background: #33363a;
+    padding-top: 10px;
+    padding-bottom: 15px;
+    position: relative;
+}
+
+
+/* Logo */
+
+.side-bar header img {
+    display: block;
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    margin: 15px auto;
+    border-radius: 50%;
+    border: 3px solid #b4b8b9;
+}
+
+
+/* Company name */
+
+.side-bar header h3 {
+    text-align: center;
+    font-family: "URW Wood Type W01 D";
+    font-weight: 500;
+    font-size: 25px;
+    letter-spacing: 2px;
+    color: #ffffff;
+}
+
+
+
+
+
+/* ==============================
+   MENU
+================================ */
+
+.side-bar .menu {
+    width: 100%;
+    margin-top: 15px;
+}
+
+
+/* Menu item */
+
+.side-bar .menu .item {
+    position: relative;
+    cursor: pointer;
+}
+
+
+/* Menu links */
+
+.side-bar .menu .item > a {
+    color: #ffffff;
+    font-size: 16px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    min-height: 60px;
+    padding: 0 25px;
+    transition: background 0.3s ease;
+}
+
+
+/* Hover */
+
+.side-bar .menu .item > a:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+
+/* Icons */
+
+.side-bar .menu .item > a > i:first-child {
+    width: 25px;
+    margin-right: 15px;
+    text-align: center;
+}
+
+
+/* ==============================
+   DROPDOWN ARROW
+================================ */
+
+.dropdown {
+    position: absolute;
+    right: 20px;
+    margin: 0 !important;
+    transition: transform 0.3s ease;
+}
+
+
+/* Rotate arrow */
+
+.dropdown.rotate {
+    transform: rotate(90deg);
+}
+
+
+/* ==============================
+   SUB MENU
+================================ */
+
+.sub-menu {
+    background: #262627;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+}
+
+
+/* Open submenu */
+
+.sub-menu.show {
+    max-height: 300px;
+}
+
+
+/* Sub menu links */
+
+.sub-menu a {
+    display: block;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 15px 20px 15px 65px;
+    font-size: 15px;
+    transition: background 0.3s ease;
+}
+
+
+/* Sub menu hover */
+
+.sub-menu a:hover {
+    background: #3a3a3a;
+}
+
+
+/* ==============================
+   HAMBURGER BUTTON
+================================ */
+
+.menu-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    color: #000000;
+    font-size: 32px;
+    cursor: pointer;
+    z-index: 900;
+    transition: 0.3s ease;
+    
+}
+
+
+.menu-btn:hover {
+    transform: scale(1.1);
+}
+
+
+/* ==============================
+   MAIN CONTENT
+================================ */
+
+.main {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 50px;
+    color: #333333;
+}
+
+
+.main .content {
+    text-align: center;
+}
+
+
+.main h1 {
+    font-size: 45px;
+    font-family: "URW Wood Type W01 D";
+    color: #10787e;
+    margin-bottom: 10px;
+}
+
+
+.main p {
+    font-size: 18px;
+    color: #666666;
+}
+
+
+/* ==============================
+   MOBILE
+================================ */
+
+@media (max-width: 600px) {
+
+    .side-bar {
+        width: 280px;
+        left: -280px;
+    }
+
+    .side-bar.active {
+        left: 0;
+    }
+
+    .main h1 {
+        font-size: 30px;
+    }
+
+    .main {
+        padding: 30px 20px;
+    }
+
+}
+
+.header{width:100%;
+}
+
+
+/* order form*/
+*{box-sizing:border-box}
+:root{--teal:#0d6f73;--teal2:#075457;--purple:#63358b;--peach:#f5cba8;--line:#222}
+
+.main-header{height:80px;background:linear-gradient(to right,var(--teal),var(--teal2));display:flex;align-items:center;justify-content:center;color:#fff}
+.brand-wrap{text-align:center}.brand{font-size:31px;font-weight:900;letter-spacing:1px}.sub-brand{font-size:16px;color:#ffff43;font-weight:bold;margin-top:3px}
+.app{max-width:1900px;margin:1px auto;background:#fff;border:1px solid #222;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+.topbar{
+  height:48px;
+  background:var(--peach);
+  border-bottom:1px solid #222;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  
+
+}
+.topbar h1{
+  font-size:22px;
+  margin:0;color:#5d2b7e}
+  .topbar span{position:absolute;
+    right:12px;
+    top:9px;
+    background:#fff;
+    border:1px solid var(--purple);
+    border-radius:14px;
+    padding:6px 12px;
+    color:var(--purple);
+    font-weight:bold}
+
+.card{border-bottom:1px solid #222}
+.section-title{
+  background:#f4f4f4;
+  border-bottom:1px solid #aaa;
+  padding:9px 10px;font-weight:800;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  color:#06069b
+}
+.hint{font-weight:normal;color:#666;font-size:11px}.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:11px}
+label{font-size:11px;font-weight:bold}input,select,textarea{display:block;width:100%;margin-top:4px;border:1px solid #aaa;border-radius:4px;background:#fff;padding:8px;font:inherit}input,select{height:34px}textarea{height:58px;resize:vertical}.wide{grid-column:span 2}
+.catalog-controls{display:flex;align-items:end;gap:15px;padding:10px 15px}.catalog-controls label{width:320px}.counter{font-weight:bold;color:var(--purple);padding-bottom:9px}
+.catalog-stage{display:flex;justify-content:center;align-items:center;gap:12px;padding:5px 16px 8px}.image-panel{height:420px;flex:1;max-width:900px;display:flex;align-items:center;justify-content:center;border:1px solid #777;background:#fff;overflow:hidden;position:relative}.image-panel img{max-width:100%;max-height:100%;object-fit:contain}.nav-arrow{width:45px;height:70px;font-size:40px;border:1px solid #888;background:#eee;cursor:pointer;border-radius:4px}.nav-arrow:hover{background:#ddd}.image-fallback{display:flex;flex-direction:column;gap:8px;text-align:center;color:#8a2525}.hidden{display:none}
+.artno-title{text-align:center;font-weight:800;color:var(--purple);margin-top:2px}.artno-box{margin:6px 12px 10px;border:2px solid #777;min-height:44px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:5px;padding:5px}.art-chip{border:1px solid #888;background:#f7f7f7;border-radius:3px;padding:7px 10px;cursor:pointer;font-weight:bold}.art-chip.active{background:var(--peach);border-color:var(--purple);color:#4d205f}
+.selected-details{display:grid;grid-template-columns:1fr 2fr 1.2fr 1.2fr 1.3fr 1.3fr;border-top:1px solid #bbb;border-bottom:1px solid #bbb}.selected-details div{padding:9px;border-right:1px solid #ccc;text-align:center}.selected-details span{display:block;font-size:9px;color:#666;font-weight:bold;margin-bottom:3px}.selected-details b{font-size:13px}
+.add-row{display:flex;align-items:end;justify-content:center;gap:15px;padding:10px}.add-row label{width:170px}button{cursor:pointer}.primary,.actions button{height:35px;border:1px solid #8192a5;border-radius:4px;background:linear-gradient(#f1f7fc,#c9d9e9);padding:0 18px;font-weight:bold}
+.order-meta{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #aaa}.order-meta div{padding:8px 10px;border-right:1px solid #ccc}.table-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:1100px}th,td{border:1px solid #222;text-align:center;padding:6px 5px;height:34px}th{font-size:10px;background:#fafafa}td{font-size:12px}tfoot td{font-weight:bold;border-top:2px solid #111}.total-label{text-align:right}.order-img{width:78px;height:60px;object-fit:contain}.remove{border:1px solid #999;background:#eee;border-radius:3px;padding:4px 8px}.order-note{min-height:34px;border-bottom:1px solid #222;padding:8px 9px}.order-note b{margin-right:12px}.order-note span{color:#8a2525;font-weight:bold}.actions{display:flex;justify-content:center;gap:12px;padding:9px;flex-wrap:wrap}
+.admin-grid{display:grid;grid-template-columns:1fr 2fr 1fr auto;gap:10px;padding:11px;align-items:end}.party-list{padding:0 11px 11px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.party-row{border:1px solid #bbb;padding:8px;background:#fafafa}.party-row strong{display:block;color:var(--purple)}.party-row button{margin-top:5px}
+.instructions{padding-bottom:12px}.instructions ol{margin:10px 25px}.instructions li{margin:7px 0}.instructions code{background:#eee;padding:2px 4px;border-radius:3px}
+@media(max-width:900px){.form-grid{grid-template-columns:1fr 1fr}.wide{grid-column:span 2}.selected-details{grid-template-columns:1fr 1fr}.order-meta{grid-template-columns:1fr 1fr}.admin-grid{grid-template-columns:1fr 1fr}.party-list{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}.wide{grid-column:span 1}.catalog-controls label{width:100%}.catalog-controls{display:block}.image-panel{height:280px}.selected-details{grid-template-columns:1fr}.admin-grid,.party-list{grid-template-columns:1fr}}
+@media print{body{background:#fff}.app{margin:0;border:1px solid #000;box-shadow:none;max-width:none}.no-print{display:none!important}.catalog-card{display:none}input,select,textarea{border:0;padding:0;height:auto}.main-header{height:55px}.order-meta{grid-template-columns:repeat(4,1fr)}@page{size:A4 landscape;margin:8mm}}
+
+
+
+
+/* order form*/
+*{box-sizing:border-box}
+:root{--teal:#0d6f73;--teal2:#075457;--purple:#63358b;--peach:#f5cba8;--line:#222}
+
+.main-header{height:80px;background:linear-gradient(to right,var(--teal),var(--teal2));display:flex;align-items:center;justify-content:center;color:#fff}
+.brand-wrap{text-align:center}.brand{font-size:31px;font-weight:900;letter-spacing:1px}.sub-brand{font-size:16px;color:#ffff43;font-weight:bold;margin-top:3px}
+.app{max-width:1900px;margin:1px auto;background:#fff;border:1px solid #222;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+.topbar{
+  height:48px;
+  background:var(--peach);
+  border-bottom:1px solid #222;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  
+
+}
+.topbar h1{
+  font-size:22px;
+  margin:0;color:#5d2b7e}
+  .topbar span{position:absolute;
+    right:12px;
+    top:9px;
+    background:#fff;
+    border:1px solid var(--purple);
+    border-radius:14px;
+    padding:6px 12px;
+    color:var(--purple);
+    font-weight:bold}
+
+.card{border-bottom:1px solid #222}
+.section-title{
+  background:#f4f4f4;
+  border-bottom:1px solid #aaa;
+  padding:9px 10px;font-weight:800;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  color:#06069b
+}
+.hint{font-weight:normal;color:#666;font-size:11px}.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:11px}
+label{font-size:11px;font-weight:bold}input,select,textarea{display:block;width:100%;margin-top:4px;border:1px solid #aaa;border-radius:4px;background:#fff;padding:8px;font:inherit}input,select{height:34px}textarea{height:58px;resize:vertical}.wide{grid-column:span 2}
+.catalog-controls{display:flex;align-items:end;gap:15px;padding:10px 15px}.catalog-controls label{width:320px}.counter{font-weight:bold;color:var(--purple);padding-bottom:9px}
+.catalog-stage{display:flex;justify-content:center;align-items:center;gap:12px;padding:5px 16px 8px}.image-panel{height:420px;flex:1;max-width:900px;display:flex;align-items:center;justify-content:center;border:1px solid #777;background:#fff;overflow:hidden;position:relative}.image-panel img{max-width:100%;max-height:100%;object-fit:contain}.nav-arrow{width:45px;height:70px;font-size:40px;border:1px solid #888;background:#eee;cursor:pointer;border-radius:4px}.nav-arrow:hover{background:#ddd}.image-fallback{display:flex;flex-direction:column;gap:8px;text-align:center;color:#8a2525}.hidden{display:none}
+.artno-title{text-align:center;font-weight:800;color:var(--purple);margin-top:2px}.artno-box{margin:6px 12px 10px;border:2px solid #777;min-height:44px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:5px;padding:5px}.art-chip{border:1px solid #888;background:#f7f7f7;border-radius:3px;padding:7px 10px;cursor:pointer;font-weight:bold}.art-chip.active{background:var(--peach);border-color:var(--purple);color:#4d205f}
+.selected-details{display:grid;grid-template-columns:1fr 2fr 1.2fr 1.2fr 1.3fr 1.3fr;border-top:1px solid #bbb;border-bottom:1px solid #bbb}.selected-details div{padding:9px;border-right:1px solid #ccc;text-align:center}.selected-details span{display:block;font-size:9px;color:#666;font-weight:bold;margin-bottom:3px}.selected-details b{font-size:13px}
+.add-row{display:flex;align-items:end;justify-content:center;gap:15px;padding:10px}.add-row label{width:170px}button{cursor:pointer}.primary,.actions button{height:35px;border:1px solid #8192a5;border-radius:4px;background:linear-gradient(#f1f7fc,#c9d9e9);padding:0 18px;font-weight:bold}
+.order-meta{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #aaa}.order-meta div{padding:8px 10px;border-right:1px solid #ccc}.table-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:1100px}th,td{border:1px solid #222;text-align:center;padding:6px 5px;height:34px}th{font-size:10px;background:#fafafa}td{font-size:12px}tfoot td{font-weight:bold;border-top:2px solid #111}.total-label{text-align:right}.order-img{width:78px;height:60px;object-fit:contain}.remove{border:1px solid #999;background:#eee;border-radius:3px;padding:4px 8px}.order-note{min-height:34px;border-bottom:1px solid #222;padding:8px 9px}.order-note b{margin-right:12px}.order-note span{color:#8a2525;font-weight:bold}.actions{display:flex;justify-content:center;gap:12px;padding:9px;flex-wrap:wrap}
+.admin-grid{display:grid;grid-template-columns:1fr 2fr 1fr auto;gap:10px;padding:11px;align-items:end}.party-list{padding:0 11px 11px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.party-row{border:1px solid #bbb;padding:8px;background:#fafafa}.party-row strong{display:block;color:var(--purple)}.party-row button{margin-top:5px}
+.instructions{padding-bottom:12px}.instructions ol{margin:10px 25px}.instructions li{margin:7px 0}.instructions code{background:#eee;padding:2px 4px;border-radius:3px}
+@media(max-width:900px){.form-grid{grid-template-columns:1fr 1fr}.wide{grid-column:span 2}.selected-details{grid-template-columns:1fr 1fr}.order-meta{grid-template-columns:1fr 1fr}.admin-grid{grid-template-columns:1fr 1fr}.party-list{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}.wide{grid-column:span 1}.catalog-controls label{width:100%}.catalog-controls{display:block}.image-panel{height:280px}.selected-details{grid-template-columns:1fr}.admin-grid,.party-list{grid-template-columns:1fr}}
+@media print{body{background:#fff}.app{margin:0;border:1px solid #000;box-shadow:none;max-width:none}.no-print{display:none!important}.catalog-card{display:none}input,select,textarea{border:0;padding:0;height:auto}.main-header{height:55px}.order-meta{grid-template-columns:repeat(4,1fr)}@page{size:A4 landscape;margin:8mm}}
+
+/* Navbar */
+.navbar {
+    background: #f3edf0;
+    
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    border: 1px solid #e9eef4;
+    flex-wrap: wrap;
+    
+}
+
+
+.navbar .brand {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+}
+
+.navbar .brand i {
+    color: #3b82f6;
+}
+
+.navbar .nav-links {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+}
+
+.navbar .nav-links a {
+    text-decoration: none;
+    color: #f4f5f7;
+    padding: 8px ;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 15px;
+    border:1px solid rgba(243,241,245,.4);background:#f8f1f5;
+      color:#8c004c;box-shadow:1px 4px 9px rgba(180, 165, 165, 0.133);text-decoration:none;
+      border-radius:7px;font-weight:600;cursor:pointer
+}
+
+.navbar .nav-links a:hover,
+.navbar .nav-links a.active {
+    background: #f0e5eb;
+    color: #680432;
+}
+
+/* ==============================
+   Logo block: image above, company name below
+   (added for gpmain.html header layout)
+================================ */
+.logo{
+  display:flex !important;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+  margin:0;
+  padding:0;
+}
+.logo > img{
+  height:3rem;
+  width:auto;
+  max-height:3rem;
+  object-fit:contain;
+  display:block;
+}
+.logo > p{
+  margin:0;
+  font-size:12px;
+  font-weight:700;
+  color:#4e4e4e;
+  letter-spacing:.3px;
+  line-height:1.2;
+}
+
+/* ==============================
+   Gap between nav links (Home / Catalogue / Orders)
+================================ */
+.nav-links{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.nav-links > a,
+.nav-links .menu_bar{
+  margin:0;
+}
+@media(max-width:760px){
+  .logo > img{height:2.4rem;max-height:2.4rem}
+  .logo > p{font-size:10px}
+  .nav-links{gap:8px}
+}
+/* ============================================================
+   HEADER LAYOUT FIX (gpmain.html)
+   ============================================================ */
+.header,
+header {
+  background: #f3edf0;
+  border-bottom: 1px solid #e2dbe0;
+  padding: 0 1rem;
+}
+
+.header .container,
+header .container {
+  max-width: 1900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  flex-wrap: wrap;
+}
+
+.navbar > .brand {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.navbar > .logo {
+  flex: 0 0 auto;
+}
+
+.navbar > .nav-links {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+.navbar > .user-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* Mobile tweaks */
+@media (max-width: 760px) {
+  .navbar {
+    justify-content: center;
+    text-align: center;
+  }
+  .navbar > .nav-links {
+    justify-content: center;
+    width: 100%;
+  }
+  .navbar > .user-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  .nav-links,
+  .menu_bar ul {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

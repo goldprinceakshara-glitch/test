@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Developer Dashboard · GP Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="gp-chat.css">
+<!-- PWA & Web App Icon Setup -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+<style>
+:root{
+  --brand:#900143;
+  --brand-dark:#6b0132;
+  --brand-light:#b8005a;
+  --gold:#e9c9da;
+  --gold-soft:#fdeef6;
+  --ink:#2b0a1c;
+  --muted:#a06a85;
+  --card:rgba(255,255,255,.82);
+  --card-border:rgba(144,1,67,.10);
+  --danger:#e0284f;
+  --success:#0f9d58;
+  --shadow:0 18px 40px -22px rgba(144,1,67,.22);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,system-ui,sans-serif}
+
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(600px 400px at 100% 0%, #fff2f8 0%, transparent 60%),
+    radial-gradient(500px 300px at 0% 100%, #ffe9f3 0%, transparent 60%),
+    linear-gradient(135deg, #fffafd 0%, #faf6f8 50%, #f7f1f4 100%);
+  padding:2rem 1.5rem;
+  color:var(--ink);
+  position:relative;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;width:380px;height:380px;border-radius:50%;
+  background:#f7f2f4;filter:blur(110px);opacity:.20;top:-140px;right:-120px;
+  z-index:0;pointer-events:none;
+}
+body::after{
+  content:"";position:fixed;width:340px;height:340px;border-radius:50%;
+  background:#f5f2f3;filter:blur(110px);opacity:.22;bottom:-140px;left:-120px;
+  z-index:0;pointer-events:none;
+}
+
+.container{max-width:1150px;margin:0 auto;position:relative;z-index:1}
+
+header{
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--card);
+  backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  padding:1.2rem 2rem;border-radius:1.5rem;
+  border:1px solid var(--card-border);margin-bottom:2rem;
+  flex-wrap:wrap;gap:1rem;box-shadow:var(--shadow);position:relative;
+}
+header::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  border-radius:1.5rem 1.5rem 0 0;
+  background:linear-gradient(90deg, #f2a5c6, var(--brand), #f2a5c6);
+}
+header h1{
+  font-size:1.4rem;font-weight:600;display:flex;align-items:center;
+  gap:.7rem;color:var(--brand);letter-spacing:-.2px;
+}
+header h1 img{height:34px;width:auto;border-radius:7px}
+header h1 i{color:var(--brand)}
+
+.header-actions{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}
+
+.user-badge{
+  padding:.55rem 1.1rem;
+  background:linear-gradient(135deg, var(--brand), var(--brand-light));
+  color:#fff;border-radius:2rem;font-size:.82rem;font-weight:600;
+  box-shadow:0 8px 18px -10px rgba(144,1,67,.55);
+  display:inline-flex;align-items:center;gap:.45rem;
+}
+.user-badge i{color:#ffe3ef}
+
+.btn{
+  padding:.7rem 1.3rem;border:none;border-radius:2rem;
+  font-weight:600;font-size:.85rem;cursor:pointer;
+  display:inline-flex;align-items:center;gap:.5rem;
+  transition:all .2s;text-decoration:none;
+}
+.btn-danger{
+  background:#fff;color:var(--danger);
+  border:1.5px solid rgba(224,40,79,.3);
+}
+.btn-danger:hover{
+  background:var(--danger);color:#fff;border-color:var(--danger);
+  box-shadow:0 10px 20px -10px rgba(224,40,79,.6);
+}
+
+.stats-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:1.1rem;margin-bottom:1.1rem;
+}
+.stats-grid.secondary{margin-bottom:2rem}
+.stat-card{
+  background:var(--card);
+  backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  padding:1.5rem;border-radius:1.5rem;
+  border:1px solid var(--card-border);box-shadow:var(--shadow);
+  transition:transform .2s, box-shadow .2s;position:relative;overflow:hidden;
+}
+.stat-card::after{
+  content:"";position:absolute;bottom:0;right:0;width:70px;height:70px;
+  border-radius:50%;background:var(--brand);opacity:.04;transform:translate(30%,30%);
+}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 24px 46px -22px rgba(144,1,67,.30)}
+
+.stat-card .icon{
+  width:50px;height:50px;border-radius:1.1rem;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;margin-bottom:1rem;
+}
+.stat-card .icon.total{background:#fde9f3;color:var(--brand)}
+.stat-card .icon.admin{background:#fcefe0;color:#b8901c}
+.stat-card .icon.user{background:#fde9f3;color:var(--brand-light)}
+.stat-card .icon.workshop{background:#f7e6ee;color:var(--brand-dark)}
+.stat-card .icon.developer{background:#e6f5ec;color:#0f7a44}
+.stat-card .icon.branch{background:#fbe3ee;color:#b8005a}
+.stat-card .icon.designer{background:#e3eeff;color:#094d9c}
+.stat-card .icon.pp{background:#fff4d6;color:#8a6300}
+
+.stat-card h3{
+  font-size:.78rem;color:var(--muted);font-weight:600;
+  text-transform:uppercase;letter-spacing:.7px;margin-bottom:.35rem;
+}
+.stat-card .value{font-size:2rem;font-weight:700;color:var(--brand)}
+
+.panel{
+  background:var(--card);
+  backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  padding:2rem;border-radius:1.5rem;
+  border:1px solid var(--card-border);box-shadow:var(--shadow);
+  margin-bottom:2rem;
+}
+.panel h2{
+  font-size:1.15rem;font-weight:600;margin-bottom:1.5rem;
+  display:flex;align-items:center;gap:.6rem;color:var(--brand);
+  letter-spacing:-.2px;
+}
+.panel h2 i{color:#e08ab4}
+
+.quick-links{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:1rem;
+}
+.quick-link{
+  display:flex;align-items:center;gap:1rem;
+  padding:1.1rem 1.3rem;background:#fff;
+  border-radius:1.1rem;border:1.5px solid rgba(144,1,67,.08);
+  text-decoration:none;color:var(--ink);transition:all .2s;
+  cursor:pointer;
+  pointer-events:auto;
+}
+.quick-link *{pointer-events:auto;}
+.quick-link:hover{
+  background:#fff;border-color:var(--brand);
+  transform:translateY(-2px);
+  box-shadow:0 16px 30px -18px rgba(144,1,67,.40);
+}
+.quick-link:hover .ql-icon{
+  background:linear-gradient(135deg, var(--brand), var(--brand-light));
+  color:#fff;transform:scale(1.05);
+}
+.quick-link .ql-icon{
+  width:46px;height:46px;border-radius:.95rem;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.15rem;background:#fde9f3;color:var(--brand);
+  flex-shrink:0;transition:all .2s;
+}
+.quick-link .ql-text h4{font-size:.95rem;font-weight:600;margin-bottom:.15rem;color:var(--brand)}
+.quick-link .ql-text p{font-size:.76rem;color:var(--muted)}
+
+@media(max-width:600px){
+  body{padding:1.2rem .9rem}
+  header{padding:1rem 1.2rem;border-radius:1.2rem}
+  header h1{font-size:1.2rem}
+  .panel{padding:1.4rem;border-radius:1.2rem}
+  .stat-card{padding:1.2rem}
+  .stat-card .value{font-size:1.7rem}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1><img src="images/gp-gold3.png" alt="GoldPrince" onerror="this.style.display='none'"> Developer Dashboard</h1>
+    <div class="header-actions">
+      <span class="user-badge"><i class="fas fa-code"></i> <span id="devName">Developer</span></span>
+      <button class="btn btn-danger" id="logoutBtn" type="button"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </header>
+
+  <!-- PRIMARY STATS -->
+  <div class="stats-grid">
+    <div class="stat-card"><div class="icon total"><i class="fas fa-users"></i></div><h3>Total Accounts</h3><div class="value" id="totalCount">0</div></div>
+    <div class="stat-card"><div class="icon admin"><i class="fas fa-crown"></i></div><h3>Admins</h3><div class="value" id="adminCount">0</div></div>
+    <div class="stat-card"><div class="icon user"><i class="fas fa-user"></i></div><h3>Users</h3><div class="value" id="userCount">0</div></div>
+    <div class="stat-card"><div class="icon workshop"><i class="fas fa-tools"></i></div><h3>Workshops</h3><div class="value" id="workshopCount">0</div></div>
+  </div>
+
+  <!-- SECONDARY STATS (extra roles) -->
+  <div class="stats-grid secondary">
+    <div class="stat-card"><div class="icon developer"><i class="fas fa-code"></i></div><h3>Developers</h3><div class="value" id="developerCount">0</div></div>
+    <div class="stat-card"><div class="icon branch"><i class="fas fa-user-tie"></i></div><h3>Branch Incharges</h3><div class="value" id="branchInchargeCount">0</div></div>
+    <div class="stat-card"><div class="icon designer"><i class="fas fa-palette"></i></div><h3>Designers</h3><div class="value" id="designerCount">0</div></div>
+    <div class="stat-card"><div class="icon pp"><i class="fas fa-industry"></i></div><h3>Post-Production</h3><div class="value" id="postProdCount">0</div></div>
+  </div>
+
+  <div class="panel">
+    <h2><i class="fas fa-bolt"></i> Developer Sections</h2>
+    <div class="quick-links" id="devLinks">
+      <a href="manage-admin.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-users-cog"></i></div>
+        <div class="ql-text"><h4>Account Management</h4><p>Users, Workshops, Designers, Post-Production</p></div>
+      </a>
+    
+
+      <a href="ORDERFORM.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-file-invoice"></i></div>
+        <div class="ql-text"><h4>Manage Production</h4><p>View &amp; manage orders</p></div>
+      </a>
+      
+      <a href="3D_CATALOGUE_UPDATE.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-cube"></i></div>
+        <div class="ql-text"><h4>Manage 3D Catalogue</h4><p>Update 3D product listings</p></div>
+      </a>
+      <a href="3D_Premium_catalogue.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-cube"></i></div>
+        <div class="ql-text"><h4>Manage 3D Premium Catalogue</h4><p>Update 3D premium product listings</p></div>
+      </a>
+      <a href="2D_CATALOGUE_UPDATE.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-image"></i></div>
+        <div class="ql-text"><h4>Manage 2D Catalogue</h4><p>Update 2D product listings</p></div>
+      </a>
+      <a href="JEWELLERY_CATALOGUE_UPDATE.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-gem"></i></div>
+        <div class="ql-text"><h4>Manage Jewellery Catalogue</h4><p>Update jewellery listings</p></div>
+      </a>
+      <a href="GOD_FRAMES_CATALOGUE_UPDATE.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-place-of-worship"></i></div>
+        <div class="ql-text"><h4>Manage God Frames</h4><p>Update god frame catalogue</p></div>
+      </a>
+
+      <a href="stock index.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-boxes-stacked"></i></div>
+        <div class="ql-text"><h4>Manage Stock Inventory</h4><p>Track &amp; update stock</p></div>
+      </a>
+      <a href="PARTYMASTER.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-address-book"></i></div>
+        <div class="ql-text"><h4>Manage Party List</h4><p>Customer &amp; vendor records</p></div>
+      </a>
+
+      <a href="gpwork-shop.html" class="quick-link" id="workshopDashboardLink">
+        <div class="ql-icon"><i class="fas fa-tools"></i></div>
+        <div class="ql-text">
+          <h4>Workshop Dashboard</h4>
+          <p id="workshopDashboardSub">Open dashboard &amp; select a branch</p>
+        </div>
+      </a>
+
+      <a href="stage-2 process.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-palette"></i></div>
+        <div class="ql-text"><h4>Manage Post-Production</h4><p>Designer accounts &amp; sections</p></div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Restore developer role when returning from Pre-Production (runs before the guard re-checks) */
+(function () {
+  if (sessionStorage.getItem('gp_orig_role') === 'developer') {
+    try {
+      var s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null');
+      if (s) { s.role = 'developer'; sessionStorage.setItem('gp_logged_user', JSON.stringify(s)); }
+    } catch (e) {}
+    sessionStorage.removeItem('gp_orig_role');
+  }
+})();
+</script>
+
+<!-- ============ PROTECTION SCRIPT — runs FIRST ============ -->
+<script>
+(function () {
+  if (window.__GP_LOGGING_OUT__) return;
+  function checkSession() {
+    var s = null;
+    try { s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null'); } catch (e) {}
+    if (!s || s.role !== 'developer' || !s.username) {
+      try { sessionStorage.clear(); } catch (e) {}
+      window.location.replace('index.html?t=' + Date.now());
+      return false;
+    }
+    return true;
+  }
+  if (!checkSession()) return;
+  window.addEventListener('pageshow', function () { checkSession(); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') checkSession();
+  });
+  window.addEventListener('focus', function () { checkSession(); });
+})();
+</script>
+
+<script>
+/* ============================================================
+   STORAGE KEYS (same as gpadmin.html)
+   ============================================================ */
+var STORAGE_KEY          = 'gp_portal_users';
+var DESIGNERS_KEY        = 'gp_designer_users';
+var CAD_DESIGNERS_KEY    = 'gp_cad_designer_users';
+var POST_PROD_KEY        = 'gp_post_production_users';
+
+/* ============================================================
+   SAFE READERS
+   ============================================================ */
+function readJSON(key) {
+  try {
+    var raw = localStorage.getItem(key);
+    if (!raw) return [];
+    var v = JSON.parse(raw);
+    return Array.isArray(v) ? v : [];
+  } catch (e) { return []; }
+}
+
+function getCoreUsers()      { return readJSON(STORAGE_KEY); }
+function getDesignerUsers()  { return readJSON(DESIGNERS_KEY); }
+function getCadDesigners()   { return readJSON(CAD_DESIGNERS_KEY); }
+function getPostProdUsers()  { return readJSON(POST_PROD_KEY); }
+
+/* ============================================================
+   USER NAME IN HEADER
+   ============================================================ */
+(function () {
+  try {
+    var s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null');
+    if (s && s.username) document.getElementById('devName').textContent = s.username;
+  } catch (e) {}
+})();
+
+/* ============================================================
+   STATS
+   ============================================================ */
+function refreshStats() {
+  var core      = getCoreUsers();
+  var designers = getDesignerUsers();
+  var cad       = getCadDesigners();
+  var pp        = getPostProdUsers();
+
+  var adminCount     = core.filter(function (u) { return u && u.role === 'admin'; }).length;
+  var userCount      = core.filter(function (u) { return u && u.role === 'user'; }).length;
+  var workshopCount  = core.filter(function (u) { return u && u.role === 'workshop'; }).length;
+  var developerCount = core.filter(function (u) { return u && u.role === 'developer'; }).length;
+  var branchCount    = core.filter(function (u) { return u && u.role === 'branch_incharge'; }).length;
+
+  var designerCount  = designers.length + cad.length;
+  var postProdCount  = pp.length;
+
+  var totalCount = core.length + designers.length + cad.length + pp.length;
+
+  document.getElementById('totalCount').textContent          = totalCount;
+  document.getElementById('adminCount').textContent          = adminCount;
+  document.getElementById('userCount').textContent           = userCount;
+  document.getElementById('workshopCount').textContent       = workshopCount;
+  document.getElementById('developerCount').textContent      = developerCount;
+  document.getElementById('branchInchargeCount').textContent = branchCount;
+  document.getElementById('designerCount').textContent       = designerCount;
+  document.getElementById('postProdCount').textContent       = postProdCount;
+}
+
+/* ============================================================
+   LOGIC FOR WORKSHOP DASHBOARD & PRE-PRODUCTION
+   ============================================================ */
+function gpShowAllWorkshops() {
+  try {
+    var s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null');
+    if (s && typeof s === 'object') {
+      ['branch', 'branchName', 'workshop', 'branch_name', 'branchCode'].forEach(function (k) {
+        if (k in s) delete s[k];
+      });
+      sessionStorage.setItem('gp_logged_user', JSON.stringify(s));
+    }
+  } catch (e) {}
+}
+
+function gpElevateRoleForPreProd(e) {
+  try {
+    var s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null');
+    if (s) {
+      if (s.role !== 'admin') sessionStorage.setItem('gp_orig_role', s.role);
+      s.role = 'admin';
+      sessionStorage.setItem('gp_logged_user', JSON.stringify(s));
+    }
+  } catch (err) {}
+}
+
+(function () {
+  var wl = document.getElementById('workshopDashboardLink');
+  if (wl) {
+    wl.addEventListener('click',    gpShowAllWorkshops);
+    wl.addEventListener('auxclick', gpShowAllWorkshops);
+  }
+
+  var pl = document.getElementById('preProdLink');
+  if (pl) {
+    pl.addEventListener('click',    gpElevateRoleForPreProd);
+    pl.addEventListener('auxclick', gpElevateRoleForPreProd);
+  }
+})();
+
+document.querySelectorAll('#devLinks a.quick-link').forEach(function (a) {
+  a.addEventListener('click', function () {
+    var href = a.getAttribute('href');
+    if (!href) return;
+    setTimeout(function () { window.location.href = href; }, 0);
+  });
+});
+
+document.getElementById('logoutBtn').addEventListener('click', function () {
+  if (!confirm('Log out of GP Portal?')) return;
+  window.__GP_LOGGING_OUT__ = true;
+  try { sessionStorage.clear(); } catch (e) {}
+  var target = 'index.html?t=' + Date.now() + '&logout=1';
+  window.location.href = target;
+  setTimeout(function () {
+    if (window.location.pathname.indexOf('index.html') === -1) {
+      window.location.replace(target);
+    }
+  }, 50);
+});
+
+refreshStats();
+window.addEventListener('focus', refreshStats);
+window.addEventListener('storage', refreshStats);
+setInterval(refreshStats, 3000);
+</script>
+
+<script>
+(function () {
+  var sub = document.getElementById('workshopDashboardSub');
+  if (!sub) return;
+  try {
+    var users = JSON.parse(localStorage.getItem('gp_portal_users') || '[]');
+    var count = 0;
+    if (Array.isArray(users)) {
+      count = users.filter(function(u){ return u && u.role === 'workshop' && u.branch; }).length;
+    }
+    if (count > 0) {
+      sub.textContent = 'View data for all ' + count + ' workshop branch' + (count === 1 ? '' : 'es');
+    } else {
+      sub.textContent = 'Open the branch workshop order dashboard';
+    }
+  } catch(e) {}
+})();
+</script>
+
+<!-- Internal chat widget -->
+<script src="gp-chat.js"></script>
+</body>
+</html>

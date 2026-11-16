@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Branch Incharge Dashboard · GP Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="gp-chat.css">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+<style>
+:root{
+  --brand:#900143;
+  --brand-dark:#6b0132;
+  --brand-light:#b8005a;
+  --gold:#e9c9da;
+  --gold-soft:#fdeef6;
+  --ink:#2b0a1c;
+  --muted:#a06a85;
+  --card:rgba(255,255,255,.82);
+  --card-border:rgba(144,1,67,.10);
+  --danger:#e0284f;
+  --success:#0f9d58;
+  --shadow:0 18px 40px -22px rgba(144,1,67,.22);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,system-ui,sans-serif}
+
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(600px 400px at 100% 0%, #fcf6f9 0%, transparent 60%),
+    radial-gradient(500px 300px at 0% 100%, #f5edf1 0%, transparent 60%),
+    linear-gradient(135deg, #f1eff0 0%, #f7f3f5 50%, #f5f0f2 100%);
+  padding:2rem 1.5rem;
+  color:var(--ink);
+  position:relative;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;width:380px;height:380px;border-radius:50%;
+  background:#f7f3f5;filter:blur(110px);opacity:.20;top:-140px;right:-120px;
+  z-index:0;pointer-events:none;
+}
+body::after{
+  content:"";position:fixed;width:340px;height:340px;border-radius:50%;
+  background:#f7f3f4;filter:blur(110px);opacity:.22;bottom:-140px;left:-120px;
+  z-index:0;pointer-events:none;
+}
+
+.container{max-width:1150px;margin:0 auto;position:relative;z-index:1}
+
+header{
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--card);
+  backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  padding:1.2rem 2rem;border-radius:1.5rem;
+  border:1px solid var(--card-border);margin-bottom:2rem;
+  flex-wrap:wrap;gap:1rem;box-shadow:var(--shadow);position:relative;
+}
+header::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  border-radius:1.5rem 1.5rem 0 0;
+  background:linear-gradient(90deg, #f2a5c6, var(--brand), #f2a5c6);
+}
+header h1{
+  font-size:1.4rem;font-weight:600;display:flex;align-items:center;
+  gap:.7rem;color:var(--brand);letter-spacing:-.2px;
+}
+header h1 img{height:34px;width:auto;border-radius:7px}
+header h1 i{color:var(--brand)}
+
+.header-actions{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}
+
+.user-badge{
+  padding:.55rem 1.1rem;
+  background:linear-gradient(135deg, var(--brand), var(--brand-light));
+  color:#fff;border-radius:2rem;font-size:.82rem;font-weight:600;
+  box-shadow:0 8px 18px -10px rgba(144,1,67,.55);
+  display:inline-flex;align-items:center;gap:.45rem;
+}
+.user-badge i{color:#ffe3ef}
+
+.btn{
+  padding:.7rem 1.3rem;border:none;border-radius:2rem;
+  font-weight:600;font-size:.85rem;cursor:pointer;
+  display:inline-flex;align-items:center;gap:.5rem;
+  transition:all .2s;text-decoration:none;
+}
+.btn-danger{
+  background:#fff;color:var(--danger);
+  border:1.5px solid rgba(224,40,79,.3);
+}
+.btn-danger:hover{
+  background:var(--danger);color:#fff;border-color:var(--danger);
+  box-shadow:0 10px 20px -10px rgba(224,40,79,.6);
+}
+
+.panel{
+  background:var(--card);
+  backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  padding:2rem;border-radius:1.5rem;
+  border:1px solid var(--card-border);box-shadow:var(--shadow);
+  margin-bottom:2rem;
+}
+.panel h2{
+  font-size:1.15rem;font-weight:600;margin-bottom:1.5rem;
+  display:flex;align-items:center;gap:.6rem;color:var(--brand);
+  letter-spacing:-.2px;
+}
+.panel h2 i{color:#e08ab4}
+
+/* Low stone stock alert */
+.stone-alert{
+  border-left:6px solid var(--danger);
+  background:linear-gradient(135deg,#fff1f4,#ffe0e6);
+  border-top:1px solid #f7a0b2;border-right:1px solid #f7a0b2;border-bottom:1px solid #f7a0b2;
+  border-radius:1rem;padding:1rem 1.2rem;
+  box-shadow:0 10px 25px -14px rgba(224,40,79,.55);
+}
+.stone-alert .sa-title{
+  font-size:.95rem;font-weight:800;color:var(--danger);
+  display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;
+  justify-content:space-between;
+}
+.stone-alert .sa-title .sa-title-text{display:flex;align-items:center;gap:.5rem}
+.stone-alert .sa-title i{animation:pulseAlert 1.6s infinite}
+@keyframes pulseAlert{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.75}}
+.stone-alert .sa-close-all{
+  background:rgba(224,40,79,.12);border:none;color:var(--danger);cursor:pointer;
+  width:26px;height:26px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.8rem;transition:background .2s;
+}
+.stone-alert .sa-close-all:hover{background:var(--danger);color:#fff}
+.stone-alert .sa-sub{font-size:.78rem;color:#9c324f;margin-bottom:.6rem}
+.sa-list{display:flex;flex-direction:column;gap:.5rem}
+.sa-chip{
+  background:#fff;border:1px solid #f7a0b2;border-radius:.6rem;
+  padding:.5rem .7rem;font-size:.8rem;color:#7a122c;font-weight:600;
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+}
+.sa-chip .sa-text{flex:1;line-height:1.35}
+.sa-chip .val{color:var(--danger);font-weight:800}
+.sa-chip .min{color:var(--muted);font-weight:600;font-size:.72rem}
+.sa-chip .sa-item-close{
+  background:#f0f0f0;border:none;color:#666;cursor:pointer;
+  width:24px;height:24px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.7rem;transition:all .15s;flex-shrink:0;
+}
+.sa-chip .sa-item-close:hover{background:var(--danger);color:#fff}
+.sa-badge{display:inline-block;background:var(--danger);color:#fff;font-size:.66rem;font-weight:800;letter-spacing:.4px;padding:.1rem .45rem;border-radius:.4rem;margin-left:.3rem}
+.sa-short{font-size:.74rem;color:#9c324f;font-weight:600;margin-top:.15rem}
+
+.quick-links{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:1rem;
+}
+.quick-link{
+  display:flex;align-items:center;gap:1rem;
+  padding:1.1rem 1.3rem;background:#fff;
+  border-radius:1.1rem;border:1.5px solid rgba(144,1,67,.08);
+  text-decoration:none;color:var(--ink);transition:all .2s;
+  cursor:pointer;
+  pointer-events:auto;
+}
+.quick-link *{pointer-events:auto;}
+.quick-link:hover{
+  background:#fff;border-color:var(--brand);
+  transform:translateY(-2px);
+  box-shadow:0 16px 30px -18px rgba(144,1,67,.40);
+}
+.quick-link:hover .ql-icon{
+  background:linear-gradient(135deg, var(--brand), var(--brand-light));
+  color:#fff;transform:scale(1.05);
+}
+.quick-link .ql-icon{
+  width:46px;height:46px;border-radius:.95rem;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.15rem;background:#fde9f3;color:var(--brand);
+  flex-shrink:0;transition:all .2s;
+}
+.quick-link .ql-text h4{font-size:.95rem;font-weight:600;margin-bottom:.15rem;color:var(--brand)}
+.quick-link .ql-text p{font-size:.76rem;color:var(--muted)}
+
+@media(max-width:600px){
+  body{padding:1.2rem .9rem}
+  header{padding:1rem 1.2rem;border-radius:1.2rem}
+  header h1{font-size:1.2rem}
+  .panel{padding:1.4rem;border-radius:1.2rem}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1><img src="images/gp-gold3.png" alt="GoldPrince" onerror="this.style.display='none'"> Branch Incharge Dashboard</h1>
+    <div class="header-actions">
+      <span class="user-badge"><i class="fas fa-user-tie"></i> <span id="branchName">Branch Incharge</span></span>
+      <button class="btn btn-danger" id="logoutBtn" type="button"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </header>
+
+  <!-- ============ LOW STONE STOCK ALERT ============ -->
+  <div class="panel" id="stoneAlertPanel" style="display:none">
+    <h2><i class="fas fa-triangle-exclamation" style="color:var(--danger)"></i> Low Stone Stock Alert</h2>
+    <div class="stone-alert">
+      <div class="sa-title">
+        <div class="sa-title-text">
+          <i class="fas fa-triangle-exclamation"></i> Stone types at or below minimum qty
+        </div>
+        <button class="sa-close-all" id="saCloseAll" title="Dismiss all for today">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="sa-sub">These stones need a purchase order. Dismissed items will reappear tomorrow at 9:00 AM.</div>
+      <div class="sa-list" id="saList"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2><i class="fas fa-bolt"></i> Management Sections</h2>
+    <div class="quick-links" id="branchLinks">
+
+      <a href="designs.html" class="quick-link" id="preProdLink">
+        <div class="ql-icon"><i class="fas fa-store"></i></div>
+        <div class="ql-text"><h4>Manage Pre-Production</h4><p>Designs Bank &amp; Workflow (Design Bank, CAD, etc.)</p></div>
+      </a>
+
+      <a href="gpwork-shop.html" class="quick-link" id="workshopDashboardLink">
+        <div class="ql-icon"><i class="fas fa-tools"></i></div>
+        <div class="ql-text"><h4>Manage Workshops</h4><p id="workshopDashboardSub">Workshop order management</p></div>
+      </a>
+
+      <a href="stone-stock.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-gem"></i></div>
+        <div class="ql-text">
+          <h4>Manage Stone Stock</h4>
+          <p>Catalogue, opening, purchase, issue &amp; closing</p>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  if (sessionStorage.getItem('gp_orig_role') === 'branch_incharge') {
+    try {
+      var s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null');
+      if (s) { s.role = 'branch_incharge'; sessionStorage.setItem('gp_logged_user', JSON.stringify(s)); }
+    } catch (e) {}
+    sessionStorage.removeItem('gp_orig_role');
+  }
+})();
+</script>
+
+<script>
+(function () {
+  if (window.__GP_LOGGING_OUT__) return;
+  function checkSession() {
+    var s = null;
+    try { s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null'); } catch (e) {}
+    if (!s || s.role !== 'branch_incharge' || !s.username) {
+      try { sessionStorage.clear(); } catch (e) {}
+      window.location.replace('index.html?t=' + Date.now());
+      return false;
+    }
+    return true;
+  }
+  if (!checkSession()) return;
+  window.addEventListener('pageshow', function () { checkSession(); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') checkSession();
+  });
+  window.addEventListener('focus', function () { checkSession(); });
+})();
+</script>
+
+<script>
+(function () {
+  try {
+    var s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null');
+    if (s && s.username) {
+      document.getElementById('branchName').textContent = s.username;
+    }
+  } catch (e) {}
+})();
+
+document.getElementById('preProdLink').addEventListener('click', function (e) {
+  try {
+    var s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null');
+    if (s) {
+      if (s.role !== 'admin') sessionStorage.setItem('gp_orig_role', s.role);
+      s.role = 'admin';
+      sessionStorage.setItem('gp_logged_user', JSON.stringify(s));
+    }
+  } catch (err) {}
+});
+
+document.querySelectorAll('#branchLinks a.quick-link:not(#preProdLink)').forEach(function (a) {
+  a.addEventListener('click', function (e) {
+    var href = a.getAttribute('href');
+    if (!href) return;
+    e.preventDefault();
+    window.location.href = href;
+  });
+});
+
+document.getElementById('logoutBtn').addEventListener('click', function () {
+  if (!confirm('Log out of GP Portal?')) return;
+  window.__GP_LOGGING_OUT__ = true;
+  try { sessionStorage.clear(); } catch (e) {}
+  var target = 'index.html?t=' + Date.now() + '&logout=1';
+  window.location.href = target;
+  setTimeout(function () {
+    if (window.location.pathname.indexOf('index.html') === -1) {
+      window.location.replace(target);
+    }
+  }, 50);
+});
+</script>
+
+<script>
+(function () {
+  var sub = document.getElementById('workshopDashboardSub');
+  if (!sub) return;
+  try {
+    var users = JSON.parse(localStorage.getItem('gp_portal_users') || '[]');
+    var count = 0;
+    if (Array.isArray(users)) {
+      count = users.filter(function(u){ return u && u.role === 'workshop' && u.branch; }).length;
+    }
+    if (count > 0) {
+      sub.textContent = 'View data for all ' + count + ' workshop branch' + (count === 1 ? '' : 'es');
+    }
+  } catch(e) {}
+})();
+</script>
+
+<!-- ============ LOW STONE STOCK ALERT ============ -->
+<script>
+(function () {
+  var CATALOGUE_KEY   = 'gp_stone_catalogue';
+  var OPENING_KEY     = 'gp_stone_opening';
+  var PURCHASE_KEY    = 'gp_stone_purchase_orders';
+  var ISSUE_KEY       = 'gp_stone_issue_orders';
+  var RETURN_KEY      = 'gp_stone_return_orders';
+  var DAMAGE_KEY      = 'gp_stone_damage';
+  var PURCHASE_RET_KEY= 'gp_stone_purchase_return';
+  var LOWSTOCK_DISMISS_KEY = 'gp_stone_lowstock_dismissed';
+
+  function readJSON(key) {
+    try {
+      var raw = localStorage.getItem(key);
+      if (!raw) return [];
+      var v = JSON.parse(raw);
+      return Array.isArray(v) ? v : [];
+    } catch (e) { return []; }
+  }
+  function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+  function escapeHtml(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function normPart(v) { return String(v == null ? '' : v).toLowerCase().replace(/[\u00d7*]/g, 'x').replace(/\s+/g, ''); }
+  function keyForStone(s,c,z) {
+    return normPart(s) + '||' + normPart(c) + '||' + normPart(z);
+  }
+  function getDismissedStore() {
+    var raw = localStorage.getItem(LOWSTOCK_DISMISS_KEY);
+    if (!raw) return {};
+    try { return JSON.parse(raw) || {}; } catch (e) { return {}; }
+  }
+  function saveDismissedStore(s) { localStorage.setItem(LOWSTOCK_DISMISS_KEY, JSON.stringify(s)); }
+  function getDismissalCycleDate() {
+    var now = new Date();
+    var cycle = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0);
+    if (now.getTime() < cycle.getTime()) cycle.setDate(cycle.getDate() - 1);
+    return cycle.getFullYear() + '-' +
+           String(cycle.getMonth() + 1).padStart(2, '0') + '-' +
+           String(cycle.getDate()).padStart(2, '0');
+  }
+  function isDismissedForCycle(key) {
+    var store = getDismissedStore();
+    var entry = store[key];
+    if (!entry) return false;
+    return entry.dismissedCycle === getDismissalCycleDate();
+  }
+  function dismissForCycle(key) {
+    var store = getDismissedStore();
+    store[key] = { dismissedCycle: getDismissalCycleDate(), dismissedAt: Date.now() };
+    saveDismissedStore(store);
+  }
+  function dismissAllForCycle(keys) {
+    var store = getDismissedStore();
+    var cycle = getDismissalCycleDate();
+    var now = Date.now();
+    keys.forEach(function (k) {
+      store[k] = { dismissedCycle: cycle, dismissedAt: now };
+    });
+    saveDismissedStore(store);
+  }
+
+  function computeStoneClosing() {
+    var catalogue = readJSON(CATALOGUE_KEY);
+    var opening   = readJSON(OPENING_KEY);
+    var purchase  = [];
+    readJSON(PURCHASE_KEY).forEach(function (o) {
+      (o.items || []).forEach(function (it) {
+        purchase.push({ stoneType: it.stoneType, color: it.color, size: it.size, qty: it.qty });
+      });
+    });
+    var issue = [];
+    readJSON(ISSUE_KEY).forEach(function (o) {
+      (o.items || []).forEach(function (it) {
+        issue.push({ stoneType: it.stoneType, color: it.color, size: it.size, qty: it.qty });
+      });
+    });
+    var ret = [];
+    readJSON(RETURN_KEY).forEach(function (o) {
+      (o.items || []).forEach(function (it) {
+        ret.push({ stoneType: it.stoneType, color: it.color, size: it.size, qty: it.qty });
+      });
+    });
+    var damage = readJSON(DAMAGE_KEY);
+    var pret   = readJSON(PURCHASE_RET_KEY);
+
+    var map = {};
+    function ensure(s,c,z){
+      var k = keyForStone(s,c,z);
+      if (!map[k]) map[k] = { stoneType:s||'', color:c||'', size:z||'', minQty:0, opening:0, purchased:0, issued:0, returned:0, damage:0, pret:0 };
+      return map[k];
+    }
+    catalogue.forEach(function (c) {
+      var e = ensure(c.stoneType, c.color, c.size);
+      e.minQty = num(c.minQty);
+    });
+    opening.forEach(function (r){ ensure(r.stoneType,r.color,r.size).opening += num(r.qty); });
+    purchase.forEach(function (r){ ensure(r.stoneType,r.color,r.size).purchased += num(r.qty); });
+    issue.forEach(function (r){ ensure(r.stoneType,r.color,r.size).issued += num(r.qty); });
+    ret.forEach(function (r){ ensure(r.stoneType,r.color,r.size).returned += num(r.qty); });
+    damage.forEach(function (r){ ensure(r.stoneType,r.color,r.size).damage += num(r.qty); });
+    pret.forEach(function (r){ ensure(r.stoneType,r.color,r.size).pret += num(r.qty); });
+
+    return Object.keys(map).map(function (k) {
+      var e = map[k];
+      e.closing = e.opening + e.purchased - e.issued + e.returned - e.damage - e.pret;
+      return e;
+    });
+  }
+
+  function renderAlert() {
+    var list = computeStoneClosing();
+    var low = list.filter(function (e) { return e.minQty > 0 && e.closing <= e.minQty; });
+    var visible = low.filter(function (e) {
+      return !isDismissedForCycle(keyForStone(e.stoneType, e.color, e.size));
+    });
+
+    var panel = document.getElementById('stoneAlertPanel');
+    var wrap = document.getElementById('saList');
+    if (!visible.length) { panel.style.display = 'none'; wrap.innerHTML = ''; return; }
+    var html = '';
+    visible.forEach(function (e) {
+      var k = keyForStone(e.stoneType, e.color, e.size);
+      var desc = e.stoneType + (e.color ? ' · ' + e.color : '') + (e.size ? ' · ' + e.size : '');
+      html += '<div class="sa-chip">'
+        + '<div class="sa-text">'
+        +   '<i class="fas fa-gem" style="color:#e08ab4"></i> '
+        +   escapeHtml(desc)
+        +   ' — Qty <span class="val">' + e.closing + '</span>'
+        +   ' <span class="min">/ min ' + e.minQty + '</span>'
+        +   (e.closing <= 0 ? ' <span class="sa-badge">OUT OF STOCK</span>' : '')
+        +   '<div class="sa-short">' + (e.minQty - e.closing > 0 ? 'Short by <b>' + (e.minQty - e.closing) + '</b> \u2014 purchase at least ' + (e.minQty - e.closing) + ' to reach minimum' : 'At minimum level \u2014 reorder now') + '</div>'
+        + '</div>'
+        + '<button class="sa-item-close" data-dismiss-key="' + escapeHtml(k) + '" title="Dismiss for today (reappears tomorrow 9 AM)">'
+        +   '<i class="fas fa-times"></i>'
+        + '</button>'
+        + '</div>';
+    });
+    wrap.innerHTML = html;
+    panel.style.display = '';
+
+    wrap.querySelectorAll('.sa-item-close').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var k = btn.getAttribute('data-dismiss-key');
+        dismissForCycle(k);
+        renderAlert();
+      });
+    });
+  }
+
+  function dismissAllAlerts() {
+    var list = computeStoneClosing();
+    var low = list.filter(function (e) { return e.minQty > 0 && e.closing <= e.minQty; });
+    var keys = low.map(function (e) { return keyForStone(e.stoneType, e.color, e.size); });
+    dismissAllForCycle(keys);
+    renderAlert();
+  }
+
+  document.getElementById('saCloseAll').addEventListener('click', dismissAllAlerts);
+
+  renderAlert();
+  window.addEventListener('focus', renderAlert);
+  window.addEventListener('storage', renderAlert);
+  setInterval(renderAlert, 3000);
+})();
+</script>
+
+<script src="gp-chat.js"></script>
+</body>
+</html>

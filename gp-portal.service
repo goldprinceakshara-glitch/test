@@ -1,0 +1,31 @@
+[Unit]
+Description=GP Portal (Express + SQLite)
+Documentation=https://your-domain/
+After=network.target
+
+[Service]
+Type=simple
+User=gp
+Group=gp
+WorkingDirectory=/opt/gp-portal
+EnvironmentFile=/opt/gp-portal/.env
+ExecStart=/usr/bin/node /opt/gp-portal/server.js
+Restart=always
+RestartSec=3
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=20
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/gp-portal/data /opt/gp-portal/deploy/backups
+
+# Logs go to journald
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stage-2 Process · GP Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://db.onlinewebfonts.com/c/7182c0aa415f7a87f826dada6cd9980c?family=URW+Wood+Type+W01+D" rel="stylesheet">
+<link rel="stylesheet" href="stage-2.css">
+<link rel="stylesheet" href="gp-chat.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- PWA & Web App Icon Setup -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+<script src="gp-chat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+(function ensureSession(){
+  try {
+    var s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null');
+    if (!s || !s.username) {
+      sessionStorage.setItem('gp_logged_user', JSON.stringify({
+        username: 'Admin', role: 'admin',
+        seededAt: new Date().toISOString(),
+        note: 'auto-seeded by stage-2 process.html'
+      }));
+    }
+  } catch (e) {
+    sessionStorage.setItem('gp_logged_user', JSON.stringify({ username: 'Admin', role: 'admin' }));
+  }
+})();
+</script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <h1><img src="images/gplogo1.png" alt="GoldPrince" onerror="this.style.display='none'"></h1>
+    <p>JEWEL INDUSTRY INDIA PVT LTD</p>
+  </div>
+  <div class="user-pill" id="userPill">
+    <i class="fas fa-user-tie"></i> <span id="userName">—</span>
+  </div>
+  <div class="top-actions">
+    
+    <button id="koraBtn"><i class="fas fa-boxes-stacked"></i> Kora Stock</button>
+    <button id="trackerBtn"><i class="fas fa-search"></i> ProductTracker</button>
+    <button id="reportsBtn"><i class="fas fa-chart-bar"></i> Reports</button>
+    <button id="diffBtn"><i class="fas fa-balance-scale"></i> Stock Weight Analysis</button>
+    <button id="excelBtn"><i class="fas fa-file-excel"></i> Preview Progress</button>
+    <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hidden" id="totalsGridWrapper"><div class="totals-grid" id="totalsGrid"></div></div>
+  <h2><i class="fas fa-chart-line"></i> Post Production Overview</h2>
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <h2><i class="fas fa-stream"></i> Post Production Stages</h2>
+  <div class="tabs" id="stageTabs">
+    <button class="tab active" data-stage="all">All</button>
+    <button class="tab" data-stage="STOCK_JAMA">1. Stock Jama</button>
+    <button class="tab" data-stage="PLATING">2. Plating/Polish</button>
+    <button class="tab" data-stage="RECEIVED_PLATING">3. Received from Plating</button>
+    <button class="tab" data-stage="PACKING">4. Packing</button>
+    <button class="tab" data-stage="QC">5. QC Section</button>
+    <button class="tab" data-stage="DISPATCH">6. Dispatch</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="pipeline-table">
+      <thead>
+        <tr>
+          <th>ROOT CARD</th>
+          <th>ORDER NO.</th>
+          <th>BRANCH / WORKSHOP</th>
+          <th>GROUP</th>
+          <th>QTY</th>
+          <th>WEIGHT (g)</th>
+          <th>STAGE</th>
+          <th>LAST UPDATE</th>
+          <th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody id="pipelineBody"></tbody>
+    </table>
+  </div>
+</main>
+
+<!-- STEP / ORDER DETAIL MODAL -->
+<div class="modal hidden" id="stepModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeStepModal">×</button>
+    <div id="stepModalContent"></div>
+    <div class="stage-progress" id="stageProgress"></div>
+    <div id="stepHistoryBox"></div>
+    <div class="modal-actions">
+      <button class="btn danger" id="cancelStageBtn"><i class="fas fa-ban"></i> Cancel &amp; Return to Stock Jama</button>
+      <button class="btn" id="exportOrderExcelBtn"><i class="fas fa-file-excel"></i> Export Order</button>
+      <button class="btn primary" id="advanceStepBtn"><i class="fas fa-arrow-right"></i> Forward</button>
+    </div>
+    <div class="message" id="stepMessage"></div>
+  </div>
+</div>
+
+<!-- EDIT ITEMS MODAL -->
+<div class="modal hidden" id="editItemsModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeEditItemsModal">×</button>
+    <h2 class="modal-title"><i class="fas fa-edit"></i> EDIT ITEMS — <span id="editItemsStageHeader">FORWARD</span></h2>
+    <p class="modal-sub" id="editItemsModeHelp"></p>
+
+    <div class="forward-info">
+      <div><span class="k">ORDER NO.</span><b id="editItemsOrderNo">—</b></div>
+      <div><span class="k">ROOT CARD (this batch)</span><b id="editItemsRootCard">—</b></div>
+    </div>
+
+    <div class="root-card-row" id="editItemsRootCardRow" style="display:none">
+      <label class="root-card-label">
+        <span class="k">ROOT CARD NUMBER <small>— auto-generated · you can edit it</small></span>
+        <div class="root-card-input-wrap">
+          <i class="fas fa-tag"></i>
+          <input id="editItemsRootCardInput" type="text" placeholder="e.g. RC-1001" autocomplete="off" spellcheck="false">
+          <button type="button" class="btn small secondary" id="editItemsRootCardSuggestBtn">Use Suggested</button>
+        </div>
+        <small id="editItemsRootCardNote">A new root card is auto-generated for every forward batch. You may edit it before confirming.</small>
+      </label>
+    </div>
+
+    <div class="edit-items-table-wrap">
+      <table class="edit-items-table" id="editItemsTable">
+        <thead>
+          <tr>
+            <th rowspan="2" class="col-sl">SL</th>
+            <th rowspan="2" class="col-art">ART NO.</th>
+            <th rowspan="2" class="col-name">PRODUCT NAME</th>
+            <th colspan="2" class="col-bal th-balance">BAL STOCK</th>
+            <th colspan="2" class="col-fwd th-fwd">FORWARD</th>
+            <th colspan="2" class="col-scrap th-scrap">SCRAP</th>
+          </tr>
+          <tr>
+            <th class="col-bal th-balance">QTY</th>
+            <th class="col-bal th-balance">WT (g)</th>
+            <th class="col-fwd th-fwd">QTY</th>
+            <th class="col-fwd th-fwd">WT (g)</th>
+            <th class="col-scrap th-scrap">QTY</th>
+            <th class="col-scrap th-scrap">WT (g)</th>
+          </tr>
+        </thead>
+        <tbody id="editItemsBody"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" class="total-label">TOTAL</td>
+            <td class="col-bal" id="editItemsTotalQty">0</td>
+            <td class="col-bal" id="editItemsTotalWt">0.00</td>
+            <td class="col-fwd" id="editItemsFwdQtyInputTotal">—</td>
+            <td class="col-fwd" id="editItemsFwdWtInputTotal">—</td>
+            <td class="col-scrap" id="editItemsScrapQtyInputTotal">—</td>
+            <td class="col-scrap" id="editItemsScrapWtInputTotal">—</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="edit-items-summary" id="editItemsSummary">
+      <div class="sum-block">
+        <div class="k">CURRENT BALANCE</div>
+        <div class="sum-row"><span>Qty</span><b id="editItemsBalQty">0</b></div>
+        <div class="sum-row"><span>Weight</span><b id="editItemsBalWt">0.00</b></div>
+      </div>
+      <div class="sum-block fwd">
+        <div class="k">TO FORWARD</div>
+        <div class="sum-row"><span>Qty</span><b id="editItemsFwdQty">0</b></div>
+        <div class="sum-row"><span>Weight</span><b id="editItemsFwdWt">0.00</b></div>
+      </div>
+      <div class="sum-block scrap">
+        <div class="k">TO SCRAP</div>
+        <div class="sum-row"><span>Qty</span><b id="editItemsScrapQty">0</b></div>
+        <div class="sum-row"><span>Weight</span><b id="editItemsScrapWt">0.00</b></div>
+      </div>
+      <div class="sum-block remain">
+        <div class="k">REMAINING IN JAMA</div>
+        <div class="sum-row"><span>Qty</span><b id="editItemsRemQty">0</b></div>
+        <div class="sum-row"><span>Weight</span><b id="editItemsRemWt">0.00</b></div>
+      </div>
+    </div>
+
+    <div class="edit-items-quick">
+      <button class="btn small" type="button" id="editItemsForwardAllBtn"><i class="fas fa-arrow-right"></i> Forward All</button>
+      <button class="btn small danger" type="button" id="editItemsScrapAllBtn"><i class="fas fa-trash"></i> Scrap All</button>
+      <button class="btn small secondary" type="button" id="editItemsClearBtn"><i class="fas fa-eraser"></i> Clear</button>
+    </div>
+
+    <label>Remarks
+      <textarea id="editItemsNote" rows="3" placeholder="Write remarks..."></textarea>
+    </label>
+
+    <div class="modal-actions">
+      <button class="btn" id="editItemsPrintBtn"><i class="fas fa-print"></i> Print Statement</button>
+      <button class="btn" id="editItemsPdfBtn"><i class="fas fa-file-pdf"></i> Download PDF</button>
+      <button class="btn" id="cancelEditItemsBtn">Cancel</button>
+      <button class="btn primary" id="confirmEditItemsBtn"><i class="fas fa-check"></i> Confirm &amp; Forward</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROOT CARD MODAL -->
+<div class="modal hidden" id="rootCardModal">
+  <div class="modal-window small-window">
+    <button class="modal-close" id="closeRootCardModal">×</button>
+    <h2 class="modal-title"><i class="fas fa-tag"></i> ALLOT ROOT CARD NUMBER</h2>
+    <p class="modal-sub">Assign a root card number, verify qty/weight, write remarks and forward to plating section.</p>
+    <label>Root Card Number
+      <input id="rootCardInput" type="text" placeholder="e.g. RC-1001" autocomplete="off">
+      <small>Auto-suggested: RC-1001, RC-1002, ...</small>
+    </label>
+    <label>Verified Qty <input id="verifiedQtyInput" type="number" min="0" step="1"></label>
+    <label>Verified Total Weight (g) <input id="verifiedWeightInput" type="number" min="0" step="0.01"></label>
+    <label>Remarks <textarea id="rootCardNote" rows="3" placeholder="Write remarks..."></textarea></label>
+    <div class="modal-actions">
+      <button class="btn" id="cancelRootCardBtn">Cancel</button>
+      <button class="btn primary" id="confirmRootCardBtn"><i class="fas fa-check"></i> Assign &amp; Forward</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROOT CARD PRINT -->
+<div class="modal hidden" id="rootCardPrintModal">
+  <div class="modal-window small-window">
+    <button class="modal-close" id="closeRootCardPrintModal">×</button>
+    <div id="rootCardPrintContent"></div>
+    <div class="modal-actions">
+      <button class="btn" id="rootCardPrintBtn"><i class="fas fa-print"></i> Print</button>
+      <button class="btn" id="rootCardPdfBtn"><i class="fas fa-file-pdf"></i> Download PDF</button>
+      <button class="btn secondary" id="rootCardCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORTS -->
+<div class="modal hidden" id="reportsModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeReportsModal">×</button>
+    <h2 class="modal-title"><i class="fas fa-chart-bar"></i> REPORTS</h2>
+    <p class="modal-sub">Filter jama totals by date range. View category breakdown and branch-wise jama totals.</p>
+    <div class="reports-filters">
+      <label>From Date <input type="date" id="reportFromDate"></label>
+      <label>To Date <input type="date" id="reportToDate"></label>
+      <div class="reports-filter-actions">
+        <button class="btn" id="reportClearBtn">Clear</button>
+        <button class="btn primary" id="reportApplyBtn"><i class="fas fa-sync"></i> Apply</button>
+      </div>
+    </div>
+    <div id="reportsBody"></div>
+    <div class="modal-actions">
+      <button class="btn" id="reportPrintBtn"><i class="fas fa-print"></i> Print</button>
+      <button class="btn" id="reportPdfBtn"><i class="fas fa-file-pdf"></i> Download PDF</button>
+      <button class="btn" id="reportExcelBtn"><i class="fas fa-file-excel"></i> Download Excel</button>
+      <button class="btn secondary" id="reportCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- STOCK PROCESSING DIFFERENCE -->
+<div class="modal hidden" id="diffModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeDiffModal">×</button>
+    <h2 class="modal-title"><i class="fas fa-balance-scale"></i> STOCK PROCESSING DIFFERENCE</h2>
+    <p class="modal-sub">Root-card-wise difference between <b>Stock Received from Branch</b> and <b>Dispatch</b>.</p>
+    <div class="reports-filters">
+      <label>From Date <input type="date" id="diffFromDate"></label>
+      <label>To Date <input type="date" id="diffToDate"></label>
+      <div class="reports-filter-actions">
+        <button class="btn" id="diffClearBtn">Clear</button>
+        <button class="btn primary" id="diffApplyBtn"><i class="fas fa-sync"></i> Apply</button>
+      </div>
+    </div>
+    <div id="diffBody"></div>
+    <div class="modal-actions">
+      <button class="btn" id="diffPrintBtn"><i class="fas fa-print"></i> Print</button>
+      <button class="btn" id="diffPdfBtn"><i class="fas fa-file-pdf"></i> Download PDF</button>
+      <button class="btn" id="diffExcelBtn"><i class="fas fa-file-excel"></i> Download Excel</button>
+      <button class="btn secondary" id="diffCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ART NO. TRACKER -->
+<div class="modal hidden" id="trackerModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeTrackerModal">×</button>
+    <h2 class="modal-title"><i class="fas fa-search"></i> ART NO. TRACKER</h2>
+    <p class="modal-sub">Search by Art No. to see which order it belongs to, which stage it is in, and its root card number.</p>
+    <div class="tracker-search">
+      <i class="fas fa-barcode"></i>
+      <input id="trackerInput" type="text" placeholder="Enter Art No. (e.g. 111916)" autocomplete="off">
+      <button class="btn primary" id="trackerSearchBtn"><i class="fas fa-search"></i> Search</button>
+    </div>
+    <div id="trackerResults"></div>
+  </div>
+</div>
+
+<!-- KORA STOCK -->
+<div class="modal hidden" id="koraStockModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeKoraStockModal">×</button>
+    <h2 class="modal-title"><i class="fas fa-boxes-stacked"></i> KORA STOCK — ALL SECTIONS STOCK BALANCE</h2>
+    <p class="modal-sub">Live stock across <b>every section</b> of the pipeline. Filter by section, product name or product group, or search by art no. Grand totals appear at the bottom.</p>
+
+    <div class="kora-filters">
+      <div class="kora-search">
+        <i class="fas fa-search"></i>
+        <input id="koraSearchArt" type="text" placeholder="Search Art No. (partial match)…" autocomplete="off">
+      </div>
+      <label class="kora-filter">
+        <span>Section</span>
+        <select id="koraFilterSection">
+          <option value="">All Sections</option>
+          <option value="STOCK_JAMA">1. Stock Jama</option>
+          <option value="PLATING">2. Plating/Polish</option>
+          <option value="RECEIVED_PLATING">3. Received from Plating</option>
+          <option value="PACKING">4. Packing</option>
+          <option value="QC">5. QC Section</option>
+          <option value="DISPATCH">6. Dispatch</option>
+          <option value="SCRAPPED">Scrapped</option>
+        </select>
+      </label>
+      <label class="kora-filter">
+        <span>Product Name</span>
+        <select id="koraFilterName"><option value="">All Names</option></select>
+      </label>
+      <label class="kora-filter">
+        <span>Product Group</span>
+        <select id="koraFilterGroup"><option value="">All Groups</option></select>
+      </label>
+      <button class="btn secondary" id="koraResetBtn"><i class="fas fa-eraser"></i> Reset</button>
+    </div>
+
+    <div class="kora-summary" id="koraSummaryGrid"></div>
+
+    <div class="kora-table-wrap">
+      <table class="kora-table">
+        <thead>
+          <tr>
+            <th>ART NO.</th>
+            <th>PRODUCT NAME</th>
+            <th>PRODUCT GROUP</th>
+            <th>SECTION</th>
+            <th>QTY</th>
+            <th>WEIGHT (g)</th>
+            <th>ORDERS</th>
+          </tr>
+        </thead>
+        <tbody id="koraBody"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" style="text-align:right;font-weight:800">GRAND TOTAL</td>
+            <td id="koraFootQty" style="font-weight:800">0</td>
+            <td id="koraFootWt" style="font-weight:800">0.00</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" id="koraExcelBtn"><i class="fas fa-file-excel"></i> Export Excel</button>
+      <button class="btn secondary" id="koraCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="stage-2.js"></script>
+</body>
+</html>

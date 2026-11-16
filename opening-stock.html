@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opening Stock - Stock Inventory</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- PWA & Web App Icon Setup -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+    <meta name="theme-color" content="#900143">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="GOLDPRINCE">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1><i class="fas fa-archive"></i> Opening Stock</h1>
+
+    <div class="card">
+        <div class="section-header">
+            <h2><i class="fas fa-list"></i> Opening Stock Records</h2>
+            <div class="actions">
+                <button onclick="openAddModal()"><i class="fas fa-plus"></i> Add</button>
+                <button class="outline" id="detailsToggleBtn" onclick="toggleOpeningDetails()">
+                    <i class="fas fa-eye"></i> Details
+                </button>
+            </div>
+        </div>
+
+        <div id="openingDetails" style="display:none;">
+
+            <div class="form-row" style="margin-bottom:18px; align-items:flex-end;">
+                <div class="form-group" style="flex:1 1 200px; min-width:160px;">
+                    <label>Product Name</label>
+                    <input type="text" id="filterName" placeholder="Search product name / art no">
+                </div>
+                <div class="form-group" style="flex:1 1 160px; min-width:140px;">
+                    <label>Category</label>
+                    <select id="filterCategory">
+                        <option value="">All Categories</option>
+                        <option value="3D Idols">3D Idols</option>
+                        <option value="3D Premium Idols">3D Premium Idols</option>
+                        <option value="2D Idols">2D Idols</option>
+                        <option value="Jewellery">Jewellery</option>
+                        <option value="God frames">God frames</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:1 1 160px; min-width:140px;">
+                    <label>Product Group</label>
+                    <select id="filterGroup">
+                        <option value="">All Groups</option>
+                        <option value="Antique">Antique</option>
+                        <option value="Premium">Premium</option>
+                        <option value="GJ">GJ</option>
+                        <option value="Kundan">Kundan</option>
+                        <option value="Gatti">Gatti</option>
+                        <option value="Meenakari">Meenakari</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:0 0 auto;">
+                    <label>&nbsp;</label>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="outline" onclick="clearFilters()"><i class="fas fa-times"></i> Clear</button>
+                        <button class="outline" onclick="downloadFilteredPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+                        <button class="outline" onclick="downloadFilteredExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions" style="margin-bottom:15px;">
+                <button class="outline" onclick="downloadTemplate()"><i class="fas fa-download"></i> Template</button>
+                <button class="outline" onclick="document.getElementById('excelInput').click()"><i class="fas fa-file-import"></i> Import Excel</button>
+                <button class="outline" onclick="exportOpening()"><i class="fas fa-file-export"></i> Export CSV</button>
+            </div>
+            <input type="file" id="excelInput" accept=".csv,.xlsx,.xls" style="display:none;">
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Art No</th>
+                            <th>Product Name</th>
+                            <th>Quantity</th>
+                            <th>Weight (g)</th>
+                            <th>Product Group</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="openingBody"></tbody>
+                </table>
+            </div>
+
+            <div class="summary-stats" style="margin-top:20px;">
+                <div class="stat">
+                    <span>Showing Records</span>
+                    <strong id="filteredCount">0</strong>
+                </div>
+                <div class="stat green">
+                    <span>Total Quantity</span>
+                    <strong id="totalQty">0</strong>
+                </div>
+                <div class="stat orange">
+                    <span>Total Weight (g)</span>
+                    <strong id="totalWeight">0.00</strong>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="openingModal">
+    <div class="modal">
+        <h2 id="modalTitle">Add Opening Stock</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Art Number *</label>
+                <input type="text" id="fArt" placeholder="e.g., A101" list="artList" autocomplete="off">
+                <datalist id="artList"></datalist>
+                <div id="fArtHint"
+                     style="display:none; margin-top:6px; font-size:0.78rem; color:#7a0138;
+                            background:#fceef5; border:1px solid #e7b9c6;
+                            padding:6px 10px; border-radius:8px; line-height:1.4;">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Quantity *</label>
+                <input type="number" id="fQty" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>Weight (g)</label>
+                <input type="number" id="fWeight" value="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>Product Group</label>
+                <input type="text" id="fGroup" readonly style="background:#f1f5f9;">
+            </div>
+        </div>
+        <div class="actions" style="margin-top: 20px;">
+            <button class="outline" onclick="closeModal()">Cancel</button>
+            <button onclick="saveOpening()"><i class="fas fa-save"></i> Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-msg" id="toastMsg"></div>
+
+<script src="data.js"></script>
+<script src="openingStock.js"></script>
+</body>
+</html>

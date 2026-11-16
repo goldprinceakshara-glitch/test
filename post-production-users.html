@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<title>Post Production Users · GP Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+:root{
+  --brand:#900143; --brand-dark:#6b0132; --brand-light:#b8005a;
+  --brand-soft:#f7e6ee; --gold:#d4af37; --gold-soft:#f7ecc8;
+  --ink:#3a0d24; --muted:#8a5a72; --white:#ffffff;
+  --danger:#e0284f; --danger-soft:#fde7ec; --ok:#137333; --ok-soft:#dcf5e3;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,system-ui,sans-serif}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(400px 250px at 80% 0%, #f7f1e6 0%, transparent 25%),
+    radial-gradient(300px 250px at 0% 60%, #f7f1e6 0%, transparent 30%),
+    linear-gradient(135deg, #dddbd6 0%, #f0ede7 25%, #f5f3ef 55%);
+  padding:1.5rem;
+  color:var(--ink);
+}
+
+.page-wrap{max-width:1280px;margin:0 auto}
+.page-head{
+  background:rgb(250,244,240);
+  border-radius:1.4rem;
+  padding:1.5rem 1.8rem;
+  box-shadow:0 20px 40px -18px rgba(144,1,67,.25), 0 0 0 1px rgba(144,1,67,.06) inset;
+  border:1px solid rgba(255,255,255,.85);
+  margin-bottom:1.2rem;
+  display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;
+}
+.page-head h1{color:var(--brand);font-size:1.6rem;font-weight:700;display:flex;align-items:center;gap:.6rem}
+.page-head .sub{color:var(--muted);font-size:.85rem;margin-top:.25rem;font-weight:500}
+.head-actions{display:flex;gap:.6rem;flex-wrap:wrap}
+
+/* ---------- 3D SMART BUTTONS ---------- */
+.btn{
+  position:relative;
+  border:1px solid rgba(144,1,67,.25);
+  background:linear-gradient(180deg,#ffffff 0%,#f2e6ee 100%);
+  color:var(--brand);
+  padding:.65rem 1.1rem;
+  border-radius:.8rem;
+  font-weight:700;
+  cursor:pointer;
+  font-size:.85rem;
+  display:inline-flex;align-items:center;gap:.45rem;
+  transition:transform .12s ease, box-shadow .18s ease, filter .18s ease;
+  box-shadow:0 4px 0 #c9a7b8, 0 8px 14px -8px rgba(144,1,67,.45);
+  transform:translateY(-1px);
+  user-select:none;
+}
+.btn:hover{
+  transform:translateY(-3px);
+  box-shadow:0 6px 0 #c9a7b8, 0 12px 20px -10px rgba(144,1,67,.55);
+  filter:brightness(1.03);
+}
+.btn:active{
+  transform:translateY(1px);
+  box-shadow:0 1px 0 #c9a7b8, 0 4px 8px -6px rgba(144,1,67,.4);
+}
+.btn.primary{
+  background:linear-gradient(180deg,var(--brand-light) 0%,var(--brand) 100%);
+  color:#fff;
+  border-color:var(--brand-dark);
+  box-shadow:0 4px 0 #4d0124, 0 8px 16px -8px rgba(144,1,67,.7);
+}
+.btn.primary:hover{
+  box-shadow:0 6px 0 #4d0124, 0 14px 22px -10px rgba(144,1,67,.75);
+  filter:brightness(1.06);
+}
+.btn.primary:active{
+  box-shadow:0 1px 0 #4d0124, 0 4px 8px -6px rgba(144,1,67,.5);
+}
+.btn.danger{
+  background:linear-gradient(180deg,#fff5f4 0%,#fde2e6 100%);
+  color:var(--danger);
+  border-color:#d5a5a2;
+  box-shadow:0 4px 0 #c98a8a, 0 8px 14px -8px rgba(224,40,79,.45);
+}
+.btn.danger:hover{
+  box-shadow:0 6px 0 #c98a8a, 0 12px 20px -10px rgba(224,40,79,.55);
+}
+.btn.danger:active{
+  box-shadow:0 1px 0 #c98a8a, 0 4px 8px -6px rgba(224,40,79,.4);
+}
+.btn.small{
+  padding:.4rem .7rem;
+  font-size:.75rem;
+  border-radius:.55rem;
+  box-shadow:0 3px 0 #c9a7b8, 0 6px 10px -6px rgba(144,1,67,.4);
+}
+.btn.small:hover{
+  box-shadow:0 4px 0 #c9a7b8, 0 8px 14px -8px rgba(144,1,67,.5);
+}
+.btn.small:active{
+  box-shadow:0 1px 0 #c9a7b8, 0 3px 6px -4px rgba(144,1,67,.35);
+}
+.btn.small.primary{
+  box-shadow:0 3px 0 #4d0124, 0 6px 12px -6px rgba(144,1,67,.65);
+}
+.btn.small.primary:hover{
+  box-shadow:0 4px 0 #4d0124, 0 10px 16px -8px rgba(144,1,67,.7);
+}
+.btn.small.primary:active{
+  box-shadow:0 1px 0 #4d0124, 0 3px 6px -4px rgba(144,1,67,.5);
+}
+.btn.small.danger{
+  box-shadow:0 3px 0 #c98a8a, 0 6px 10px -6px rgba(224,40,79,.4);
+}
+.btn.small.danger:hover{
+  box-shadow:0 4px 0 #c98a8a, 0 10px 16px -8px rgba(224,40,79,.5);
+}
+.btn.small.danger:active{
+  box-shadow:0 1px 0 #c98a8a, 0 3px 6px -4px rgba(224,40,79,.35);
+}
+.btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.btn i{font-size:.9em}
+
+.card{
+  background:rgb(250,244,240);border-radius:1.4rem;padding:1.4rem 1.6rem;
+  box-shadow:0 14px 30px -18px rgba(144,1,67,.22), 0 0 0 1px rgba(144,1,67,.06) inset;
+  border:1px solid rgba(255,255,255,.85);margin-bottom:1.2rem;
+}
+.card h2{color:var(--brand);font-size:1.1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem}
+.field{display:flex;flex-direction:column;gap:.35rem}
+.field label{font-size:.75rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.field input,.field select{
+  border:1.5px solid rgba(144,1,67,.22);border-radius:.7rem;padding:.65rem .8rem;
+  font-size:.9rem;background:#fff;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s;
+}
+.field input:focus,.field select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(144,1,67,.12)}
+
+.form-actions{display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap}
+
+table.users-table{width:100%;border-collapse:collapse;font-size:.85rem;background:#fff;border-radius:.8rem;overflow:hidden;box-shadow:0 0 0 1px rgba(144,1,67,.08)}
+.users-table th,.users-table td{padding:.7rem .8rem;text-align:left;border-bottom:1px solid rgba(144,1,67,.1);vertical-align:middle}
+.users-table th{background:var(--brand-soft);color:var(--brand);font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;font-weight:800}
+.users-table tbody tr:hover{background:#fcf7fa}
+.users-table td.actions{text-align:right;white-space:nowrap}
+.users-table td.actions .btn{margin-left:.3rem}
+
+.role-badge{display:inline-block;padding:.25rem .6rem;border-radius:.6rem;font-size:.7rem;font-weight:800;background:var(--brand-soft);color:var(--brand);white-space:nowrap}
+.role-badge.stock_jama_incharge{background:#fff4d6;color:#8a6300}
+.role-badge.plating_polish{background:#e1efff;color:#094d9c}
+.role-badge.packing{background:#ffe5d1;color:#8a3d00}
+.role-badge.qc_section{background:#e0f7fa;color:#00695c}
+.role-badge.dispatch_section{background:#dcf5e3;color:#137333}
+
+.msg{margin-top:1rem;padding:.7rem 1rem;border-radius:.7rem;font-size:.85rem;font-weight:600;display:none}
+.msg.show{display:block}
+.msg.ok{background:var(--ok-soft);color:var(--ok)}
+.msg.err{background:var(--danger-soft);color:var(--danger)}
+
+.empty{text-align:center;color:var(--muted);font-style:italic;padding:1.5rem}
+.hint{font-size:.78rem;color:var(--muted);margin-top:.4rem}
+
+.edit-banner{background:var(--gold-soft);border:1px dashed rgba(212,175,55,.8);border-radius:.7rem;padding:.55rem .8rem;font-size:.8rem;color:var(--brand-dark);font-weight:600;margin-bottom:1rem;display:none}
+.edit-banner.show{display:block}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="page-head">
+    <div>
+      <h1><i class="fas fa-user-cog"></i> Post Production Users</h1>
+      <div class="sub">Manage section in-charges for Stock Jama, Plating/Polish, Packing, QC &amp; Dispatch</div>
+    </div>
+    <div class="head-actions">
+      <button class="btn" id="backBtn"><i class="fas fa-arrow-left"></i> Back to Portal</button>
+      <button class="btn primary" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 id="formTitle"><i class="fas fa-user-plus"></i> Add New User</h2>
+    <div class="edit-banner" id="editBanner"></div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="fUsername" placeholder="e.g. jama1" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="text" id="fPassword" placeholder="Password" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Mobile Number</label>
+        <input type="text" id="fMobile" placeholder="e.g. 9929992299" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Role / Section</label>
+        <select id="fRole">
+          <option value="stock_jama_incharge">Stock Jama In-charge</option>
+          <option value="plating_polish">Plating / Polish Section</option>
+          <option value="packing">Packing Section</option>
+          <option value="qc_section">QC Section</option>
+          <option value="dispatch_section">Dispatch Section</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" id="saveBtn"><i class="fas fa-save"></i> <span id="saveBtnText">Add User</span></button>
+      <button class="btn" id="cancelEditBtn" style="display:none"><i class="fas fa-times"></i> Cancel Edit</button>
+      <button class="btn" id="resetBtn"><i class="fas fa-eraser"></i> Clear Form</button>
+    </div>
+    <div class="hint"><i class="fas fa-info-circle"></i> The username must be unique across all post-production users. Each role sees only its own section in Stage-2 Process.</div>
+    <div class="msg" id="msgBox"></div>
+  </div>
+
+  <div class="card">
+    <h2><i class="fas fa-list"></i> Existing Post Production Users</h2>
+    <div style="overflow:auto">
+      <table class="users-table" id="usersTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Username</th>
+            <th>Password</th>
+            <th>Mobile</th>
+            <th>Role</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   SESSION GUARD — only allow admin from index.html login
+   ============================================================ */
+(function () {
+  try {
+    var raw = sessionStorage.getItem('gp_logged_user');
+    var s = raw ? JSON.parse(raw) : null;
+    if (!s || !s.username || s.role !== 'admin') {
+      sessionStorage.removeItem('gp_logged_user');
+      window.location.replace('index.html');
+      return;
+    }
+  } catch (e) {
+    try { sessionStorage.removeItem('gp_logged_user'); } catch (_) {}
+    window.location.replace('index.html');
+  }
+})();
+
+/* ============================================================
+   POST-PRODUCTION USERS MANAGEMENT
+   Storage key: gp_post_production_users
+   ============================================================ */
+var PP_USERS_KEY = 'gp_post_production_users';
+var ROLE_LABELS = {
+  stock_jama_incharge: 'Stock Jama In-charge',
+  plating_polish:      'Plating / Polish Section',
+  packing:             'Packing Section',
+  qc_section:          'QC Section',
+  dispatch_section:    'Dispatch Section'
+};
+
+var editingUsername = null;
+
+function readUsers(){
+  try { var v = JSON.parse(localStorage.getItem(PP_USERS_KEY)||'null'); return Array.isArray(v)?v:[]; }
+  catch(e){ return []; }
+}
+function saveUsers(arr){ localStorage.setItem(PP_USERS_KEY, JSON.stringify(arr)); }
+
+function showMsg(text, isError){
+  var box = document.getElementById('msgBox');
+  box.textContent = text;
+  box.classList.add('show');
+  box.classList.toggle('ok', !isError);
+  box.classList.toggle('err',  isError);
+  clearTimeout(window.__ppMsgTimer);
+  window.__ppMsgTimer = setTimeout(function(){ box.classList.remove('show'); }, 4000);
+}
+
+function renderUsers(){
+  var list = readUsers();
+  var body = document.getElementById('usersBody');
+  if (!list.length){
+    body.innerHTML = '<tr><td colspan="6" class="empty">No post production users yet. Add one above.</td></tr>';
+    return;
+  }
+  body.innerHTML = list.map(function(u, i){
+    var role = u.role || '';
+    return '<tr>'
+      + '<td>'+(i+1)+'</td>'
+      + '<td><b>'+escapeHtml(u.username)+'</b></td>'
+      + '<td><code>'+escapeHtml(u.password)+'</code></td>'
+      + '<td>'+escapeHtml(u.mobile || '—')+'</td>'
+      + '<td><span class="role-badge '+role+'">'+escapeHtml(ROLE_LABELS[role] || role || '—')+'</span></td>'
+      + '<td class="actions">'
+      +   '<button class="btn small" data-edit="'+escapeHtml(u.username)+'"><i class="fas fa-pen"></i> Edit</button>'
+      +   '<button class="btn small danger" data-del="'+escapeHtml(u.username)+'"><i class="fas fa-trash"></i> Delete</button>'
+      + '</td>'
+      + '</tr>';
+  }).join('');
+
+  body.querySelectorAll('[data-edit]').forEach(function(b){
+    b.addEventListener('click', function(){ startEdit(b.dataset.edit); });
+  });
+  body.querySelectorAll('[data-del]').forEach(function(b){
+    b.addEventListener('click', function(){ deleteUser(b.dataset.del); });
+  });
+}
+
+function escapeHtml(v){
+  return String(v==null?'':v).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function resetForm(){
+  editingUsername = null;
+  document.getElementById('fUsername').value = '';
+  document.getElementById('fPassword').value = '';
+  document.getElementById('fMobile').value   = '';
+  document.getElementById('fRole').value     = 'stock_jama_incharge';
+  document.getElementById('fUsername').disabled = false;
+  document.getElementById('formTitle').innerHTML = '<i class="fas fa-user-plus"></i> Add New User';
+  document.getElementById('saveBtnText').textContent = 'Add User';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  document.getElementById('editBanner').classList.remove('show');
+}
+
+function startEdit(username){
+  var list = readUsers();
+  var u = list.find(function(x){ return x.username.toLowerCase() === String(username).toLowerCase(); });
+  if (!u){ showMsg('User not found.', true); return; }
+  editingUsername = u.username;
+  document.getElementById('fUsername').value = u.username;
+  document.getElementById('fUsername').disabled = true;
+  document.getElementById('fPassword').value = u.password || '';
+  document.getElementById('fMobile').value   = u.mobile || '';
+  document.getElementById('fRole').value     = u.role || 'stock_jama_incharge';
+  document.getElementById('formTitle').innerHTML = '<i class="fas fa-user-pen"></i> Edit User — '+escapeHtml(u.username);
+  document.getElementById('saveBtnText').textContent = 'Update User';
+  document.getElementById('cancelEditBtn').style.display = 'inline-flex';
+  document.getElementById('editBanner').textContent = 'Editing existing user "'+u.username+'". Username cannot be changed.';
+  document.getElementById('editBanner').classList.add('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function deleteUser(username){
+  if (!confirm('Delete user "'+username+'"? This cannot be undone.')) return;
+  var list = readUsers().filter(function(u){ return u.username.toLowerCase() !== String(username).toLowerCase(); });
+  saveUsers(list);
+  if (editingUsername && editingUsername.toLowerCase() === String(username).toLowerCase()) resetForm();
+  renderUsers();
+  showMsg('User "'+username+'" deleted.', false);
+}
+
+function saveUser(){
+  var username = document.getElementById('fUsername').value.trim();
+  var password = document.getElementById('fPassword').value.trim();
+  var mobile   = document.getElementById('fMobile').value.trim();
+  var role     = document.getElementById('fRole').value;
+
+  if (!username){ showMsg('Username is required.', true); return; }
+  if (!password){ showMsg('Password is required.', true); return; }
+  if (password.length < 4){ showMsg('Password must be at least 4 characters.', true); return; }
+  if (!role){ showMsg('Role is required.', true); return; }
+
+  var list = readUsers();
+
+  if (editingUsername){
+    var idx = list.findIndex(function(u){ return u.username.toLowerCase() === editingUsername.toLowerCase(); });
+    if (idx === -1){ showMsg('User not found for update.', true); return; }
+    list[idx] = Object.assign({}, list[idx], {
+      password: password,
+      mobile: mobile,
+      role: role
+    });
+    saveUsers(list);
+    showMsg('User "'+editingUsername+'" updated successfully.', false);
+    resetForm();
+    renderUsers();
+    return;
+  }
+
+  // Add new — username must be unique
+  var dup = list.some(function(u){ return u.username.toLowerCase() === username.toLowerCase(); });
+  if (dup){ showMsg('Username "'+username+'" already exists. Choose another.', true); return; }
+
+  list.push({ username: username, password: password, mobile: mobile, role: role });
+  saveUsers(list);
+  showMsg('User "'+username+'" added successfully.', false);
+  resetForm();
+  renderUsers();
+}
+
+document.getElementById('saveBtn').addEventListener('click', saveUser);
+document.getElementById('resetBtn').addEventListener('click', resetForm);
+document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+document.getElementById('fPassword').addEventListener('keypress', function(e){ if (e.key==='Enter'){ e.preventDefault(); saveUser(); } });
+
+document.getElementById('backBtn').addEventListener('click', function(){
+  try {
+    var raw = sessionStorage.getItem('gp_logged_user');
+    var s = raw ? JSON.parse(raw) : null;
+    if (s && s.role === 'admin') { window.location.replace('gpadmin.html'); return; }
+  } catch(e){}
+  window.location.replace('index.html');
+});
+
+document.getElementById('logoutBtn').addEventListener('click', function(){
+  if (!confirm('Log out?')) return;
+  try { sessionStorage.removeItem('gp_logged_user'); sessionStorage.clear(); } catch(e){}
+  window.location.replace('index.html');
+});
+
+renderUsers();
+</script>
+</body>
+</html>

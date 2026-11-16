@@ -1,0 +1,31 @@
+{
+  "name": "GOLDPRINCE — Jewel Industry Portal",
+  "short_name": "GOLDPRINCE",
+  "description": "GoldPrince Jewel Industry India Pvt Ltd — Orders, Designs, Workshop & Stock Portal",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#900143",
+  "theme_color": "#900143",
+  "icons": [
+    {
+      "src": "icons/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

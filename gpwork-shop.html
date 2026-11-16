@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Branch Dashboard · GP Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<link href="https://db.onlinewebfonts.com/c/7182c0aa415f7a87f826dada6cd9980c?family=URW+Wood+Type+W01+D" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<link rel="stylesheet" href="gpwork-shop.css">
+<link rel="stylesheet" href="gp-chat.css">
+<!-- PWA & Web App Icon Setup -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+<script src="gp-chat.js"></script>
+</head>
+<body>
+
+<div class="session-warn hidden" id="sessionWarn"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <h1><img src="images/gplogo1.png" alt="GoldPrince" onerror="this.style.display='none'"></h1>
+    <p>JEWEL INDUSTRY INDIA PVT LTD</p> 
+  </div>
+  <div class="branch-pill" id="branchPill">
+    <i class="fas fa-store"></i> <span id="branchName">—</span>
+  </div>
+  <div class="top-actions">
+    <div class="notif-wrap">
+      <button class="notif-btn" id="notifBtn" title="New order notifications">
+        <i class="fab fa-whatsapp"></i>
+      </button>
+      <span class="notif-badge hidden" id="notifBadge">0</span>
+      <div class="notif-panel" id="notifPanel">
+        <div class="np-head">
+          <span><i class="fab fa-whatsapp"></i> New Orders</span>
+          <button class="np-close" id="notifClose">×</button>
+        </div>
+        <div class="np-body" id="notifBody">
+          <div class="notif-empty">No new order notifications.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports button -->
+    <button id="reportsBtn"><i class="fas fa-file-alt"></i> Reports</button>
+
+    <button id="stockBtn"><i class="fas fa-box-open"></i> Orders to Dispatch</button>
+    <button id="completedBtn"><i class="fas fa-truck"></i> Orders Dispatched</button>
+    <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <h2><i class="fas fa-chart-bar"></i> Overview — <span id="branchTitle">…</span></h2>
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <h2><i class="fas fa-stream"></i> Order Stages <small style="font-weight:400;color:#6c7480;font-size:12px">(processing orders only)</small></h2>
+
+  <!-- Filters bar for Order Stages -->
+  <div class="stage-filters" id="stageFilters" style="display:none">
+    <label>
+      <span>Workshop</span>
+      <select id="fWorkshop"><option value="">All Workshops</option></select>
+    </label>
+    <label>
+      <span>Product Group</span>
+      <select id="fGroup">
+        <option value="">All Groups</option>
+        <option value="3D PREMIUM IDOLS">3D PREMIUM IDOLS</option>
+        <option value="3D IDOLS">3D IDOLS</option>
+        <option value="2D IDOLS">2D IDOLS</option>
+        <option value="JEWELLERY">JEWELLERY</option>
+        <option value="GOD FRAMES">GOD FRAMES</option>
+      </select>
+    </label>
+    <label>
+      <span>From Date</span>
+      <input id="fFrom" type="date">
+    </label>
+    <label>
+      <span>To Date</span>
+      <input id="fTo" type="date">
+    </label>
+    <button class="btn" id="fReset"><i class="fas fa-undo"></i> Reset</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-stage="all">All Processing</button>
+    <button class="tab" data-stage="NEW">New</button>
+    <button class="tab" data-stage="WAX">Wax</button>
+    <button class="tab" data-stage="CASTING">Casting</button>
+    <button class="tab" data-stage="FILING">Filing</button>
+    <button class="tab" data-stage="HO">Head Office</button>
+  </div>
+
+  <div class="stage-summary-grid" id="stageSummaryGrid"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>WORKSHOP</th>
+          <th>ORDER NO.</th><th>EST. NO.</th><th>GROUP</th>
+          <th>RECEIVED</th><th>WAX</th><th>CASTING</th><th>FILING</th><th>HO</th>
+          <th>QTY</th><th>WEIGHT (g)</th><th>STAGE</th><th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody id="ordersBody"></tbody>
+      <tfoot id="ordersTfoot"></tfoot>
+    </table>
+  </div>
+</main>
+
+<div class="modal hidden" id="orderModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeOrderModal">×</button>
+    <div id="orderModalContent"></div>
+    <div class="stage-flow" id="stageFlow"></div>
+    <div id="trackBox"></div>
+    <div id="orderItemsBox"></div>
+    <div class="modal-actions">
+      <button class="btn" id="dlOrderPdfBtn"><i class="fas fa-file-pdf"></i> Order PDF</button>
+      <button class="btn" id="dlOrderExcelBtn"><i class="fas fa-file-excel"></i> Order Excel</button>
+      <button class="btn primary" id="forwardStageBtn"><i class="fas fa-arrow-right"></i> Forward</button>
+    </div>
+    <div class="message" id="stageMessage"></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="stockModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeStockModal">×</button>
+    <h2 style="color:#8c004c;margin-bottom:6px"><i class="fas fa-box-open"></i> Orders to Dispatch — Send Ready Stock to Head Office</h2>
+    <p style="color:#6c7480;margin-bottom:14px;font-size:13px">
+      Send stock <b>partially</b> if needed — Stock Qty / Weight / TOTAL WT are all editable.
+      Every Send creates a new lot. The order stays here until you click <b>Clear Order</b> in this modal.
+      Once cleared, it disappears from this list and is moved to Orders Dispatched.
+    </p>
+    <div class="table-wrap" style="max-height:60vh;overflow:auto">
+      <table style="min-width:1200px">
+        <thead>
+  <tr>
+    <th>ART NO.</th><th>PRODUCT NAME</th><th>GROUP</th><th>TOUCH</th>
+    <th>ORDER QTY</th><th>PENDING</th>
+    <th>STOCK QTY</th><th>WEIGHT (g)</th><th>TOTAL WT (g)</th>
+    <th>ACTION</th>
+  </tr>
+</thead>
+        <tbody id="stockBody"></tbody>
+        <tfoot>
+  <tr style="background:#ebe2d9;font-weight:700">
+    <td colspan="6" style="text-align:right">GRAND TOTAL:</td>
+    <td id="stockTotalQty">0</td>
+    <td></td>
+    <td id="stockTotalWeight">0.00</td>
+    <td></td>
+  </tr>
+</tfoot>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelStockBtn">Cancel</button>
+      <button class="btn green" id="sendHoAllBtn"><i class="fas fa-paper-plane"></i> Send to HO (all selected)</button>
+    </div>
+    <div class="message" id="stockMessage"></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="completedModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeCompletedModal">×</button>
+    <h2 style="color:#8c004c;margin-bottom:6px"><i class="fas fa-truck"></i> Orders Dispatched to Head Office</h2>
+    <p style="color:#6c7480;margin-bottom:14px;font-size:13px">
+      All orders sent to HO from <b><span id="completedBranchName">—</span></b>.
+      Each lot you send appears here. Use <b>Clear</b> to close an order once it is fully handled —
+      if it still has pending quantity, the order will re-appear in Orders to Dispatch as PENDING.
+    </p>
+    <div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>ORDER NO.</th><th>GROUP</th><th>ORDER QTY</th><th>ORDER WT (g)</th>
+        <th>SENT QTY (total)</th><th>SENT WT (g, total)</th>
+        <th style="background:#ffebee;color:#b3261e">PENDING QTY</th>
+        <th style="background:#ffebee;color:#b3261e">PENDING WT (g)</th>
+        <th>LOTS</th><th>LAST SENT</th><th>ACTION</th>
+      </tr>
+    </thead>
+    <tbody id="completedBody"></tbody>
+  </table>
+</div>
+    <div class="modal-actions">
+      <button class="btn green" id="exportCompletedExcelBtn"><i class="fas fa-file-excel"></i> Export All Dispatched (Excel)</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reports modal -->
+<div class="modal hidden" id="reportsModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeReportsModal">×</button>
+    <h2 style="color:#8c004c;margin-bottom:6px"><i class="fas fa-file-alt"></i> Reports — Workshop-wise &amp; Group-wise</h2>
+    <p style="color:#6c7480;margin-bottom:14px;font-size:13px">
+      Totals over all processing orders. Use the tabs below to view <b>by workshop</b> or <b>by product group</b>.
+      Grand totals are shown at the bottom of each view.
+    </p>
+
+    <div class="tabs" id="reportTabs">
+      <button class="tab active" data-report="workshop">Workshop-wise</button>
+      <button class="tab" data-report="group">Group-wise</button>
+    </div>
+
+    <div class="table-wrap" style="margin-top:14px">
+      <table>
+        <thead id="reportThead"></thead>
+        <tbody id="reportBody"></tbody>
+        <tfoot id="reportTfoot"></tfoot>
+      </table>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn green" id="exportReportsExcelBtn"><i class="fas fa-file-excel"></i> Export Report (Excel)</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div class="action-banner" id="actionBanner">
+  <div class="ab-text">
+    <span id="actionBannerText">Ready to send WhatsApp notification</span>
+    <small id="actionBannerSub">Click the button to open WhatsApp with a pre-filled message.</small>
+  </div>
+  <button id="actionBannerBtn"><i class="fab fa-whatsapp"></i> Send WhatsApp</button>
+  <button class="dismiss" id="actionBannerDismiss">Dismiss</button>
+</div>
+
+<script src="gpwork-shop.js"></script>
+</body>
+</html>

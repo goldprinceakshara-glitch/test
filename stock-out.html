@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Out / Hold Stock - Stock Inventory</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- PWA & Web App Icon Setup -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+    <meta name="theme-color" content="#900143">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="GOLDPRINCE">
+
+    <!-- Libraries for PDF & Excel export with images -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1><i class="fas fa-arrow-up"></i> Stock Out / Hold Stock</h1>
+
+    <!-- ============ MODE TABS ============ -->
+    <div class="mode-tabs">
+        <button id="tabStockOut" class="active" onclick="switchMode('stockout')">
+            <i class="fas fa-arrow-up"></i> Stock Out
+        </button>
+        <button id="tabHoldStock" class="hold" onclick="switchMode('holdstock')">
+            <i class="fas fa-pause-circle"></i> Hold Stock
+        </button>
+        <button id="tabHeldStock" class="held-list" onclick="switchMode('heldstock')">
+            <i class="fas fa-clipboard-list"></i> Held Stock
+        </button>
+    </div>
+
+    <!-- ============================================================
+         PANEL 1 — STOCK OUT
+         ============================================================ -->
+    <div class="mode-panel active" id="panelStockOut">
+        <div class="card">
+            <div class="section-header">
+                <h2><i class="fas fa-plus-circle"></i> New Stock Out Entry</h2>
+                <div class="actions">
+                    <button class="outline" onclick="downloadTemplate()"><i class="fas fa-download"></i> Template</button>
+                    <button class="outline" onclick="document.getElementById('excelImportInput').click()"><i class="fas fa-file-excel"></i> Import Excel</button>
+                    <button class="outline" id="txnDetailsToggleBtn" onclick="toggleTransactionsDetails()">
+                        <i class="fas fa-eye"></i> Stock Out Transaction Details
+                    </button>
+                </div>
+            </div>
+            <input type="file" id="excelImportInput" accept=".csv,.xlsx,.xls" style="display:none;">
+
+            <!-- STEP 1: Party Details -->
+            <div style="background:#faf9f9; padding:15px; border-radius:12px; margin-bottom:15px;">
+                <div style="font-weight:700; color:#770836; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-user"></i> Step 1: Party Details
+                </div>
+                <div class="form-grid">
+                    <div class="form-group party-field">
+                        <label>Select Party *</label>
+                        <div class="searchable-select" id="partySearchWrap">
+                            <div class="searchable-select-input">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="fPartySearch"
+                                       placeholder="Type to search party by ID or name..."
+                                       autocomplete="off" spellcheck="false">
+                                <input type="hidden" id="fParty" value="">
+                                <button type="button" class="clear-btn" id="fPartyClearBtn" title="Clear">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="searchable-select-list" id="partyList" role="listbox"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Party Name</label>
+                        <input type="text" id="fPartyName" readonly style="background:#f7f0f4;">
+                    </div>
+                    <div class="form-group">
+                        <label>Cell No</label>
+                        <input type="text" id="fPartyCell" readonly style="background:#f7f0f4;">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Address</label>
+                        <input type="text" id="fPartyAddress" readonly style="background:#f7f0f4;">
+                    </div>
+                    <div class="form-group">
+                        <label>Estimation / Reference No</label>
+                        <input type="text" id="fInvoiceNo" placeholder="EST-2025-0001" style="background:#f5f0f2; font-weight:600; color:#5f0637;">
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="fDate">
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Add Products -->
+            <div style="background:#f5f1f3; padding:15px; border-radius:12px; margin-bottom:15px;">
+                <div style="font-weight:700; color:#5f0624; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-box"></i> Step 2: Add Products to this Party
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1; min-width:150px;">
+                        <label>Art Number *</label>
+                        <input type="text" id="pArt" list="artList" placeholder="e.g., A101" autocomplete="off">
+                        <datalist id="artList"></datalist>
+                    </div>
+                    <div class="form-group" style="flex:1; min-width:150px;">
+                        <label>Product Name</label>
+                        <input type="text" id="pName" readonly style="background:#f8f6f7;">
+                    </div>
+                    <div class="form-group" style="min-width:100px;">
+                        <label>Available</label>
+                        <input type="text" id="pAvailable" readonly style="background:#f9f1f7; color:#10b981; font-weight:bold;">
+                    </div>
+                    <div class="form-group" style="min-width:90px;">
+                        <label>Quantity *</label>
+                        <input type="number" id="pQty" value="1" min="1">
+                    </div>
+                    <div class="form-group" style="min-width:110px;">
+                        <label>Weight (g)</label>
+                        <input type="number" id="pWeight" value="0" step="0.01">
+                    </div>
+                    <div class="form-group" style="min-width:110px;">
+                        <label>Group</label>
+                        <input type="text" id="pGroup" readonly style="background:#f7f0f4;">
+                    </div>
+                    <button onclick="addProductToCart()" style="height:42px;"><i class="fas fa-cart-plus"></i> Add Item</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Cart Items -->
+            <div style="border:2px dashed #cbd5e1; border-radius:12px; padding:15px; margin-bottom:15px;">
+                <div style="font-weight:700; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="fas fa-shopping-cart"></i> Step 3: Items in this transaction</span>
+                    <span class="badge" id="cartCount">0 items</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Art No</th>
+                                <th>Product Name</th>
+                                <th>Quantity</th>
+                                <th>Weight (g)</th>
+                                <th>Group</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cartBody">
+                            <tr><td colspan="6" class="empty-message">No items added yet. Add products above.</td></tr>
+                        </tbody>
+                        <tfoot id="cartFooter" style="display:none;">
+                            <tr style="background:#f8fafc; font-weight:700;">
+                                <td colspan="2" style="text-align:right;">TOTALS:</td>
+                                <td id="cartTotalQty">0</td>
+                                <td id="cartTotalWeight">0.00</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="actions" style="justify-content:flex-end;">
+                <button class="outline" onclick="resetStockOutForm()"><i class="fas fa-times"></i> Clear Form</button>
+                <button class="outline" onclick="openPreview()"><i class="fas fa-eye"></i> Preview</button>
+                <button class="danger" onclick="openPreview()"><i class="fas fa-save"></i> Save Stock Out Transaction</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         PANEL 2 — HOLD STOCK ENTRY
+         ============================================================ -->
+    <div class="mode-panel" id="panelHoldStock">
+        <div class="card">
+            <div class="section-header">
+                <h2><i class="fas fa-pause-circle"></i> Hold Stock Entry</h2>
+                <div class="actions">
+                    <button class="outline" onclick="downloadHoldTemplate()"><i class="fas fa-download"></i> Hold Template</button>
+                    <button class="outline" onclick="document.getElementById('holdExcelImportInput').click()"><i class="fas fa-file-excel"></i> Import Excel</button>
+                </div>
+            </div>
+            <input type="file" id="holdExcelImportInput" accept=".csv,.xlsx,.xls" style="display:none;">
+
+            <div style="background:linear-gradient(#fff,#f5e7e9); padding:15px; border-radius:12px; margin-bottom:15px;">
+                <div style="font-weight:700; color:#92400e; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-user"></i> Step 1: Party Details
+                </div>
+                <div class="form-grid">
+                    <div class="form-group party-field">
+                        <label>Select Party *</label>
+                        <div class="searchable-select" id="hPartySearchWrap">
+                            <div class="searchable-select-input">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="hPartySearch"
+                                       placeholder="Type to search party by ID or name..."
+                                       autocomplete="off" spellcheck="false">
+                                <input type="hidden" id="hParty" value="">
+                                <button type="button" class="clear-btn" id="hPartyClearBtn" title="Clear">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="searchable-select-list" id="hPartyList" role="listbox"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Party Name</label>
+                        <input type="text" id="hPartyName" readonly style="background:#f7f0f4;">
+                    </div>
+                    <div class="form-group">
+                        <label>Cell No</label>
+                        <input type="text" id="hPartyCell" readonly style="background:#f7f0f4;">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Address</label>
+                        <input type="text" id="hPartyAddress" readonly style="background:#f7f0f4;">
+                    </div>
+                </div>
+            </div>
+
+            <div style="background:linear-gradient(#fff,#f5e7e9); padding:15px; border-radius:12px; margin-bottom:15px;">
+                <div style="font-weight:700; color:#92400e; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-box"></i> Step 2: Add Products to Hold
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1; min-width:150px;">
+                        <label>Art Number *</label>
+                        <input type="text" id="hArt" list="artListHold" placeholder="e.g., A101" autocomplete="off">
+                        <datalist id="artListHold"></datalist>
+                    </div>
+                    <div class="form-group" style="flex:1; min-width:150px;">
+                        <label>Product Name</label>
+                        <input type="text" id="hName" readonly style="background:#f7f0f4;">
+                    </div>
+                    <div class="form-group" style="min-width:100px;">
+                        <label>Available</label>
+                        <input type="text" id="hAvailable" readonly style="background:#f7f0f4; color:#10b981; font-weight:bold;">
+                    </div>
+                    <div class="form-group" style="min-width:90px;">
+                        <label>Quantity *</label>
+                        <input type="number" id="hQty" value="1" min="1">
+                    </div>
+                    <div class="form-group" style="min-width:110px;">
+                        <label>Weight (g)</label>
+                        <input type="number" id="hWeight" value="0" step="0.01">
+                    </div>
+                    <div class="form-group" style="min-width:110px;">
+                        <label>Group</label>
+                        <input type="text" id="hGroup" readonly style="background:#f7f0f4;">
+                    </div>
+                    <button onclick="addHoldItem()" style="height:42px;"><i class="fas fa-cart-plus"></i> Add to Hold</button>
+                </div>
+            </div>
+
+            <div style="border:2px dashed linear-gradient(#fff,#f5e7e9); border-radius:12px; padding:15px; margin-bottom:15px;">
+                <div style="font-weight:700; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="fas fa-pause-circle"></i> Step 3: Items held for this party</span>
+                    <span class="hold-badge" id="holdTotals">Qty: 0 · Weight: 0.00g</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Art No</th>
+                                <th>Product Name</th>
+                                <th>Quantity</th>
+                                <th>Weight (g)</th>
+                                <th>Group</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="holdBody">
+                            <tr><td colspan="6" class="empty-message">No items held for this party yet.</td></tr>
+                        </tbody>
+                        <tfoot id="holdFooter" style="display:none;">
+                            <tr style="background:#8b175b; font-weight:700;">
+                                <td colspan="2" style="text-align:right;">GRAND TOTALS:</td>
+                                <td id="holdTotalQty">0</td>
+                                <td id="holdTotalWeight">0.00</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="actions" style="justify-content:flex-end;">
+                <button class="outline" onclick="resetHoldForm()"><i class="fas fa-times"></i> Clear</button>
+                <button class="success" onclick="saveHoldForParty()"><i class="fas fa-save"></i> Save Hold</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         PANEL 3 — HELD STOCK LIST
+         ============================================================ -->
+    <div class="mode-panel" id="panelHeldStock">
+        <div class="card">
+            <div class="section-header">
+                <h2><i class="fas fa-clipboard-list"></i> Held Stock (by Party)</h2>
+                <div class="actions">
+                    <button class="outline" id="heldDetailsToggleBtn" onclick="toggleHeldDetails()">
+                        <i class="fas fa-eye"></i> Details
+                    </button>
+                </div>
+            </div>
+
+            <div id="heldStockDetails" style="display:none;">
+                <!-- Filters -->
+                <div class="form-row" style="margin-bottom:18px; align-items:flex-end;">
+                    <div class="form-group" style="flex:1 1 160px; min-width:140px;">
+                        <label>Party Name</label>
+                        <input type="text" id="heldFilterParty" placeholder="Party name / ID">
+                    </div>
+                    <div class="form-group" style="flex:1 1 140px; min-width:130px;">
+                        <label>Product Group</label>
+                        <select id="heldFilterGroup">
+                            <option value="">All Groups</option>
+                            <option value="Antique">Antique</option>
+                            <option value="Premium">Premium</option>
+                            <option value="GJ">GJ</option>
+                            <option value="Kundan">Kundan</option>
+                            <option value="Gatti">Gatti</option>
+                            <option value="Meenakari">Meenakari</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:1 1 140px; min-width:130px;">
+                        <label>Category</label>
+                        <select id="heldFilterCategory">
+                            <option value="">All Categories</option>
+                            <option value="3D Idols">3D Idols</option>
+                            <option value="3D Premium Idols">3D Premium Idols</option>
+                            <option value="2D Idols">2D Idols</option>
+                            <option value="Jewellery">Jewellery</option>
+                            <option value="God frames">God frames</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:1 1 150px; min-width:140px;">
+                        <label>Date</label>
+                        <input type="date" id="heldFilterDate">
+                    </div>
+                    <div class="form-group" style="flex:0 0 auto;">
+                        <label>&nbsp;</label>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="outline" onclick="clearHeldFilters()"><i class="fas fa-times"></i> Clear</button>
+                            <button class="outline" onclick="exportHeldStock()"><i class="fas fa-file-excel"></i> Export Excel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hold-grand-total" id="holdGrandTotal">
+                    <div class="hgt-item">
+                        <span class="hgt-label">Total Held Quantity</span>
+                        <span class="hgt-value" id="grandHeldQty">0</span>
+                    </div>
+                    <div class="hgt-item">
+                        <span class="hgt-label">Total Held Weight (g)</span>
+                        <span class="hgt-value" id="grandHeldWeight">0.00</span>
+                    </div>
+                    <div class="hgt-item">
+                        <span class="hgt-label">Parties Holding Stock</span>
+                        <span class="hgt-value" id="grandHeldParties">0</span>
+                    </div>
+                </div>
+
+                <!-- Party-wise sub-totals -->
+                <h3 style="font-size:1rem; color:var(--brand-dark); margin:15px 0 10px;">
+                    <i class="fas fa-user"></i> Party-wise Sub Totals
+                </h3>
+                <div id="heldPartySubtotals" class="summary-stats" style="margin-bottom:20px;"></div>
+
+                <div id="heldStockList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     PREVIEW MODAL — Estimation
+     ============================================================ -->
+<div class="modal-overlay" id="previewModal">
+    <div class="modal" style="max-width:900px;">
+        <h2><i class="fas fa-file-invoice"></i> Estimation Preview</h2>
+
+        <!-- Header: Left = Est No + Date, Right = Party -->
+        <div style="display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:15px; padding:15px; background:#faf9f9; border-radius:12px;">
+            <div style="flex:1; min-width:220px;">
+                <div style="font-size:0.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Estimation No</div>
+                <div style="font-size:1.2rem; font-weight:800; color:var(--brand-dark);" id="previewEstNo">-</div>
+                <div style="margin-top:8px; font-size:0.85rem; color:var(--muted);">
+                    <i class="fas fa-calendar"></i> Date: <strong id="previewDate">-</strong>
+                </div>
+            </div>
+            <div style="flex:1; min-width:220px; text-align:right;">
+                <div style="font-size:0.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Party</div>
+                <div style="font-size:1.2rem; font-weight:800; color:var(--brand-dark);" id="previewPartyName">-</div>
+                <div style="margin-top:6px; font-size:0.85rem;" id="previewPartyCell">-</div>
+                <div style="margin-top:4px; font-size:0.82rem; color:var(--muted);" id="previewPartyAddress">-</div>
+            </div>
+        </div>
+
+        <!-- Items table -->
+        <div class="table-wrap" style="max-height:400px; overflow-y:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Art No</th>
+                        <th>Product Name</th>
+                        <th>Qty</th>
+                        <th>Weight (g)</th>
+                        <th>Image</th>
+                    </tr>
+                </thead>
+                <tbody id="previewItemsBody"></tbody>
+                <tfoot>
+                    <tr style="background:#f3f0f1; font-weight:800; color:var(--brand-dark);">
+                        <td colspan="2" style="text-align:right;">GRAND TOTAL</td>
+                        <td id="previewTotalQty">0</td>
+                        <td id="previewTotalWeight">0.00</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="actions" style="margin-top:20px;">
+            <button class="outline" onclick="closePreview()">Back to Edit</button>
+            <button class="danger" onclick="confirmSaveFromPreview()">
+                <i class="fas fa-check"></i> Confirm & Save
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     TRANSACTIONS DETAILS MODAL
+     ============================================================ -->
+<div class="modal-overlay" id="transactionsDetailsModal">
+    <div class="modal" style="max-width: 1200px; width: 95%;">
+        <div class="section-header" style="margin-bottom: 20px;">
+            <h2><i class="fas fa-list"></i> Stock Out Transactions</h2>
+            <div class="actions">
+                <button class="outline" onclick="closeTransactionsDetails()"><i class="fas fa-times"></i> Close</button>
+            </div>
+        </div>
+        
+        <!-- Filters + Export toolbar -->
+        <div class="form-row" style="margin-bottom:18px; align-items:flex-end;">
+            <div class="form-group" style="flex:1 1 160px; min-width:140px;">
+                <label>Estimation</label>
+                <input type="text" id="txnFilterEst" placeholder="EST-...">
+            </div>
+            <div class="form-group" style="flex:1 1 150px; min-width:140px;">
+                <label>Date</label>
+                <input type="date" id="txnFilterDate">
+            </div>
+            <div class="form-group" style="flex:1 1 150px; min-width:140px;">
+                <label>Party</label>
+                <input type="text" id="txnFilterParty" placeholder="Party name / ID">
+            </div>
+            <div class="form-group" style="flex:1 1 140px; min-width:130px;">
+                <label>Product Name</label>
+                <input type="text" id="txnFilterName" placeholder="Search product">
+            </div>
+            <div class="form-group" style="flex:1 1 130px; min-width:120px;">
+                <label>Category</label>
+                <select id="txnFilterCategory">
+                    <option value="">All Categories</option>
+                    <option value="3D Idols">3D Idols</option>
+                    <option value="3D Premium Idols">3D Premium Idols</option>
+                    <option value="2D Idols">2D Idols</option>
+                    <option value="Jewellery">Jewellery</option>
+                    <option value="God frames">God frames</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex:1 1 130px; min-width:120px;">
+                <label>Product Group</label>
+                <select id="txnFilterGroup">
+                    <option value="">All Groups</option>
+                    <option value="Antique">Antique</option>
+                    <option value="Premium">Premium</option>
+                    <option value="GJ">GJ</option>
+                    <option value="Kundan">Kundan</option>
+                    <option value="Gatti">Gatti</option>
+                    <option value="Meenakari">Meenakari</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex:0 0 auto;">
+                <label>&nbsp;</label>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="outline" onclick="clearTxnFilters()"><i class="fas fa-times"></i> Clear</button>
+                    <button class="outline" onclick="printTransactions()"><i class="fas fa-print"></i> Print</button>
+                    <button class="outline" onclick="downloadTxnsPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+                    <button class="outline" onclick="downloadTxnsExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="transactionsList" style="max-height: 60vh; overflow-y: auto; padding-right: 5px;"></div>
+    </div>
+</div>
+
+<div class="toast-msg" id="toastMsg"></div>
+
+<script src="data.js"></script>
+<script src="stockOut.js"></script>
+</body>
+</html>

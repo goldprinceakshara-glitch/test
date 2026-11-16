@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<!-- saved from url=(0049)file:///F:\sudha\orders\gpmain.html -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>User Dashboard · GP Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://db.onlinewebfonts.com/c/7182c0aa415f7a87f826dada6cd9980c?family=URW+Wood+Type+W01+D" rel="stylesheet">
+<link rel="stylesheet" href="mystyle.css">
+<link rel="stylesheet" href="gp-chat.css">
+<script src="gp-chat.js"></script>
+
+<!-- PWA & Web App Icon Setup -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,system-ui,sans-serif}
+body{min-height:100vh;background-color:rgb(240,235,241);color:#1f2937}
+
+.header{display:flex;justify-content:space-between;align-items:center;
+  background:rgba(255,255,255,.06);backdrop-filter:blur(12px);
+  width:100%;border:1px solid rgba(255,255,255,.1);
+  margin-bottom:.2rem;flex-wrap:wrap;}
+
+.btn{padding:.7rem 1.3rem;border:none;border-radius:2rem;font-weight:500;font-size:.9rem;
+  cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:all .2s}
+.btn-danger{background:rgba(240, 211, 230, 0.15);color:#860747;border:1px solid #ff6b6b50}
+.btn-danger:hover{background:rgba(255,107,107,.25);color:#7f1d1d}
+
+.panel{background:rgba(255,255,255,.06);backdrop-filter:blur(12px);
+  padding:2rem;border-radius:2rem;border:1px solid rgba(255,255,255,.08)}
+.panel h2{font-size:1.2rem;font-weight:500;margin-bottom:1rem;
+  display:flex;align-items:center;gap:.6rem}
+.panel p{color:#4b5563;font-size:.95rem;line-height:1.6}
+.badge{padding:.5rem 1rem;background:rgba(240, 211, 230, 0.15);color:#47052a;
+  border-radius:2rem;border:1px solid #ff3cce50;font-size:.85rem;font-weight:500;
+  display:inline-flex;align-items:center;gap:.35rem}
+
+/* Logo block: image on top, company name underneath */
+.logo{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin:0;padding:0}
+.logo > img{height:3rem;width:auto;max-height:3rem;object-fit:contain;display:block}
+.logo > p{margin:0;font-size:12px;font-weight:700;color:#4e4e4e;letter-spacing:.3px;line-height:1.2}
+
+/* Nav links gap */
+.nav-links{display:flex;align-items:center;gap:14px}
+.nav-links > a,.nav-links .menu_bar{margin:0}
+
+/* User actions (new) */
+.user-actions{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+
+@media(max-width:760px){
+  .logo > img{height:2.4rem;max-height:2.4rem}
+  .logo > p{font-size:10px}
+  .nav-links{gap:8px}
+}
+
+/* ---- MOBILE NAV: tap-friendly dropdowns ---- */
+@media (max-width: 100px){
+  .navbar{flex-direction:column;align-items:stretch;gap:10px}
+  .nav-links{width:100%}
+  .menu_bar ul{flex-direction:column;width:100%}
+  .menu_bar li{width:100%}
+  .menu_bar li > a{display:block;width:100%;padding:12px 14px;
+    border-bottom:1px solid rgba(0,0,0,.06)}
+
+  .dropdown_menu,
+  .dropdown_menu-1{
+    position:static !important;display:none;width:100%;
+    box-shadow:none;border:1px solid rgba(0,0,0,.08);
+    border-radius:8px;margin:4px 0 8px;
+  }
+  .menu_bar li:focus-within > .dropdown_menu,
+  .menu_bar li:focus-within > .dropdown_menu-1,
+  .menu_bar li:active > .dropdown_menu,
+  .menu_bar li:active > .dropdown_menu-1{display:block !important}
+  .dropdown_menu-1{margin-left:14px}
+}
+@media (max-width: 900px){
+  .menu_bar li.open > .dropdown_menu,
+  .menu_bar li.open > .dropdown_menu-1{display:block !important}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= HEADER (FIXED) ================= -->
+<header>
+  <div class="container">
+    <div class="navbar">
+
+      <!-- Brand mark (left) -->
+      <div class="brand">
+        <img src="images/gp-gold42.png" alt="GP brand" class="logo1-img">
+      </div>
+
+      <!-- Logo + company name (center) -->
+      <div class="logo">
+        <img src="images/gplogo1.png" alt="GoldPrince"
+             onerror="this.style.display='none'">
+        <p>JEWEL INDUSTRY INDIA PVT LTD</p>
+      </div>
+
+      <!-- Navigation (center-right) -->
+      <nav class="nav-links" aria-label="Primary">
+        <div class="menu_bar">
+          <ul>
+            
+            <li>
+              <a href="ORDERFORM.html">
+                Orders <i class="fas fa-shopping-cart"></i>
+              </a>
+            </li>
+            <li>
+              <a href="stock index.html">
+                Stock Inventory <i class="fas fa-tachometer-alt"></i>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- User info + logout (right) -->
+      <div class="user-actions">
+        <span class="badge">
+          <i class="fas fa-user"></i>
+          <span id="userName">User</span>
+        </span>
+        <button class="btn btn-danger" id="logoutBtn" type="button">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+
+    </div>
+  </div>
+</header>
+<!-- =============== END HEADER (FIXED) =============== -->
+
+<script>
+(function () {
+  if (window.__GP_LOGGING_OUT__) return;
+  function checkSession() {
+    var s = null;
+    try { s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null'); } catch (e) {}
+    if (!s || !s.username) {
+      try { sessionStorage.clear(); } catch (e) {}
+      window.location.replace('index.html?t=' + Date.now());
+      return false;
+    }
+    if (s.role !== 'user') {
+      if (s.role === 'admin')    { window.location.replace('gpadmin.html');     return false; }
+      if (s.role === 'workshop') { window.location.replace('gpwork-shop.html'); return false; }
+      try { sessionStorage.clear(); } catch (e) {}
+      window.location.replace('index.html?t=' + Date.now());
+      return false;
+    }
+    return true;
+  }
+  if (!checkSession()) return;
+  window.addEventListener('pageshow', function () { checkSession(); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') checkSession();
+  });
+  window.addEventListener('focus', function () { checkSession(); });
+})();
+</script>
+
+<script>
+var logged = null;
+try { logged = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null'); } catch (e) {}
+if (logged && logged.username) document.getElementById('userName').textContent = logged.username;
+
+document.getElementById('logoutBtn').addEventListener('click', function () {
+  if (!confirm('Log out of GP Portal?')) return;
+  window.__GP_LOGGING_OUT__ = true;
+  try { sessionStorage.clear(); } catch (e) {}
+  var target = 'index.html?t=' + Date.now() + '&logout=1';
+  window.location.href = target;
+  setTimeout(function () {
+    if (window.location.pathname.indexOf('index.html') === -1) window.location.replace(target);
+  }, 50);
+});
+
+// ---------- HELPERS ----------
+function showToast(msg, type = '') {
+    let toast = document.getElementById('toastMsg');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toastMsg';
+        toast.className = 'toast-msg';
+        document.body.appendChild(toast);
+    }
+    toast.className = 'toast-msg ' + type;
+    toast.innerText = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function exportToCSV(filename, headers, rows) {
+    let csv = headers.join(',') + '\n';
+    rows.forEach(row => {
+        csv += row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',') + '\n';
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Exported successfully', 'success');
+}
+
+function parseCSV(text) {
+    const lines = text.split('\n').filter(l => l.trim());
+    if (lines.length < 2) return [];
+    const firstLine = lines[0].replace(/^\uFEFF/, '');
+    const headers = firstLine.split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g) || [];
+        const clean = values.map(v => v.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+        const row = {};
+        headers.forEach((h, idx) => { row[h] = clean[idx] || ''; });
+        rows.push(row);
+    }
+    return rows;
+}
+
+function buildNavbar() {
+    const currentPage = window.location.pathname.split('/').pop() || 'stock index.html';
+    const links = [
+        { href: 'stock index.html',  label: 'Home',      icon: 'fa-home' },
+        { href: 'catalogue.html',    label: 'Catalogue', icon: 'fa-book' },
+        { href: 'opening-stock.html',label: 'Orders',    icon: 'fa-archive' },
+    ];
+    const nav = document.createElement('div');
+    nav.className = 'navbar';
+    nav.innerHTML = `
+        <div class="brand"><i class="fas fa-boxes"></i> Stock Inventory</div>
+        <div class="nav-links">
+            ${links.map(l => `
+                <a href="${l.href}" class="${currentPage === l.href ? 'active' : ''}">
+                    <i class="fas ${l.icon}"></i> ${l.label}
+                </a>
+            `).join('')}
+        </div>
+    `;
+    document.body.insertBefore(nav, document.body.firstChild);
+}
+
+/* MOBILE: tap-to-open mega-menu */
+(function () {
+  function isMobileNav() { return window.innerWidth <= 900; }
+  document.querySelectorAll('.menu_bar > ul > li').forEach(function (li) {
+    var directLink = li.querySelector(':scope > a');
+    if (!directLink) return;
+    var hasSub = li.querySelector('.dropdown_menu, .dropdown_menu-1');
+    if (!hasSub) return;
+    directLink.addEventListener('click', function (e) {
+      if (!isMobileNav()) return;
+      e.preventDefault();
+      e.stopPropagation();
+      li.classList.toggle('open');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

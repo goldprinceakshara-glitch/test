@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock In - Stock Inventory</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- PWA & Web App Icon Setup -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+    <meta name="theme-color" content="#900143">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="GOLDPRINCE">
+
+    <!-- Libraries for PDF & Excel export with images -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1><i class="fas fa-arrow-down"></i> Stock In</h1>
+
+    <div class="card">
+        <div class="section-header">
+            <h2><i class="fas fa-list"></i> Stock In Records</h2>
+            <div class="actions">
+                <button onclick="openAddModal()"><i class="fas fa-plus"></i> Add Stock In</button>
+                <button class="outline" id="detailsToggleBtn" onclick="toggleStockInDetails()">
+                    <i class="fas fa-eye"></i> Details
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= COLLAPSIBLE DETAILS SECTION ================= -->
+        <div id="stockInDetails" style="display:none;">
+
+            <!-- Filters + Download toolbar -->
+            <div class="form-row" style="margin-bottom:18px; align-items:flex-end;">
+                <div class="form-group" style="flex:1 1 160px; min-width:140px;">
+                    <label>Root Card No</label>
+                    <input type="text" id="filterRootCard" placeholder="e.g., RC001">
+                </div>
+                <div class="form-group" style="flex:1 1 160px; min-width:140px;">
+                    <label>Product Name</label>
+                    <input type="text" id="filterName" placeholder="Search name / art no">
+                </div>
+                <div class="form-group" style="flex:1 1 140px; min-width:130px;">
+                    <label>Category</label>
+                    <select id="filterCategory">
+                        <option value="">All Categories</option>
+                        <option value="3D Idols">3D Idols</option>
+                        <option value="3D Premium Idols">3D Premium Idols</option>
+                        <option value="2D Idols">2D Idols</option>
+                        <option value="Jewellery">Jewellery</option>
+                        <option value="God frames">God frames</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:1 1 140px; min-width:130px;">
+                    <label>Product Group</label>
+                    <select id="filterGroup">
+                        <option value="">All Groups</option>
+                        <option value="Antique">Antique</option>
+                        <option value="Premium">Premium</option>
+                        <option value="GJ">GJ</option>
+                        <option value="Kundan">Kundan</option>
+                        <option value="Gatti">Gatti</option>
+                        <option value="Meenakari">Meenakari</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:1 1 150px; min-width:140px;">
+                    <label>Date</label>
+                    <input type="date" id="filterDate">
+                </div>
+                <div class="form-group" style="flex:0 0 auto;">
+                    <label>&nbsp;</label>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="outline" onclick="clearFilters()"><i class="fas fa-times"></i> Clear</button>
+                        <button class="outline" onclick="downloadFilteredPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+                        <button class="outline" onclick="downloadFilteredExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk toolbar -->
+            <div class="actions" style="margin-bottom:15px;">
+                <button class="outline" onclick="downloadTemplate()"><i class="fas fa-download"></i> Template</button>
+                <button class="outline" onclick="document.getElementById('excelInput').click()"><i class="fas fa-file-import"></i> Import Excel</button>
+                <button class="outline" onclick="exportData()"><i class="fas fa-file-export"></i> Export CSV</button>
+            </div>
+            <input type="file" id="excelInput" accept=".csv,.xlsx,.xls" style="display:none;">
+
+            <!-- Records grouped by Root Card / Date with subtotal rows under table -->
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Root Card No</th>
+                            <th>Date</th>
+                            <th>Art No</th>
+                            <th>Product Name</th>
+                            <th>Category</th>
+                            <th>Quantity</th>
+                            <th>Weight (g)</th>
+                            <th>Product Group</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockInBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Grand total quick summary -->
+            <div class="summary-stats" style="margin-top:20px;">
+                <div class="stat">
+                    <span>Showing Rows</span>
+                    <strong id="filteredCount">0</strong>
+                </div>
+                <div class="stat green">
+                    <span>Grand Total Quantity</span>
+                    <strong id="grandTotalQty">0</strong>
+                </div>
+                <div class="stat orange">
+                    <span>Grand Total Weight (g)</span>
+                    <strong id="grandTotalWeight">0.00</strong>
+                </div>
+            </div>
+        </div>
+        <!-- ================= /COLLAPSIBLE DETAILS SECTION ================= -->
+
+    </div>
+</div>
+
+<!-- ============================================================
+     ADD STOCK IN MODAL — Root Card + Date + Continuous Entry
+     ============================================================ -->
+<div class="modal-overlay" id="stockInModal">
+    <div class="modal" style="max-width:780px;">
+        <h2 id="modalTitle"><i class="fas fa-plus-circle"></i> Add Stock In</h2>
+
+        <!-- Header: Root Card + Date -->
+        <div class="form-grid" style="margin-bottom:15px;">
+            <div class="form-group">
+                <label>Root Card No *</label>
+                <input type="text" id="fRootCard" placeholder="e.g., RC001" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Date *</label>
+                <input type="date" id="fDate">
+            </div>
+        </div>
+
+        <hr style="border:none; border-top:1px dashed var(--border-strong); margin:15px 0;">
+
+        <!-- Continuous item entry -->
+        <h3 style="font-size:1rem; color:var(--brand-dark); margin-bottom:10px;">
+            <i class="fas fa-barcode"></i> Add Items (press Enter to move Art → Qty → Weight → Add)
+        </h3>
+        <div class="form-grid" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Art Number *</label>
+                <input type="text" id="fArt" list="artList" placeholder="e.g., A101" autocomplete="off">
+                <datalist id="artList"></datalist>
+                <div id="fArtHint"
+                     style="display:none; margin-top:6px; font-size:0.78rem; color:#7a0138;
+                            background:#fceef5; border:1px solid #e7b9c6;
+                            padding:6px 10px; border-radius:8px; line-height:1.4;"></div>
+            </div>
+            <div class="form-group">
+                <label>Product Name</label>
+                <input type="text" id="fName" readonly style="background:#f1f5f9;">
+            </div>
+            <div class="form-group">
+                <label>Quantity *</label>
+                <input type="number" id="fQty" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>Weight (g)</label>
+                <input type="number" id="fWeight" value="0" step="0.01">
+            </div>
+        </div>
+
+        <div class="actions" style="margin-bottom:15px;">
+            <button class="outline" onclick="addItemToList()">
+                <i class="fas fa-plus"></i> Add Item to List
+            </button>
+        </div>
+
+        <!-- Live item list preview -->
+        <h3 style="font-size:1rem; color:var(--brand-dark); margin-bottom:10px;">
+            <i class="fas fa-list-ol"></i> Items in this Root Card
+            <span id="itemCountBadge" class="badge" style="margin-left:8px;">0 items</span>
+        </h3>
+        <div class="table-wrap" style="max-height:220px; overflow-y:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Art No</th>
+                        <th>Product Name</th>
+                        <th>Qty</th>
+                        <th>Weight (g)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="pendingItemsBody">
+                    <tr><td colspan="5" class="empty-message">No items yet — add one above</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary-stats" style="margin-top:12px;">
+            <div class="stat green">
+                <span>Pending Qty</span>
+                <strong id="pendingTotalQty">0</strong>
+            </div>
+            <div class="stat orange">
+                <span>Pending Weight (g)</span>
+                <strong id="pendingTotalWeight">0.00</strong>
+            </div>
+        </div>
+
+        <div class="actions" style="margin-top:20px;">
+            <button class="outline" onclick="closeModal()">Cancel</button>
+            <button class="success" onclick="prepareConfirmation()">
+                <i class="fas fa-save"></i> Save
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     CONFIRMATION MODAL — shows summary before committing
+     ============================================================ -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal" style="max-width:780px;">
+        <h2><i class="fas fa-check-circle"></i> Confirm Stock In</h2>
+
+        <div class="summary-stats" style="margin-bottom:15px;">
+            <div class="stat">
+                <span>Root Card No</span>
+                <strong id="confirmRootCard">-</strong>
+            </div>
+            <div class="stat">
+                <span>Date</span>
+                <strong id="confirmDate">-</strong>
+            </div>
+        </div>
+
+        <div class="table-wrap" style="max-height:300px; overflow-y:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Art No</th>
+                        <th>Product Name</th>
+                        <th>Quantity</th>
+                        <th>Weight (g)</th>
+                    </tr>
+                </thead>
+                <tbody id="confirmItemsBody"></tbody>
+                <tfoot>
+                    <tr style="background:#f3f0f1; font-weight:800; color:var(--brand-dark);">
+                        <td colspan="2" style="text-align:right;">GRAND TOTAL</td>
+                        <td id="confirmTotalQty">0</td>
+                        <td id="confirmTotalWeight">0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="actions" style="margin-top:20px;">
+            <button class="outline" onclick="closeConfirm()">Back</button>
+            <button class="success" onclick="commitStockIn()">
+                <i class="fas fa-check"></i> Confirm & Save
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-msg" id="toastMsg"></div>
+
+<script src="data.js"></script>
+<script src="stockIn.js"></script>
+</body>
+</html>

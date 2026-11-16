@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOLDPRINCE - PARTY MASTER</title>
+  <link href="https://db.onlinewebfonts.com/c/7182c0aa415f7a87f826dada6cd9980c?family=URW+Wood+Type+W01+D" rel="stylesheet">
+  <!-- PWA & Web App Icon Setup -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+  <style>
+    *{box-sizing:border-box}
+    :root{
+      --purple:#8c004c;--purple-dark:#8c004c;--peach:#f7f3f4;--border:#c6cbd3;
+      --bg:#f4f5f7;--white:#fff;--text:#252a31;--muted:#6c7480;--danger:#b3261e;--green:#8c004c;
+    }
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+    .topbar{min-height:70px;padding:8px 22px;background:var(--peach);border-bottom:1px solid #bca48f;
+      display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand img{width:60px;height:60px;object-fit:contain}
+    .brand h1{margin:0;padding:0;display:flex;align-items:center;justify-content:center;height:44px}
+    .brand h1 img{height:100%;width:auto;max-height:44px;object-fit:contain;display:block}
+    .brand p{margin:3px 0 0;font-size:10px;font-weight:700;color:#0a0101;text-align:center}
+    .top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .top-actions a,.top-actions button{border:1px solid rgba(3, 0, 0, 0.4);background:#f5edef;
+      color:#8c004c;box-shadow:1px 4px 9px #0002;text-decoration:none;padding:9px 18px;
+      border-radius:7px;font-weight:600;cursor:pointer}
+    .top-actions a:hover,.top-actions button:hover{transform:translateY(-1px);color:rgb(224,90,49)}
+    h3{margin:0;color:#8c004c;font-size:18px;text-decoration:underline}
+    .app{max-width:1180px;margin:0 auto;padding:20px 14px 50px}
+    .card{background:#fff;border:1px solid var(--border);border-radius:9px;
+      box-shadow:0 2px 8px rgba(0,0,0,.06);padding:18px;margin-bottom:20px}
+    .card h2{margin:0 0 15px;color:var(--purple);font-size:20px;border-bottom:1px solid var(--border);
+      padding-bottom:10px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700}
+    label small{font-weight:400;color:var(--muted);font-size:11px}
+    .wide{grid-column:1/-1}
+    input,textarea,select{width:100%;border:1px solid #aeb7c2;border-radius:6px;min-height:39px;
+      padding:9px 11px;background:#fff;color:#111;outline:none;font:inherit}
+    textarea{resize:vertical}
+    input:focus,textarea:focus,select:focus{border-color:var(--purple);box-shadow:0 0 0 2px rgba(140,0,76,.12)}
+    .required{color:#c5221f}
+    .btn{min-height:40px;padding:9px 17px;border-radius:6px;border:1px solid #9da5af;
+      background:#fff;color:#333;font-weight:700;cursor:pointer;font:inherit}
+    .btn:hover{filter:brightness(.97)}
+    .btn.primary{background:var(--purple);border-color:var(--purple);color:#fff}
+    .btn.secondary{background:#f2f3f5}
+    .btn.danger{color:var(--danger);border-color:#d5a5a2}
+    .btn.small{padding:5px 10px;min-height:32px;font-size:12px}
+    .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+    .table-wrap{overflow:auto;border:1px solid #ddd;border-radius:7px}
+    table{width:100%;border-collapse:collapse;min-width:820px}
+    th,td{border:1px solid #ddd;padding:9px;text-align:left;font-size:13px}
+    th{background:#f7f3f4;color:#8c004c;font-size:12px;text-align:center;
+      position:sticky;top:0}
+    td.center{text-align:center}
+    tr:hover{background:#faf5ff}
+    .empty{padding:22px;text-align:center;border:1px dashed #ccc;border-radius:7px;color:#777}
+    .search-bar{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+    .search-bar input{flex:1;min-width:200px}
+    .status{font-weight:700;color:var(--green);text-align:right;margin-top:8px;min-height:20px}
+    .status.error{color:var(--danger)}
+    .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;
+      background:#eee6f5;color:#8c004c;font-weight:700}
+    @media(max-width:760px){
+      .form-grid{grid-template-columns:1fr}
+      .wide{grid-column:auto}
+      .brand h1{height:34px}
+      .brand h1 img{max-height:34px}
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img src="images/gp-gold3.png" alt="GoldPrince" onerror="this.style.display='none'">
+    <div>
+      <h1><img src="images/gplogo1.png" alt="GoldPrince" onerror="this.style.display='none'"></h1>
+      <p>JEWEL INDUSTRY INDIA PVT LTD</p>
+    </div>
+  </div>
+  <h3>Party Master</h3>
+  <div class="top-actions">
+   
+    <a href="GPMAIN.html">Home</a>
+    <button type="button" onclick="window.location.href='index.html'">Logout</button>
+  </div>
+</header>
+
+<main class="app">
+
+  <!-- ============ FORM ============ -->
+  <section class="card">
+    <h2 id="formTitle">Add New Party</h2>
+    <form id="partyForm" autocomplete="off">
+      <input type="hidden" id="editKey" value="">
+      <div class="form-grid">
+        <label>Party Name <span class="required">*</span>
+          <input id="pName" placeholder="e.g. ABC Jewellers" required>
+          <small>Must be unique. Used as the key in Order Form.</small>
+        </label>
+        <label>Cell No.
+          <input id="pCell" placeholder="e.g. 9876543210" inputmode="tel">
+        </label>
+        <label>Phone
+          <input id="pPhone" placeholder="Landline / alternate number">
+        </label>
+        <label>GST No.
+          <input id="pGst" placeholder="Optional">
+        </label>
+        <label class="wide">Address
+          <textarea id="pAddress" rows="2" placeholder="Shop / Street / City"></textarea>
+        </label>
+        <label>City
+          <input id="pCity" placeholder="City">
+        </label>
+        <label>Pincode
+          <input id="pPincode" placeholder="Pincode" inputmode="numeric">
+        </label>
+        <label class="wide">Notes
+          <textarea id="pNotes" rows="2" placeholder="Any remarks..."></textarea>
+        </label>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn secondary" id="resetBtn">Reset</button>
+        <button type="submit" class="btn primary" id="saveBtn">Save Party</button>
+      </div>
+      <div id="formStatus" class="status"></div>
+    </form>
+  </section>
+
+  <!-- ============ LIST ============ -->
+  <section class="card">
+    <h2>Party List <span class="badge" id="countBadge">0</span></h2>
+    <div class="search-bar">
+      <input id="searchBox" placeholder="Search by name, cell, city...">
+      <button type="button" class="btn secondary" id="exportBtn">EXPORT JSON</button>
+      <button type="button" class="btn secondary" id="importBtn">IMPORT JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>SL</th>
+            <th>PARTY NAME</th>
+            <th>CELL NO.</th>
+            <th>PHONE</th>
+            <th>CITY</th>
+            <th>ADDRESS</th>
+            <th>GST</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="partyBody"></tbody>
+      </table>
+    </div>
+    <div id="emptyMsg" class="empty" style="margin-top:12px;">No parties yet. Add one above.</div>
+  </section>
+
+</main>
+
+<script>
+/* ============================================================
+   STORAGE KEYS — same as Order Form so data is shared
+   ============================================================ */
+const PARTY_STORAGE_KEY = "goldprince_parties";
+const LEGACY_KEY        = "gp_party_master";
+const $ = id => document.getElementById(id);
+
+/* ============================================================
+   LOAD / SAVE
+   ============================================================ */
+function loadAll() {
+  let a = {}, b = {};
+  try { a = JSON.parse(localStorage.getItem(PARTY_STORAGE_KEY) || "{}") || {}; } catch(e){}
+  try { b = JSON.parse(localStorage.getItem(LEGACY_KEY)        || "{}") || {}; } catch(e){}
+  // merge, PARTY_STORAGE_KEY wins on conflict
+  const merged = {};
+  for (const [k, v] of Object.entries(b)) merged[k] = v;
+  for (const [k, v] of Object.entries(a)) merged[k] = v;
+  return merged;
+}
+
+function saveAll(obj) {
+  localStorage.setItem(PARTY_STORAGE_KEY, JSON.stringify(obj));
+  // Also mirror to legacy key so old Order Form versions still work
+  localStorage.setItem(LEGACY_KEY, JSON.stringify(obj));
+}
+
+/* ============================================================
+   NORMALIZE — supports multiple field naming conventions
+   ============================================================ */
+function normParty(p) {
+  return {
+    address: p.address || p.Address || "",
+    cell:    p.cell    || p.cellNo  || p.mobile || p.phone || "",
+    phone:   p.phone   || p.landline || "",
+    gst:     p.gst     || p.GST     || "",
+    city:    p.city    || "",
+    pincode: p.pincode || p.pin     || "",
+    notes:   p.notes   || p.note    || ""
+  };
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+let allParties = {};
+
+function render() {
+  allParties = loadAll();
+  const q = ($("searchBox").value || "").trim().toLowerCase();
+  const names = Object.keys(allParties).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+  const filtered = q
+    ? names.filter(n => {
+        const p = allParties[n] || {};
+        return n.toLowerCase().includes(q)
+          || (p.cell||"").toLowerCase().includes(q)
+          || (p.phone||"").toLowerCase().includes(q)
+          || (p.city||"").toLowerCase().includes(q)
+          || (p.address||"").toLowerCase().includes(q);
+      })
+    : names;
+
+  $("countBadge").textContent = names.length;
+  $("emptyMsg").style.display = names.length ? "none" : "block";
+
+  const body = $("partyBody");
+  if (!filtered.length) {
+    body.innerHTML = `<tr><td colspan="8" class="center" style="color:#888;padding:20px">No matching parties.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = filtered.map((n, i) => {
+    const p = normParty(allParties[n]);
+    const key = encodeURIComponent(n);
+    return `<tr>
+      <td class="center">${i+1}</td>
+      <td><b>${esc(n)}</b></td>
+      <td class="center">${esc(p.cell || "—")}</td>
+      <td class="center">${esc(p.phone || "—")}</td>
+      <td>${esc(p.city || "—")}</td>
+      <td>${esc(p.address || "—")}</td>
+      <td class="center">${esc(p.gst || "—")}</td>
+      <td class="center">
+        <button class="btn small secondary" onclick="editParty('${key}')">Edit</button>
+        <button class="btn small danger" onclick="deleteParty('${key}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+/* ============================================================
+   SAVE (add / update)
+   ============================================================ */
+$("partyForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const name = $("pName").value.trim();
+  if (!name) { setStatus("Party Name is required.", true); return; }
+
+  const originalKey = $("editKey").value;
+  const data = loadAll();
+
+  // If editing and name changed, remove old key
+  if (originalKey && originalKey !== name) {
+    delete data[originalKey];
+  }
+
+  // Duplicate check (only when adding or renaming to an existing name)
+  if (!originalKey && data[name]) {
+    setStatus(`Party "${name}" already exists. Use Edit to update.`, true);
+    return;
+  }
+  if (originalKey && originalKey !== name && data[name]) {
+    setStatus(`Another party named "${name}" already exists.`, true);
+    return;
+  }
+
+  data[name] = {
+    address: $("pAddress").value.trim(),
+    cell:    $("pCell").value.trim(),
+    phone:   $("pPhone").value.trim(),
+    gst:     $("pGst").value.trim(),
+    city:    $("pCity").value.trim(),
+    pincode: $("pPincode").value.trim(),
+    notes:   $("pNotes").value.trim()
+  };
+
+  saveAll(data);
+  setStatus(originalKey ? `Party "${name}" updated.` : `Party "${name}" saved.`, false);
+  resetForm();
+  render();
+});
+
+/* ============================================================
+   EDIT / DELETE
+   ============================================================ */
+function editParty(encodedName) {
+  const name = decodeURIComponent(encodedName);
+  const data = loadAll();
+  const p = normParty(data[name] || {});
+  $("editKey").value   = name;
+  $("pName").value     = name;
+  $("pCell").value     = p.cell;
+  $("pPhone").value    = p.phone;
+  $("pGst").value      = p.gst;
+  $("pAddress").value  = p.address;
+  $("pCity").value     = p.city;
+  $("pPincode").value  = p.pincode;
+  $("pNotes").value    = p.notes;
+  $("formTitle").textContent = "EDIT PARTY";
+  $("saveBtn").textContent   = "UPDATE PARTY";
+  setStatus(`Editing "${name}". Change fields and click Update.`, false);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  $("pName").focus();
+}
+
+function deleteParty(encodedName) {
+  const name = decodeURIComponent(encodedName);
+  if (!confirm(`Delete party "${name}"?\n\nThis cannot be undone.`)) return;
+  const data = loadAll();
+  delete data[name];
+  saveAll(data);
+  setStatus(`Party "${name}" deleted.`, false);
+  if ($("editKey").value === name) resetForm();
+  render();
+}
+
+/* ============================================================
+   RESET / STATUS
+   ============================================================ */
+function resetForm() {
+  $("partyForm").reset();
+  $("editKey").value = "";
+  $("formTitle").textContent = "ADD NEW PARTY";
+  $("saveBtn").textContent   = "SAVE PARTY";
+}
+
+function setStatus(msg, isError) {
+  const el = $("formStatus");
+  el.textContent = msg;
+  el.className = "status" + (isError ? " error" : "");
+  if (msg) setTimeout(() => { if (el.textContent === msg) el.textContent = ""; }, 4000);
+}
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+$("searchBox").addEventListener("input", render);
+
+/* ============================================================
+   EXPORT / IMPORT
+   ============================================================ */
+$("exportBtn").addEventListener("click", () => {
+  const data = loadAll();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url;
+  a.download = `goldprince_parties_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  setStatus("Exported parties JSON.", false);
+});
+
+$("importBtn").addEventListener("click", () => $("importFile").click());
+
+$("importFile").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const incoming = JSON.parse(ev.target.result);
+      if (!incoming || typeof incoming !== "object" || Array.isArray(incoming)) {
+        throw new Error("File must contain a JSON object of {partyName: {...}}");
+      }
+      const current = loadAll();
+      let added = 0, updated = 0;
+      for (const [k, v] of Object.entries(incoming)) {
+        if (!k) continue;
+        if (current[k]) updated++; else added++;
+        current[k] = v;
+      }
+      saveAll(current);
+      render();
+      setStatus(`Import done. Added: ${added}, Updated: ${updated}.`, false);
+    } catch (err) {
+      setStatus("Import failed: " + err.message, true);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+
+/* ============================================================
+   UTIL
+   ============================================================ */
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => (
+    { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]
+  ));
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+render();
+</script>
+
+</body>
+</html>

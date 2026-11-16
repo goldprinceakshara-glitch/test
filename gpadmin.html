@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Admin Dashboard · GP Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="gp-chat.css">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+<style>
+:root{
+  --brand:#900143;
+  --brand-dark:#6b0132;
+  --brand-light:#b8005a;
+  --gold:#e9c9da;
+  --gold-soft:#fdeef6;
+  --ink:#2b0a1c;
+  --muted:#a06a85;
+  --card:rgba(255,255,255,.82);
+  --card-border:rgba(144,1,67,.10);
+  --danger:#e0284f;
+  --success:#9b0963;
+  --shadow:0 18px 40px -22px rgba(144,1,67,.22);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,system-ui,sans-serif}
+
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(600px 400px at 100% 0%, #fff2f8 0%, transparent 60%),
+    radial-gradient(500px 300px at 0% 100%, #f7eff3 0%, transparent 60%),
+    linear-gradient(135deg, #fffafd 0%, #f7f4f5 50%, #f8f6f7 100%);
+  padding:2rem 1.5rem;
+  color:var(--ink);
+  position:relative;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;width:380px;height:380px;border-radius:50%;
+  background:#f8f4f5;filter:blur(110px);opacity:.20;top:-140px;right:-120px;
+  z-index:0;pointer-events:none;
+}
+body::after{
+  content:"";position:fixed;width:340px;height:340px;border-radius:50%;
+  background:#f3eef0;filter:blur(110px);opacity:.22;bottom:-140px;left:-120px;
+  z-index:0;pointer-events:none;
+}
+
+.container{max-width:1150px;margin:0 auto;position:relative;z-index:1}
+
+header{
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--card);
+  backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  padding:1.2rem 2rem;border-radius:1.5rem;
+  border:1px solid var(--card-border);margin-bottom:2rem;
+  flex-wrap:wrap;gap:1rem;box-shadow:var(--shadow);position:relative;
+}
+header::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  border-radius:1.5rem 1.5rem 0 0;
+  background:linear-gradient(90deg, #f2a5c6, var(--brand), #f2a5c6);
+}
+header h1{
+  font-size:1.4rem;font-weight:600;display:flex;align-items:center;
+  gap:.7rem;color:var(--brand);letter-spacing:-.2px;
+}
+header h1 img{height:34px;width:auto;border-radius:7px}
+header h1 i{color:var(--brand)}
+
+.header-actions{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}
+
+.user-badge{
+  padding:.55rem 1.1rem;
+  background:linear-gradient(135deg, var(--brand), var(--brand-light));
+  color:#fff;border-radius:2rem;font-size:.82rem;font-weight:600;
+  box-shadow:0 8px 18px -10px rgba(144,1,67,.55);
+  display:inline-flex;align-items:center;gap:.45rem;
+}
+.user-badge i{color:#ffe3ef}
+
+.btn{
+  padding:.7rem 1.3rem;border:none;border-radius:2rem;
+  font-weight:600;font-size:.85rem;cursor:pointer;
+  display:inline-flex;align-items:center;gap:.5rem;
+  transition:all .2s;text-decoration:none;
+}
+.btn-danger{
+  background:#fff;color:var(--danger);
+  border:1.5px solid rgba(224,40,79,.3);
+}
+.btn-danger:hover{
+  background:var(--danger);color:#fff;border-color:var(--danger);
+  box-shadow:0 10px 20px -10px rgba(224,40,79,.6);
+}
+
+/* --- STATS GRID: tighter min width for mobile --- */
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:.85rem;margin-bottom:1.1rem;
+}
+.stats-grid.secondary{margin-bottom:2rem}
+.stat-card{
+  background:var(--card);
+  backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  padding:1.2rem 1rem;border-radius:1.3rem;
+  border:1px solid var(--card-border);box-shadow:var(--shadow);
+  transition:transform .2s, box-shadow .2s;position:relative;overflow:hidden;
+}
+.stat-card::after{
+  content:"";position:absolute;bottom:0;right:0;width:70px;height:70px;
+  border-radius:50%;background:var(--brand);opacity:.04;transform:translate(30%,30%);
+}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 24px 46px -22px rgba(144,1,67,.30)}
+
+.stat-card .icon{
+  width:42px;height:42px;border-radius:.9rem;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;margin-bottom:.7rem;
+}
+.stat-card .icon.total{background:#fde9f3;color:var(--brand)}
+.stat-card .icon.admin{background:#fcefe0;color:#b81c7c}
+.stat-card .icon.user{background:#fde9f3;color:var(--brand-light)}
+.stat-card .icon.workshop{background:#f7e6ee;color:var(--brand-dark)}
+.stat-card .icon.developer{background:#e6f5ec;color:#7a0f41}
+.stat-card .icon.branch{background:#fbe3ee;color:#b8005a}
+.stat-card .icon.designer{background:#e3eeff;color:#9c094e}
+.stat-card .icon.pp{background:#fff4d6;color:#8a004c}
+
+.stat-card h3{
+  font-size:.7rem;color:var(--muted);font-weight:600;
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:.25rem;
+}
+.stat-card .value{font-size:1.5rem;font-weight:700;color:var(--brand)}
+
+.panel{
+  background:var(--card);
+  backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  padding:2rem;border-radius:1.5rem;
+  border:1px solid var(--card-border);box-shadow:var(--shadow);
+  margin-bottom:2rem;
+}
+.panel h2{
+  font-size:1.15rem;font-weight:600;margin-bottom:1.5rem;
+  display:flex;align-items:center;gap:.6rem;color:var(--brand);
+  letter-spacing:-.2px;
+}
+.panel h2 i{color:#e08ab4}
+
+/* Low stone stock alert */
+.stone-alert{
+  border-left:6px solid var(--danger);
+  background:linear-gradient(135deg,#fff1f4,#ffe0e6);
+  border-top:1px solid #f7a0b2;border-right:1px solid #f7a0b2;border-bottom:1px solid #f7a0b2;
+  border-radius:1rem;padding:1rem 1.2rem;
+  box-shadow:0 10px 25px -14px rgba(224,40,79,.55);
+}
+.stone-alert .sa-title{
+  font-size:.95rem;font-weight:800;color:var(--danger);
+  display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;
+  justify-content:space-between;
+}
+.stone-alert .sa-title .sa-title-text{display:flex;align-items:center;gap:.5rem}
+.stone-alert .sa-title i{animation:pulseAlert 1.6s infinite}
+@keyframes pulseAlert{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.75}}
+.stone-alert .sa-close-all{
+  background:rgba(224,40,79,.12);border:none;color:var(--danger);cursor:pointer;
+  width:26px;height:26px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.8rem;transition:background .2s;
+}
+.stone-alert .sa-close-all:hover{background:var(--danger);color:#fff}
+.stone-alert .sa-sub{font-size:.78rem;color:#9c324f;margin-bottom:.6rem}
+.sa-list{display:flex;flex-direction:column;gap:.5rem}
+.sa-chip{
+  background:#fff;border:1px solid #f7a0b2;border-radius:.6rem;
+  padding:.5rem .7rem;font-size:.8rem;color:#7a122c;font-weight:600;
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+}
+.sa-chip .sa-text{flex:1;line-height:1.35}
+.sa-chip .val{color:var(--danger);font-weight:800}
+.sa-chip .min{color:var(--muted);font-weight:600;font-size:.72rem}
+.sa-chip .sa-item-close{
+  background:#f0f0f0;border:none;color:#666;cursor:pointer;
+  width:24px;height:24px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.7rem;transition:all .15s;flex-shrink:0;
+}
+.sa-chip .sa-item-close:hover{background:var(--danger);color:#fff}
+.sa-badge{display:inline-block;background:var(--danger);color:#fff;font-size:.66rem;font-weight:800;letter-spacing:.4px;padding:.1rem .45rem;border-radius:.4rem;margin-left:.3rem}
+.sa-short{font-size:.74rem;color:#9c324f;font-weight:600;margin-top:.15rem}
+.no-low{font-size:.82rem;color:var(--muted);font-style:italic}
+
+/* Pending login requests */
+.pending-list{display:flex;flex-direction:column;gap:1rem}
+.pending-empty{
+  text-align:center;color:var(--muted);font-size:.9rem;
+  padding:2rem;background:rgba(255,255,255,.6);
+  border-radius:1rem;border:1px dashed rgba(144,1,67,.20);
+}
+.pending-item{
+  display:flex;flex-wrap:wrap;gap:1rem;align-items:center;
+  justify-content:space-between;
+  padding:1rem 1.2rem;
+  background:#fff;
+  border-radius:1.1rem;
+  border:1.5px solid rgba(144,1,67,.10);
+}
+.pending-item .info{flex:1;min-width:200px}
+.pending-item .info h4{
+  font-size:.95rem;color:var(--brand);font-weight:600;
+  display:flex;align-items:center;gap:.45rem;margin-bottom:.25rem;
+}
+.pending-item .info p{
+  font-size:.78rem;color:var(--muted);line-height:1.55;
+}
+.pending-item .info .otp-box{
+  display:inline-block;margin-top:.4rem;
+  padding:.3rem .7rem;background:#fdeef6;
+  border-radius:.5rem;border:1px dashed rgba(235, 190, 211, 0.8);
+  font-size:.75rem;color:var(--brand-dark);font-weight:600;
+  letter-spacing:2px;
+}
+.pending-item .info .meta{
+  font-size:.72rem;color:#c39ab1;margin-top:.35rem;
+}
+.pending-item .actions{display:flex;gap:.5rem;flex-wrap:wrap}
+.btn-approve{
+  padding:.65rem 1.1rem;border:none;border-radius:2rem;
+  background:linear-gradient(135deg, #0f9d5b, #73e695);
+  color:#fff;font-weight:600;font-size:.82rem;cursor:pointer;
+  display:inline-flex;align-items:center;gap:.4rem;
+  transition:all .2s;box-shadow:0 8px 18px -10px rgba(32, 4, 20, 0.7);
+}
+.btn-approve:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.btn-reject{
+  padding:.65rem 1.1rem;border:1.5px solid rgba(224,40,79,.30);
+  border-radius:2rem;background:#fff;color:var(--danger);
+  font-weight:600;font-size:.82rem;cursor:pointer;
+  display:inline-flex;align-items:center;gap:.4rem;
+  transition:all .2s;
+}
+.btn-reject:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
+
+.admin-phone-row{
+  display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;
+  margin-bottom:1.2rem;padding-bottom:1.2rem;
+  border-bottom:1px solid rgba(144,1,67,.10);
+}
+.admin-phone-row label{
+  font-size:.82rem;color:var(--muted);font-weight:600;
+}
+.admin-phone-row input{
+  padding:.6rem .9rem;border-radius:.7rem;
+  border:1.5px solid rgba(144,1,67,.18);background:#fff;
+  font-size:.85rem;color:var(--ink);outline:none;min-width:180px;
+  transition:border-color .2s, box-shadow .2s;
+}
+.admin-phone-row input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(144,1,67,.10)}
+.admin-phone-row button{
+  padding:.6rem 1.1rem;border:none;border-radius:.7rem;
+  background:linear-gradient(135deg, var(--brand), var(--brand-light));
+  color:#fff;font-weight:600;font-size:.82rem;cursor:pointer;
+  transition:filter .2s;
+}
+.admin-phone-row button:hover{filter:brightness(1.08)}
+
+/* --- QUICK LINKS: tighter min width for mobile --- */
+.quick-links{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:.9rem;
+}
+.quick-link{
+  display:flex;align-items:center;gap:.9rem;
+  padding:1rem 1.1rem;background:#fff;
+  border-radius:1rem;border:1.5px solid rgba(144,1,67,.08);
+  text-decoration:none;color:var(--ink);transition:all .2s;
+  cursor:pointer;
+}
+.quick-link:hover{
+  background:#fff;border-color:var(--brand);
+  transform:translateY(-2px);
+  box-shadow:0 16px 30px -18px rgba(144,1,67,.40);
+}
+.quick-link:hover .ql-icon{
+  background:linear-gradient(135deg, var(--brand), var(--brand-light));
+  color:#fff;transform:scale(1.05);
+}
+.quick-link .ql-icon{
+  width:40px;height:40px;border-radius:.85rem;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.05rem;background:#fde9f3;color:var(--brand);
+  flex-shrink:0;transition:all .2s;
+}
+.quick-link .ql-text h4{font-size:.88rem;font-weight:600;margin-bottom:.12rem;color:var(--brand)}
+.quick-link .ql-text p{font-size:.72rem;color:var(--muted)}
+
+/* --- MOBILE TWEAKS --- */
+@media(max-width:600px){
+  body{padding:1rem .75rem}
+  header{padding:.9rem 1rem;border-radius:1.2rem;gap:.6rem}
+  header h1{font-size:1.1rem}
+  header h1 img{height:28px}
+  .panel{padding:1.2rem;border-radius:1.2rem}
+  .stat-card{padding:1rem .8rem}
+  .stat-card .value{font-size:1.4rem}
+  .stat-card .icon{width:38px;height:38px;font-size:1rem}
+  .stat-card h3{font-size:.65rem}
+  .quick-link{padding:.85rem .9rem;gap:.7rem}
+  .quick-link .ql-icon{width:36px;height:36px;font-size:.95rem;border-radius:.75rem}
+  .quick-link .ql-text h4{font-size:.82rem}
+  .quick-link .ql-text p{font-size:.68rem}
+  .pending-item{padding:.85rem 1rem;gap:.75rem}
+  .pending-item .info h4{font-size:.88rem}
+  .pending-item .info p{font-size:.74rem}
+  .btn-approve,.btn-reject{padding:.55rem .9rem;font-size:.78rem}
+  .admin-phone-row input{min-width:140px;font-size:.8rem}
+  .admin-phone-row button{padding:.5rem .9rem;font-size:.78rem}
+}
+
+@media (max-width:420px){
+  body{padding:.75rem .5rem}
+  header{padding:.75rem .85rem;border-radius:1rem;gap:.5rem}
+  header h1{font-size:.95rem;gap:.45rem}
+  header h1 img{height:24px}
+  .user-badge{font-size:.7rem;padding:.4rem .75rem}
+  .btn-danger{padding:.55rem .9rem;font-size:.75rem}
+  .panel{padding:1rem .9rem;border-radius:1rem}
+  .panel h2{font-size:1rem;margin-bottom:1.1rem}
+  .stats-grid{gap:.6rem;grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+  .stat-card{padding:.85rem .7rem;border-radius:1rem}
+  .stat-card .value{font-size:1.25rem}
+  .stat-card .icon{width:34px;height:34px;font-size:.9rem;margin-bottom:.5rem}
+  .stat-card h3{font-size:.6rem;letter-spacing:.3px}
+  .quick-links{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.7rem}
+  .quick-link{padding:.75rem .8rem;gap:.6rem;border-radius:.9rem}
+  .quick-link .ql-icon{width:32px;height:32px;font-size:.85rem;border-radius:.7rem}
+  .quick-link .ql-text h4{font-size:.78rem}
+  .quick-link .ql-text p{font-size:.64rem}
+  .sa-chip{padding:.4rem .55rem;font-size:.74rem;gap:.35rem}
+  .sa-chip .sa-text .val{font-size:.8rem}
+  .sa-chip .sa-text .min{font-size:.65rem}
+  .sa-short{font-size:.68rem}
+  .sa-badge{font-size:.6rem;padding:.05rem .35rem}
+  .stone-alert{padding:.75rem .9rem}
+  .pending-item{padding:.7rem .8rem;gap:.6rem}
+  .pending-item .info{min-width:100%}
+  .pending-item .actions{width:100%;justify-content:flex-end}
+  .admin-phone-row input{min-width:100%;flex:1}
+  .admin-phone-row button{flex:1}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1><img src="images/gp-gold3.png" alt="GoldPrince" onerror="this.style.display='none'"> Admin Dashboard</h1>
+    <div class="header-actions">
+      <span class="user-badge"><i class="fas fa-user-shield"></i> <span id="adminName">Admin</span></span>
+      <button class="btn btn-danger" id="logoutBtn" type="button"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </header>
+
+  <!-- ============ LOW STONE STOCK ALERT ============ -->
+  <div class="panel" id="stoneAlertPanel" style="display:none">
+    <h2><i class="fas fa-triangle-exclamation" style="color:var(--danger)"></i> Low Stone Stock Alert</h2>
+    <div class="stone-alert">
+      <div class="sa-title">
+        <div class="sa-title-text">
+          <i class="fas fa-triangle-exclamation"></i> Stone types at or below minimum qty
+        </div>
+        <button class="sa-close-all" id="saCloseAll" title="Dismiss all for today">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="sa-sub">These stones need a purchase order to replenish. Dismissed items will reappear tomorrow at 9:00 AM.</div>
+      <div class="sa-list" id="saList"></div>
+    </div>
+  </div>
+
+  <!-- PRIMARY STATS -->
+  <div class="stats-grid">
+    <div class="stat-card"><div class="icon total"><i class="fas fa-users"></i></div><h3>Total Accounts</h3><div class="value" id="totalCount">0</div></div>
+    <div class="stat-card"><div class="icon admin"><i class="fas fa-crown"></i></div><h3>Admins</h3><div class="value" id="adminCount">0</div></div>
+    <div class="stat-card"><div class="icon user"><i class="fas fa-user"></i></div><h3>Users</h3><div class="value" id="userCount">0</div></div>
+    <div class="stat-card"><div class="icon workshop"><i class="fas fa-tools"></i></div><h3>Workshops</h3><div class="value" id="workshopCount">0</div></div>
+  </div>
+
+  <!-- SECONDARY STATS -->
+  <div class="stats-grid secondary">
+    <div class="stat-card"><div class="icon developer"><i class="fas fa-code"></i></div><h3>Developers</h3><div class="value" id="developerCount">0</div></div>
+    <div class="stat-card"><div class="icon branch"><i class="fas fa-user-tie"></i></div><h3>Branch Incharges</h3><div class="value" id="branchInchargeCount">0</div></div>
+    <div class="stat-card"><div class="icon designer"><i class="fas fa-palette"></i></div><h3>Designers</h3><div class="value" id="designerCount">0</div></div>
+    <div class="stat-card"><div class="icon pp"><i class="fas fa-industry"></i></div><h3>Post-Production</h3><div class="value" id="postProdCount">0</div></div>
+  </div>
+
+  <!-- DEVICE LOGIN REQUESTS -->
+  <div class="panel">
+    <h2><i class="fas fa-mobile-screen-button"></i> Device Login Requests <span id="pendingCount" style="font-size:.8rem;color:var(--muted);font-weight:500;margin-left:.4rem"></span></h2>
+
+    <div class="admin-phone-row">
+      <label><i class="fas fa-phone"></i> Admin OTP mobile:</label>
+      <input type="text" id="adminPhoneInput" placeholder="+91 99299 92299">
+      <button id="saveAdminPhoneBtn" type="button"><i class="fas fa-save"></i> Save</button>
+    </div>
+
+    <div class="pending-list" id="pendingList">
+      <div class="pending-empty"><i class="fas fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:.4rem;"></i> No pending device login requests.</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2><i class="fas fa-bolt"></i> Management Sections</h2>
+    <div class="quick-links">
+
+      <a href="manage-admin.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-users-cog"></i></div>
+        <div class="ql-text"><h4>Account Management</h4><p>Admins, Developers, Users, Workshops &amp; more</p></div>
+      </a>
+
+      <a href="designs.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-store"></i></div>
+        <div class="ql-text"><h4>Manage Pre-Production</h4><p>Update and manage design listings</p></div>
+      </a>
+
+      <a href="stone-stock.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-gem"></i></div>
+        <div class="ql-text">
+          <h4>Manage Stone Stock</h4>
+          <p>Catalogue, opening, purchase, issue &amp; closing</p>
+        </div>
+      </a>
+
+      <a href="ORDERFORM.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-file-invoice"></i></div>
+        <div class="ql-text"><h4>Manage Production</h4><p>View &amp; manage orders</p></div>
+      </a>
+
+      <a href="gpwork-shop.html" class="quick-link" id="workshopDashboardLink">
+        <div class="ql-icon"><i class="fas fa-tools"></i></div>
+        <div class="ql-text">
+          <h4>Workshop Dashboard</h4>
+          <p id="workshopDashboardSub">Open dashboard &amp; select a branch</p>
+        </div>
+      </a>
+
+      <a href="stage-2 process.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-palette"></i></div>
+        <div class="ql-text"><h4>Manage Post-Production</h4><p>Designer accounts &amp; sections</p></div>
+      </a>
+
+      <a href="stock index.html" class="quick-link">
+        <div class="ql-icon"><i class="fas fa-boxes-stacked"></i></div>
+        <div class="ql-text"><h4>Manage Stock Inventory</h4><p>Track &amp; update stock</p></div>
+      </a>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============ PROTECTION SCRIPT ============ -->
+<script>
+(function () {
+  if (window.__GP_LOGGING_OUT__) return;
+  function checkSession() {
+    var s = null;
+    try { s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null'); } catch (e) {}
+    if (!s || s.role !== 'admin' || !s.username) {
+      try { sessionStorage.clear(); } catch (e) {}
+      window.location.replace('index.html?t=' + Date.now());
+      return false;
+    }
+    return true;
+  }
+  if (!checkSession()) return;
+  window.addEventListener('pageshow', function () { checkSession(); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') checkSession();
+  });
+  window.addEventListener('focus', function () { checkSession(); });
+})();
+</script>
+
+<script>
+/* ============================================================
+   STORAGE KEYS
+   ============================================================ */
+var STORAGE_KEY          = 'gp_portal_users';
+var DESIGNERS_KEY        = 'gp_designer_users';
+var CAD_DESIGNERS_KEY    = 'gp_cad_designer_users';
+var POST_PROD_KEY        = 'gp_post_production_users';
+var PENDING_KEY          = 'gp_pending_logins';
+var ADMIN_PHONE_KEY      = 'gp_admin_mobile';
+var DEVICE_ACCESS_KEY    = 'gp_device_access';
+
+var ST_CATALOGUE_KEY   = 'gp_stone_catalogue';
+var ST_OPENING_KEY     = 'gp_stone_opening';
+var ST_PURCHASE_KEY    = 'gp_stone_purchase_orders';
+var ST_ISSUE_KEY       = 'gp_stone_issue_orders';
+var ST_RETURN_KEY      = 'gp_stone_return_orders';
+var ST_DAMAGE_KEY      = 'gp_stone_damage';
+var ST_PURCHASE_RET_KEY= 'gp_stone_purchase_return';
+var LOWSTOCK_DISMISS_KEY = 'gp_stone_lowstock_dismissed';
+
+function readJSON(key) {
+  try {
+    var raw = localStorage.getItem(key);
+    if (!raw) return [];
+    var v = JSON.parse(raw);
+    return Array.isArray(v) ? v : [];
+  } catch (e) { return []; }
+}
+function getCoreUsers()      { return readJSON(STORAGE_KEY); }
+function getDesignerUsers()  { return readJSON(DESIGNERS_KEY); }
+function getCadDesigners()   { return readJSON(CAD_DESIGNERS_KEY); }
+function getPostProdUsers()  { return readJSON(POST_PROD_KEY); }
+
+function getPendingRequests() {
+  try { return JSON.parse(localStorage.getItem(PENDING_KEY) || '[]') || []; }
+  catch(e) { return []; }
+}
+function savePendingRequests(list) {
+  localStorage.setItem(PENDING_KEY, JSON.stringify(list));
+}
+function getDeviceAccessStore() {
+  try { return JSON.parse(localStorage.getItem(DEVICE_ACCESS_KEY) || '{}') || {}; }
+  catch (e) { return {}; }
+}
+function saveDeviceAccessStore(s) {
+  localStorage.setItem(DEVICE_ACCESS_KEY, JSON.stringify(s));
+}
+function approveDeviceLocally(username, fingerprint) {
+  var store = getDeviceAccessStore();
+  store[String(username).toLowerCase() + '::' + fingerprint] = {
+    username: username, approvedAt: Date.now(), approvedBy: 'admin'
+  };
+  saveDeviceAccessStore(store);
+}
+
+(function () {
+  try {
+    var s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null');
+    if (s && s.username) document.getElementById('adminName').textContent = s.username;
+  } catch (e) {}
+})();
+
+function refreshStats() {
+  var core      = getCoreUsers();
+  var designers = getDesignerUsers();
+  var cad       = getCadDesigners();
+  var pp        = getPostProdUsers();
+
+  var adminCount     = core.filter(function (u) { return u && u.role === 'admin'; }).length;
+  var userCount      = core.filter(function (u) { return u && u.role === 'user'; }).length;
+  var workshopCount  = core.filter(function (u) { return u && u.role === 'workshop'; }).length;
+  var developerCount = core.filter(function (u) { return u && u.role === 'developer'; }).length;
+  var branchCount    = core.filter(function (u) { return u && u.role === 'branch_incharge'; }).length;
+
+  var designerCount  = designers.length + cad.length;
+  var postProdCount  = pp.length;
+
+  var totalCount = core.length + designers.length + cad.length + pp.length;
+
+  document.getElementById('totalCount').textContent          = totalCount;
+  document.getElementById('adminCount').textContent          = adminCount;
+  document.getElementById('userCount').textContent           = userCount;
+  document.getElementById('workshopCount').textContent       = workshopCount;
+  document.getElementById('developerCount').textContent      = developerCount;
+  document.getElementById('branchInchargeCount').textContent = branchCount;
+  document.getElementById('designerCount').textContent       = designerCount;
+  document.getElementById('postProdCount').textContent       = postProdCount;
+}
+
+/* ============================================================
+   LOW STONE STOCK — DISMISSAL HELPERS (9 AM cycle)
+   ============================================================ */
+function normPart(v) { return String(v == null ? '' : v).toLowerCase().replace(/[\u00d7*]/g, 'x').replace(/\s+/g, ''); }
+function keyForStone(stoneType, color, size) {
+  return normPart(stoneType) + '||' + normPart(color) + '||' + normPart(size);
+}
+function getDismissedStore() {
+  var raw = localStorage.getItem(LOWSTOCK_DISMISS_KEY);
+  if (!raw) return {};
+  try { return JSON.parse(raw) || {}; } catch (e) { return {}; }
+}
+function saveDismissedStore(s) { localStorage.setItem(LOWSTOCK_DISMISS_KEY, JSON.stringify(s)); }
+function getDismissalCycleDate() {
+  var now = new Date();
+  var cycle = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0);
+  if (now.getTime() < cycle.getTime()) cycle.setDate(cycle.getDate() - 1);
+  return cycle.getFullYear() + '-' +
+         String(cycle.getMonth() + 1).padStart(2, '0') + '-' +
+         String(cycle.getDate()).padStart(2, '0');
+}
+function isDismissedForCycle(key) {
+  var store = getDismissedStore();
+  var entry = store[key];
+  if (!entry) return false;
+  return entry.dismissedCycle === getDismissalCycleDate();
+}
+function dismissForCycle(key) {
+  var store = getDismissedStore();
+  store[key] = { dismissedCycle: getDismissalCycleDate(), dismissedAt: Date.now() };
+  saveDismissedStore(store);
+}
+function dismissAllForCycle(keys) {
+  var store = getDismissedStore();
+  var cycle = getDismissalCycleDate();
+  var now = Date.now();
+  keys.forEach(function (k) {
+    store[k] = { dismissedCycle: cycle, dismissedAt: now };
+  });
+  saveDismissedStore(store);
+}
+
+/* ============================================================
+   LOW STONE STOCK — COMPUTE
+   ============================================================ */
+function computeStoneClosing() {
+  var catalogue = readJSON(ST_CATALOGUE_KEY);
+  var opening   = readJSON(ST_OPENING_KEY);
+  var purchase  = [];
+  readJSON(ST_PURCHASE_KEY).forEach(function (o) {
+    (o.items || []).forEach(function (it) {
+      purchase.push({ stoneType: it.stoneType, color: it.color, size: it.size, qty: it.qty });
+    });
+  });
+  var issue = [];
+  readJSON(ST_ISSUE_KEY).forEach(function (o) {
+    (o.items || []).forEach(function (it) {
+      issue.push({ stoneType: it.stoneType, color: it.color, size: it.size, qty: it.qty });
+    });
+  });
+  var ret = [];
+  readJSON(ST_RETURN_KEY).forEach(function (o) {
+    (o.items || []).forEach(function (it) {
+      ret.push({ stoneType: it.stoneType, color: it.color, size: it.size, qty: it.qty });
+    });
+  });
+  var damage = readJSON(ST_DAMAGE_KEY);
+  var pret   = readJSON(ST_PURCHASE_RET_KEY);
+
+  function num(v){ var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+  var map = {};
+  function ensure(s,c,z){
+    var k = keyForStone(s,c,z);
+    if (!map[k]) map[k] = { stoneType:s||'', color:c||'', size:z||'', minQty:0, opening:0, purchased:0, issued:0, returned:0, damage:0, pret:0 };
+    return map[k];
+  }
+  catalogue.forEach(function (c) {
+    var e = ensure(c.stoneType, c.color, c.size);
+    e.minQty = num(c.minQty);
+  });
+  opening.forEach(function (r){ ensure(r.stoneType,r.color,r.size).opening += num(r.qty); });
+  purchase.forEach(function (r){ ensure(r.stoneType,r.color,r.size).purchased += num(r.qty); });
+  issue.forEach(function (r){ ensure(r.stoneType,r.color,r.size).issued += num(r.qty); });
+  ret.forEach(function (r){ ensure(r.stoneType,r.color,r.size).returned += num(r.qty); });
+  damage.forEach(function (r){ ensure(r.stoneType,r.color,r.size).damage += num(r.qty); });
+  pret.forEach(function (r){ ensure(r.stoneType,r.color,r.size).pret += num(r.qty); });
+
+  return Object.keys(map).map(function (k) {
+    var e = map[k];
+    e.closing = e.opening + e.purchased - e.issued + e.returned - e.damage - e.pret;
+    return e;
+  });
+}
+
+function escapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function renderStoneAlert() {
+  var list = computeStoneClosing();
+  var low = list.filter(function (e) { return e.minQty > 0 && e.closing <= e.minQty; });
+
+  // Filter out dismissed-for-current-cycle
+  var visible = low.filter(function (e) {
+    return !isDismissedForCycle(keyForStone(e.stoneType, e.color, e.size));
+  });
+
+  var panel = document.getElementById('stoneAlertPanel');
+  var wrap = document.getElementById('saList');
+  if (!visible.length) {
+    panel.style.display = 'none';
+    wrap.innerHTML = '';
+    return;
+  }
+  var html = '';
+  visible.forEach(function (e) {
+    var k = keyForStone(e.stoneType, e.color, e.size);
+    var desc = e.stoneType + (e.color ? ' · ' + e.color : '') + (e.size ? ' · ' + e.size : '');
+    html += '<div class="sa-chip">'
+      + '<div class="sa-text">'
+      +   '<i class="fas fa-gem" style="color:#e08ab4"></i> '
+      +   escapeHtml(desc)
+      +   ' — Qty <span class="val">' + e.closing + '</span>'
+      +   ' <span class="min">/ min ' + e.minQty + '</span>'
+        +   (e.closing <= 0 ? ' <span class="sa-badge">OUT OF STOCK</span>' : '')
+        +   '<div class="sa-short">' + (e.minQty - e.closing > 0 ? 'Short by <b>' + (e.minQty - e.closing) + '</b> \u2014 purchase at least ' + (e.minQty - e.closing) + ' to reach minimum' : 'At minimum level \u2014 reorder now') + '</div>'
+      + '</div>'
+      + '<button class="sa-item-close" data-dismiss-key="' + escapeHtml(k) + '" title="Dismiss for today (reappears tomorrow 9 AM)">'
+      +   '<i class="fas fa-times"></i>'
+      + '</button>'
+      + '</div>';
+  });
+  wrap.innerHTML = html;
+  panel.style.display = '';
+
+  wrap.querySelectorAll('.sa-item-close').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var k = btn.getAttribute('data-dismiss-key');
+      dismissForCycle(k);
+      renderStoneAlert();
+    });
+  });
+}
+
+function dismissAllStoneAlerts() {
+  var list = computeStoneClosing();
+  var low = list.filter(function (e) { return e.minQty > 0 && e.closing <= e.minQty; });
+  var keys = low.map(function (e) { return keyForStone(e.stoneType, e.color, e.size); });
+  dismissAllForCycle(keys);
+  renderStoneAlert();
+}
+
+function formatTime(ts) {
+  try { return new Date(ts).toLocaleString(); } catch (e) { return ''; }
+}
+
+function renderPendingRequests() {
+  var list = getPendingRequests().filter(function(r){ return r.status === 'pending'; });
+  var container = document.getElementById('pendingList');
+  var countEl = document.getElementById('pendingCount');
+  countEl.textContent = list.length ? ('(' + list.length + ' pending)') : '';
+
+  if (!list.length) {
+    container.innerHTML = '<div class="pending-empty"><i class="fas fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:.4rem;"></i> No pending device login requests.</div>';
+    return;
+  }
+
+  var html = '';
+  list.forEach(function (r) {
+    var roleTag = (r.role === 'admin')
+      ? ' <span style="background:#fcefe0;color:#b8901c;padding:.1rem .45rem;border-radius:.4rem;font-size:.7rem;font-weight:700;letter-spacing:.4px;">ADMIN</span>'
+      : '';
+    html += ''
+      + '<div class="pending-item" data-id="' + escapeHtml(r.id) + '">'
+      +   '<div class="info">'
+      +     '<h4><i class="fas fa-user-clock"></i> ' + escapeHtml(r.username) + roleTag + ' <span style="color:var(--muted);font-weight:400;font-size:.8rem">(' + escapeHtml(r.role) + (r.branch ? ' · ' + escapeHtml(r.branch) : '') + ')</span></h4>'
+      +     '<p>First-time device login request. OTP was sent to admin mobile <strong>' + escapeHtml(r.adminMobile || '') + '</strong>.</p>'
+      +     '<div class="otp-box">OTP: ' + escapeHtml(r.otp) + '</div>'
+      +     '<div class="meta"><i class="fas fa-desktop"></i> ' + escapeHtml(r.deviceId) + ' · <i class="fas fa-clock"></i> ' + escapeHtml(formatTime(r.requestedAt)) + '</div>'
+      +   '</div>'
+      +   '<div class="actions">'
+      +     '<button class="btn-approve" data-action="approve" data-id="' + escapeHtml(r.id) + '"><i class="fas fa-check"></i> Approve</button>'
+      +     '<button class="btn-reject"  data-action="reject"  data-id="' + escapeHtml(r.id) + '"><i class="fas fa-times"></i> Reject</button>'
+      +   '</div>'
+      + '</div>';
+  });
+  container.innerHTML = html;
+
+  container.querySelectorAll('button[data-action]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-id');
+      var action = btn.getAttribute('data-action');
+      var all = getPendingRequests();
+      var found = null;
+      for (var i = 0; i < all.length; i++) { if (all[i].id === id) { found = all[i]; break; } }
+      if (!found) return;
+
+      if (action === 'approve') {
+        if (!confirm('Approve device login for "' + found.username + '"?')) return;
+        found.status = 'approved';
+        found.approvedAt = Date.now();
+        approveDeviceLocally(found.username, found.deviceId);
+      } else if (action === 'reject') {
+        if (!confirm('Reject device login for "' + found.username + '"?')) return;
+        found.status = 'rejected';
+        found.rejectedAt = Date.now();
+      }
+      savePendingRequests(all);
+      renderPendingRequests();
+    });
+  });
+}
+
+(function loadAdminPhone(){
+  var inp = document.getElementById('adminPhoneInput');
+  inp.value = localStorage.getItem(ADMIN_PHONE_KEY) || '+91 99299 92299';
+})();
+document.getElementById('saveAdminPhoneBtn').addEventListener('click', function () {
+  var v = document.getElementById('adminPhoneInput').value.trim();
+  if (!v) { alert('Please enter a valid mobile number.'); return; }
+  localStorage.setItem(ADMIN_PHONE_KEY, v);
+  alert('Admin OTP mobile saved: ' + v);
+});
+
+document.getElementById('logoutBtn').addEventListener('click', function () {
+  if (!confirm('Log out of GP Portal?')) return;
+  window.__GP_LOGGING_OUT__ = true;
+  try { sessionStorage.clear(); } catch (e) {}
+  try { localStorage.removeItem('gp_logged_user'); } catch (e) {}
+  var target = 'index.html?t=' + Date.now() + '&logout=1';
+  window.location.href = target;
+  setTimeout(function () {
+    if (window.location.pathname.indexOf('index.html') === -1) {
+      window.location.replace(target);
+    }
+  }, 50);
+});
+
+document.getElementById('saCloseAll').addEventListener('click', dismissAllStoneAlerts);
+
+refreshStats();
+renderPendingRequests();
+renderStoneAlert();
+window.addEventListener('focus', function () { refreshStats(); renderPendingRequests(); renderStoneAlert(); });
+window.addEventListener('storage', function () { refreshStats(); renderPendingRequests(); renderStoneAlert(); });
+setInterval(function () { refreshStats(); renderPendingRequests(); renderStoneAlert(); }, 3000);
+</script>
+
+<script>
+(function () {
+  var sub = document.getElementById('workshopDashboardSub');
+  if (!sub) return;
+  try {
+    var users = JSON.parse(localStorage.getItem('gp_portal_users') || '[]');
+    var count = 0;
+    if (Array.isArray(users)) {
+      count = users.filter(function(u){ return u && u.role === 'workshop' && u.branch; }).length;
+    }
+    if (count > 0) {
+      sub.textContent = 'View data for all ' + count + ' workshop branch' + (count === 1 ? '' : 'es');
+    } else {
+      sub.textContent = 'Open the branch workshop order dashboard';
+    }
+  } catch(e) {}
+})();
+</script>
+
+<script src="gp-chat.js"></script>
+</body>
+</html>

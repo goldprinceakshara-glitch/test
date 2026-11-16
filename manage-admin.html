@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Account Management · GP Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<!-- PWA & Web App Icon Setup -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+<style>
+:root{
+  --brand:#900143;
+  --brand-dark:#6b0132;
+  --brand-light:#b8005a;
+  --gold:#f3f1f2;
+  --gold-soft:#f7e8f2;
+  --ink:#2b0a1c;
+  --muted:#8a5a72;
+  --card:rgba(255,255,255,.75);
+  --card-border:rgba(144,1,67,.12);
+  --danger:#e0284f;
+  --success:#1e9e63;
+  --shadow:0 20px 45px -22px rgba(144,1,67,.35);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,system-ui,sans-serif}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(900px 500px at 100% 0%, #f5e6ed 0%, transparent 55%),
+    radial-gradient(900px 600px at 0% 100%, #faf7f8 0%, transparent 55%),
+    linear-gradient(135deg, #fcf8f9 0%, #f8f6f7 50%, #f3eff1 550%);
+  padding:2rem 1.5rem;
+  color:var(--ink);
+  position:relative;
+  overflow-x:hidden;
+}
+body::before{content:"";position:fixed;width:400px;height:400px;border-radius:50%;background:var(--brand);filter:blur(90px);opacity:.12;top:-140px;right:-120px;z-index:0;pointer-events:none}
+body::after{content:"";position:fixed;width:360px;height:360px;border-radius:50%;background:var(--gold);filter:blur(90px);opacity:.14;bottom:-140px;left:-120px;z-index:0;pointer-events:none}
+.container{max-width:1150px;margin:0 auto;position:relative;z-index:1}
+
+header{
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--card);
+  backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  padding:1.2rem 2rem;border-radius:1.5rem;border:1px solid var(--card-border);
+  margin-bottom:2rem;flex-wrap:wrap;gap:1rem;box-shadow:var(--shadow);position:relative;
+}
+header::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;border-radius:1.5rem 1.5rem 0 0;background:linear-gradient(90deg, var(--gold), var(--brand), var(--gold))}
+header h1{font-size:1.35rem;font-weight:600;display:flex;align-items:center;gap:.7rem;color:var(--brand);letter-spacing:-.2px}
+header h1 i{color:var(--brand)}
+
+.btn{
+  padding:.7rem 1.3rem;border:none;border-radius:2rem;font-weight:600;font-size:.85rem;
+  cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:all .2s;text-decoration:none;
+}
+.btn-back{background:#fff;color:var(--brand);border:1.5px solid rgba(144,1,67,.25)}
+.btn-back:hover{background:rgba(144,1,67,.08);border-color:var(--brand)}
+.btn-primary{background:linear-gradient(135deg, var(--brand), var(--brand-light));color:#fff;box-shadow:0 10px 20px -10px rgba(144,1,67,.7)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 26px -12px rgba(144,1,67,.8);filter:brightness(1.05)}
+.btn-secondary{background:#fff;color:var(--muted);border:1.5px solid rgba(144,1,67,.2)}
+.btn-secondary:hover{background:rgba(144,1,67,.06);color:var(--brand)}
+
+.panel{
+  background:var(--card);
+  backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  padding:2rem;border-radius:1.5rem;border:1px solid var(--card-border);box-shadow:var(--shadow);
+}
+.panel h2{font-size:1.15rem;font-weight:600;margin-bottom:1.2rem;display:flex;align-items:center;gap:.6rem;color:var(--brand);letter-spacing:-.2px}
+.panel h2 i{color:var(--gold)}
+
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;flex-wrap:wrap;gap:.8rem}
+
+.count-badge{
+  background:rgba(212,175,55,.15);color:#8a6d0f;padding:.45rem 1rem;border-radius:2rem;
+  font-size:.8rem;border:1px solid rgba(212,175,55,.45);font-weight:600;letter-spacing:.3px;
+}
+
+/* ---------- TABS ---------- */
+.tabs{
+  display:flex;gap:.4rem;flex-wrap:wrap;
+  padding:.4rem;border-radius:1rem;
+  background:rgba(255,255,255,.55);border:1px solid var(--card-border);
+  margin-bottom:1.4rem;
+}
+.tab-btn{
+  border:none;background:transparent;color:var(--brand);
+  padding:.65rem 1.05rem;border-radius:.7rem;font-weight:700;font-size:.82rem;
+  cursor:pointer;display:inline-flex;align-items:center;gap:.45rem;
+  transition:all .2s;
+}
+.tab-btn:hover{background:rgba(144,1,67,.08)}
+.tab-btn.active{
+  background:linear-gradient(135deg,var(--brand),var(--brand-light));
+  color:#fff;box-shadow:0 8px 18px -10px rgba(144,1,67,.65);
+}
+.tab-btn i{font-size:.9em}
+.tab-btn .tab-count{
+  background:rgba(255,255,255,.6);color:var(--brand);
+  font-size:.68rem;font-weight:800;padding:.05rem .45rem;border-radius:.5rem;
+}
+.tab-btn.active .tab-count{background:rgba(255,255,255,.25);color:#fff}
+
+.table-wrap{
+  background:#fff;border-radius:1.1rem;border:1px solid var(--card-border);
+  overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.6);
+  overflow-x:auto;
+}
+table{width:100%;border-collapse:collapse;font-size:.9rem;color:var(--ink);min-width:680px}
+th{
+  text-align:left;padding:1rem 1.2rem;background:linear-gradient(180deg,#fff9fc,#fbeef5);
+  color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  font-size:.72rem;border-bottom:1.5px solid rgba(144,1,67,.15);
+}
+td{padding:1rem 1.2rem;border-bottom:1px solid rgba(144,1,67,.06);color:#4a2338}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:rgba(144,1,67,.03)}
+tr:last-child td{border-bottom:none}
+td code{font-family:'Courier New',monospace;background:#f7f1f4;padding:.15rem .45rem;border-radius:.35rem;font-size:.82rem;color:#5a1b39}
+
+.badge{display:inline-flex;align-items:center;gap:.35rem;padding:.32rem .8rem;border-radius:30px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.badge-admin{background:rgba(212,175,55,.18);color:#8a6d0f;border:1px solid rgba(212,175,55,.5)}
+.badge-developer{background:rgba(15,157,88,.12);color:#0f7a44;border:1px solid rgba(15,157,88,.35)}
+.badge-branch{background:rgba(184,0,90,.12);color:var(--brand);border:1px solid rgba(144,1,67,.3)}
+.badge-user{background:rgba(144,1,67,.1);color:var(--brand-dark);border:1px solid rgba(144,1,67,.25)}
+.badge-workshop{background:rgba(184,0,90,.14);color:var(--brand);border:1px solid rgba(144,1,67,.3)}
+.badge-designer{background:rgba(9,77,156,.12);color:#094d9c;border:1px solid rgba(9,77,156,.3)}
+.badge-cad{background:rgba(75,31,168,.12);color:#4b1fa8;border:1px solid rgba(75,31,168,.3)}
+.badge-pp{background:rgba(138,99,0,.14);color:#8a6300;border:1px solid rgba(138,99,0,.35)}
+.badge-pp.plating_polish{background:rgba(9,77,156,.12);color:#094d9c;border-color:rgba(9,77,156,.3)}
+.badge-pp.packing{background:rgba(138,61,0,.12);color:#8a3d00;border-color:rgba(138,61,0,.3)}
+.badge-pp.qc_section{background:rgba(0,105,92,.12);color:#00695c;border-color:rgba(0,105,92,.3)}
+.badge-pp.dispatch_section{background:rgba(19,115,51,.12);color:#137333;border-color:rgba(19,115,51,.3)}
+.badge-stone{background:rgba(212,175,55,.15);color:#8a6d0f;border:1px solid rgba(212,175,55,.45)}
+
+.action-btns{display:flex;gap:.4rem}
+.icon-btn{width:36px;height:36px;border-radius:.8rem;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;transition:all .2s}
+.icon-edit{background:rgba(144,1,67,.1);color:var(--brand)}
+.icon-edit:hover{background:var(--brand);color:#fff}
+.icon-remove{background:rgba(224,40,79,.1);color:var(--danger)}
+.icon-remove:hover{background:var(--danger);color:#fff}
+
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.empty-state i{font-size:3rem;margin-bottom:1rem;opacity:.35;color:var(--brand)}
+
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(43,10,28,.55);
+  backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:1000;padding:1rem;
+}
+.modal-overlay.show{display:flex;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:#fff;border:1px solid var(--card-border);border-radius:1.5rem;
+  padding:2rem;max-width:480px;width:100%;
+  box-shadow:0 30px 60px -20px rgba(144,1,67,.5);
+  animation:popIn .25s ease;
+  position:relative;
+  max-height:92vh;overflow-y:auto;
+}
+.modal::before{content:"";position:absolute;top:0;left:2rem;right:2rem;height:3px;border-radius:0 0 6px 6px;background:linear-gradient(90deg, var(--gold), var(--brand), var(--gold))}
+@keyframes popIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal h3{font-size:1.15rem;font-weight:600;margin-bottom:1.5rem;display:flex;align-items:center;gap:.6rem;color:var(--brand)}
+.modal h3 i{color:var(--gold)}
+.modal .form-group{margin-bottom:1.1rem}
+.modal label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:.5rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.modal input, .modal select{
+  width:100%;padding:.9rem 1.1rem;background:#fdf5f8;
+  border:1.5px solid rgba(144,1,67,.18);border-radius:.9rem;color:var(--ink);font-size:1rem;outline:none;
+  transition:all .2s;
+}
+.modal input:focus, .modal select:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 4px rgba(144,1,67,.13)}
+.modal input:disabled{background:#f0e5eb;color:var(--muted);cursor:not-allowed}
+.modal-actions{display:flex;gap:.7rem;margin-top:1.5rem}
+.modal-actions .btn{flex:1;justify-content:center;padding:.85rem}
+.modal .note{font-size:.74rem;color:var(--muted);line-height:1.5;margin-top:-.3rem;margin-bottom:.8rem}
+
+.toast{
+  position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(120px);
+  background:var(--brand);color:#fff;padding:1rem 1.5rem;border-radius:1rem;font-size:.9rem;font-weight:600;
+  border-left:4px solid var(--gold);opacity:0;transition:all .3s cubic-bezier(.3,1.2,.5,1);
+  z-index:2000;box-shadow:0 18px 36px -14px rgba(144,1,67,.7);
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.error{background:var(--danger);border-left-color:#fff}
+.toast.success{background:var(--brand);border-left-color:var(--gold)}
+
+@media(max-width:600px){
+  body{padding:1.2rem .9rem}
+  header{padding:1rem 1.2rem;border-radius:1.2rem}
+  header h1{font-size:1.15rem}
+  .panel{padding:1.4rem;border-radius:1.2rem}
+  .tab-btn{padding:.55rem .8rem;font-size:.76rem}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1><i class="fas fa-user-shield"></i> Account Management</h1>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+      <a href="gpadmin.html" class="btn btn-back" id="backBtn"><i class="fas fa-arrow-left"></i> Dashboard</a>
+      <button class="btn btn-back" id="logoutBtn" type="button"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </header>
+
+  <div class="panel">
+    <div class="toolbar">
+      <h2><i class="fas fa-users-cog"></i> <span id="sectionTitle">Account Management</span></h2>
+      <div style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap">
+        <span class="count-badge" id="countBadge">0 accounts</span>
+        <button class="btn btn-primary" id="addBtn" type="button"><i class="fas fa-plus-circle"></i> <span id="addBtnText">Add Account</span></button>
+      </div>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button class="tab-btn active" data-tab="core" type="button">
+        <i class="fas fa-shield-halved"></i> Admins / Developers / Branch <span class="tab-count" id="tabCountCore">0</span>
+      </button>
+      <button class="tab-btn" data-tab="user" type="button">
+        <i class="fas fa-user"></i> Users <span class="tab-count" id="tabCountUser">0</span>
+      </button>
+      <button class="tab-btn" data-tab="workshop" type="button">
+        <i class="fas fa-tools"></i> Workshops <span class="tab-count" id="tabCountWorkshop">0</span>
+      </button>
+      <button class="tab-btn" data-tab="designer" type="button">
+        <i class="fas fa-palette"></i> Designers <span class="tab-count" id="tabCountDesigner">0</span>
+      </button>
+      <button class="tab-btn" data-tab="cad_designer" type="button">
+        <i class="fas fa-drafting-compass"></i> CAD Designers <span class="tab-count" id="tabCountCad">0</span>
+      </button>
+      <button class="tab-btn" data-tab="pp" type="button">
+        <i class="fas fa-industry"></i> Post-Production <span class="tab-count" id="tabCountPP">0</span>
+      </button>
+      <button class="tab-btn" data-tab="stone" type="button">
+        <i class="fas fa-gem"></i> Stone Stock <span class="tab-count" id="tabCountStone">0</span>
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none"><i class="fas fa-user-slash"></i><p>No accounts in this section yet.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL ============ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle"><i class="fas fa-plus-circle"></i> Add Account</h3>
+    <div class="form-group" id="roleGroup">
+      <label>Role</label>
+      <select id="modalRole"></select>
+    </div>
+    <div class="form-group" id="sectionGroup">
+      <label>Designer Section</label>
+      <select id="modalSection">
+        <option value="Designs Bank">Designs Bank</option>
+        <option value="cad-charge">CAD — Charge (Allot Designs)</option>
+        <option value="CAM">CAM Section</option>
+        <option value="Casting">Casting Section</option>
+        <option value="Samples">Samples Section</option>
+        <option value="Admin">Admin</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Username</label><input type="text" id="modalUsername" autocomplete="off"></div>
+    <div class="form-group"><label>Password</label><input type="text" id="modalPassword" autocomplete="off"></div>
+    <div class="form-group"><label>Mobile Number</label><input type="text" id="modalPhone" autocomplete="off"></div>
+    <div class="note" id="modalNote"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="cancelBtn" type="button">Cancel</button>
+      <button class="btn btn-primary" id="saveBtn" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- API base -->
+<!-- /config.js is generated by the UI server from the API_URL environment variable -->
+<script src="config.js"></script>
+<script>
+  /* API base: API_URL from /config.js (Railway). If empty: same origin, or localhost:4000 in local dev. */
+  window.GP_API_BASE = window.GP_API_BASE || (
+    (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      && location.port !== '4000'
+        ? 'http://localhost:4000'
+        : ''
+  );
+</script>
+
+<!-- ============ PROTECTION + API CLIENT ============ -->
+<script>
+/* ---------- API client ---------- */
+var GP_API = {
+  base: window.GP_API_BASE,
+  tokenKey: 'gp_jwt',
+  getToken: function () { return localStorage.getItem(this.tokenKey) || ''; },
+  setToken: function (t) { t ? localStorage.setItem(this.tokenKey, t) : localStorage.removeItem(this.tokenKey); },
+
+  req: function (path, opts) {
+    opts = opts || {};
+    var headers = { 'Content-Type': 'application/json' };
+    if (this.getToken()) headers.Authorization = 'Bearer ' + this.getToken();
+    return fetch(this.base + path, {
+      method: opts.method || 'GET',
+      headers: headers,
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    }).then(function (r) {
+      return r.json().catch(function(){ return {}; }).then(function (data) {
+        if (!r.ok) {
+          var err = new Error((data && data.error) || r.statusText);
+          err.status = r.status; err.data = data; throw err;
+        }
+        return data;
+      });
+    });
+  },
+
+  me: function () { return this.req('/api/auth/me'); },
+  listAccounts: function (params) {
+    var q = new URLSearchParams(params || {}).toString();
+    return this.req('/api/accounts' + (q ? '?' + q : ''));
+  },
+  counts: function () { return this.req('/api/accounts/counts'); },
+  createAccount: function (payload) { return this.req('/api/accounts', { method: 'POST', body: payload }); },
+  updateAccount: function (id, payload) { return this.req('/api/accounts/' + id, { method: 'PUT', body: payload }); },
+  deleteAccount: function (id) { return this.req('/api/accounts/' + id, { method: 'DELETE' }); }
+};
+
+/* ---------- Session guard (server-verified) ---------- */
+(function () {
+  if (window.__GP_LOGGING_OUT__) return;
+
+  function logoutRedirect() {
+    GP_API.setToken('');
+    try { sessionStorage.clear(); } catch (e) {}
+    window.location.replace('index.html?t=' + Date.now());
+  }
+
+  function check() {
+    var cached = null;
+    try { cached = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null'); } catch (e) {}
+    if (!cached || !cached.username) { logoutRedirect(); return; }
+
+    GP_API.me().then(function (data) {
+      if (!data || !data.user) { logoutRedirect(); return; }
+      if (data.user.role !== 'admin' && data.user.role !== 'developer') {
+        logoutRedirect(); return;
+      }
+      // keep the cache fresh
+      try {
+        sessionStorage.setItem('gp_logged_user', JSON.stringify({
+          username: data.user.username,
+          role: data.user.role,
+          branch: data.user.branch || '',
+          section: data.user.section || '',
+          phone: data.user.phone || '',
+          mobile: data.user.mobile || '',
+          whatsapp: data.user.mobile || '',
+          loginAt: (cached.loginAt || Date.now())
+        }));
+      } catch (e) {}
+    }).catch(function () { logoutRedirect(); });
+  }
+
+  if (!GP_API.getToken()) { logoutRedirect(); return; }
+  check();
+  window.addEventListener('pageshow', check);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') check();
+  });
+  window.addEventListener('focus', check);
+})();
+</script>
+
+<script>
+/* ============================================================
+   LOGGED-IN USER
+   ============================================================ */
+var CURRENT_USER = (function () {
+  try { return JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null') || {}; }
+  catch (e) { return {}; }
+})();
+var IS_ADMIN = (CURRENT_USER.role === 'admin');
+
+/* ============================================================
+   ROLE METADATA (mirrors backend)
+   ============================================================ */
+var ROLE_LABEL = {
+  admin:               'Admin',
+  developer:           'Developer',
+  branch_incharge:     'Branch Incharge',
+  user:                'User',
+  workshop:            'Workshop',
+  designer:            'Designer',
+  cad_designer:        'CAD Designer',
+  stock_jama_incharge: 'Stock Jama In-charge',
+  plating_polish:      'Plating / Polish',
+  packing:             'Packing',
+  qc_section:          'QC Section',
+  dispatch_section:    'Dispatch Section',
+  stone_stock:         'Stone Stock'
+};
+var ROLE_BADGE_CLASS = {
+  admin:'badge-admin', developer:'badge-developer', branch_incharge:'badge-branch',
+  user:'badge-user', workshop:'badge-workshop',
+  designer:'badge-designer', cad_designer:'badge-cad',
+  stone_stock:'badge-stone'
+};
+var ROLE_ICON = {
+  admin:'fa-crown', developer:'fa-code', branch_incharge:'fa-user-tie',
+  user:'fa-user', workshop:'fa-tools',
+  designer:'fa-palette', cad_designer:'fa-drafting-compass',
+  stone_stock:'fa-gem'
+};
+
+var DEVELOPER_FORBIDDEN_ROLES = ['admin', 'developer', 'branch_incharge', 'stone_stock'];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+var state = {
+  activeTab: 'core',
+  editing: null,     // { id, role }
+  accounts: []       // all accounts from server
+};
+
+var tableHead    = document.getElementById('tableHead');
+var tableBody    = document.getElementById('tableBody');
+var emptyState   = document.getElementById('emptyState');
+var countBadge   = document.getElementById('countBadge');
+var addBtn       = document.getElementById('addBtn');
+var addBtnText   = document.getElementById('addBtnText');
+var sectionTitle = document.getElementById('sectionTitle');
+var tabsEl       = document.getElementById('tabs');
+
+var tabCountEls = {
+  core:         document.getElementById('tabCountCore'),
+  user:         document.getElementById('tabCountUser'),
+  workshop:     document.getElementById('tabCountWorkshop'),
+  designer:     document.getElementById('tabCountDesigner'),
+  cad_designer: document.getElementById('tabCountCad'),
+  pp:           document.getElementById('tabCountPP'),
+  stone:        document.getElementById('tabCountStone')
+};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function canSeeRole(role) {
+  if (IS_ADMIN) return true;
+  return DEVELOPER_FORBIDDEN_ROLES.indexOf(role) === -1;
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
+  });
+}
+
+function roleBadgeHtml(role) {
+  var cls  = ROLE_BADGE_CLASS[role] || ('badge-pp ' + role);
+  var icon = ROLE_ICON[role] || 'fa-circle';
+  var label = ROLE_LABEL[role] || role;
+  return '<span class="badge ' + cls + '"><i class="fas ' + icon + '"></i> ' + escapeHtml(label) + '</span>';
+}
+
+function isPPRole(role) {
+  return ['stock_jama_incharge','plating_polish','packing','qc_section','dispatch_section'].indexOf(role) !== -1;
+}
+
+function addLabelForTab(tab) {
+  if (tab === 'core')         return 'Add Account';
+  if (tab === 'user')         return 'Add User';
+  if (tab === 'workshop')     return 'Add Workshop';
+  if (tab === 'designer')     return 'Add Designer';
+  if (tab === 'cad_designer') return 'Add CAD Designer';
+  if (tab === 'pp')           return 'Add Post-Prod User';
+  if (tab === 'stone')        return 'Add Stone Stock User';
+  return 'Add';
+}
+
+function rowsForActiveTab() {
+  var tab = state.activeTab;
+  var out = state.accounts.filter(function (a) {
+    if (tab === 'core')         return ['admin','developer','branch_incharge'].indexOf(a.role) !== -1;
+    if (tab === 'user')         return a.role === 'user';
+    if (tab === 'workshop')     return a.role === 'workshop';
+    if (tab === 'designer')     return a.role === 'designer';
+    if (tab === 'cad_designer') return a.role === 'cad_designer';
+    if (tab === 'pp')           return isPPRole(a.role);
+    if (tab === 'stone')        return a.role === 'stone_stock';
+    return false;
+  });
+  if (!IS_ADMIN) out = out.filter(function (a) { return canSeeRole(a.role); });
+  return out;
+}
+
+function updateTabCounts() {
+  var counts = { core:0, user:0, workshop:0, designer:0, cad_designer:0, pp:0, stone:0 };
+  state.accounts.forEach(function (a) {
+    if (['admin','developer','branch_incharge'].indexOf(a.role) !== -1) counts.core++;
+    else if (a.role === 'user')         counts.user++;
+    else if (a.role === 'workshop')     counts.workshop++;
+    else if (a.role === 'designer')     counts.designer++;
+    else if (a.role === 'cad_designer') counts.cad_designer++;
+    else if (a.role === 'stone_stock')  counts.stone++;
+    else if (isPPRole(a.role))          counts.pp++;
+  });
+  Object.keys(tabCountEls).forEach(function (k) {
+    if (tabCountEls[k]) tabCountEls[k].textContent = counts[k];
+  });
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function render() {
+  updateTabCounts();
+
+  var rows = rowsForActiveTab();
+  countBadge.textContent = rows.length + ' account' + (rows.length !== 1 ? 's' : '');
+
+  if (state.activeTab === 'core')         sectionTitle.textContent = 'Admins / Developers / Branch Incharges';
+  else if (state.activeTab === 'user')    sectionTitle.textContent = 'User Accounts';
+  else if (state.activeTab === 'workshop')sectionTitle.textContent = 'Workshop Accounts';
+  else if (state.activeTab === 'designer')sectionTitle.textContent = 'Designer Accounts';
+  else if (state.activeTab === 'cad_designer') sectionTitle.textContent = 'CAD Designer Accounts';
+  else if (state.activeTab === 'pp')      sectionTitle.textContent = 'Post-Production Users';
+  else if (state.activeTab === 'stone')   sectionTitle.textContent = 'Stone Stock Users';
+
+  if (state.activeTab === 'designer') {
+    tableHead.innerHTML = '<tr><th>Username</th><th>Password</th><th>Mobile Number</th><th>Section</th><th style="width:110px">Actions</th></tr>';
+  } else {
+    tableHead.innerHTML = '<tr><th>Username</th><th>Password</th><th>Mobile Number</th><th>Role</th><th style="width:110px">Actions</th></tr>';
+  }
+
+  tableBody.innerHTML = '';
+  if (rows.length === 0) {
+    emptyState.style.display = 'block';
+    return;
+  }
+  emptyState.style.display = 'none';
+
+  rows.forEach(function (a) {
+    var tr = document.createElement('tr');
+
+    if (state.activeTab === 'designer') {
+      tr.innerHTML =
+        '<td><strong>' + escapeHtml(a.username) + '</strong></td>' +
+        '<td><code>••••••••</code></td>' +
+        '<td>' + escapeHtml(a.mobile || a.phone || '—') + '</td>' +
+        '<td>' + escapeHtml(a.section || '—') + '</td>' +
+        '<td><div class="action-btns">' +
+          '<button type="button" class="icon-btn icon-edit" data-action="edit" data-id="' + a.id + '" data-role="' + a.role + '" title="Edit"><i class="fas fa-pen"></i></button>' +
+          '<button type="button" class="icon-btn icon-remove" data-action="remove" data-id="' + a.id + '" data-role="' + a.role + '" title="Remove"><i class="fas fa-trash"></i></button>' +
+        '</div></td>';
+    } else {
+      tr.innerHTML =
+        '<td><strong>' + escapeHtml(a.username) + '</strong></td>' +
+        '<td><code>••••••••</code></td>' +
+        '<td>' + escapeHtml(a.phone || a.mobile || '—') + '</td>' +
+        '<td>' + roleBadgeHtml(a.role) + '</td>' +
+        '<td><div class="action-btns">' +
+          '<button type="button" class="icon-btn icon-edit" data-action="edit" data-id="' + a.id + '" data-role="' + a.role + '" title="Edit"><i class="fas fa-pen"></i></button>' +
+          '<button type="button" class="icon-btn icon-remove" data-action="remove" data-id="' + a.id + '" data-role="' + a.role + '" title="Remove"><i class="fas fa-trash"></i></button>' +
+        '</div></td>';
+    }
+    tableBody.appendChild(tr);
+  });
+}
+
+/* ============================================================
+   LOAD / REFRESH
+   ============================================================ */
+function loadAll() {
+  return GP_API.listAccounts({}).then(function (data) {
+    state.accounts = (data.accounts || []);
+    render();
+  }).catch(function (err) {
+    if (err.status === 401) {
+      GP_API.setToken('');
+      try { sessionStorage.clear(); } catch (e) {}
+      window.location.replace('index.html');
+    } else {
+      showToast((err.data && err.data.error) || err.message || 'Could not load accounts.', 'error');
+    }
+  });
+}
+
+/* ============================================================
+   ROW ACTIONS
+   ============================================================ */
+tableBody.addEventListener('click', function (e) {
+  var btn = e.target.closest('button[data-action]');
+  if (!btn) return;
+  var id = parseInt(btn.dataset.id, 10);
+  var role = btn.dataset.role;
+  if (isNaN(id) || !role) return;
+  if (!canSeeRole(role)) { showToast('You cannot modify this account.', 'error'); return; }
+
+  if (btn.dataset.action === 'edit')   openEditModal(id, role);
+  if (btn.dataset.action === 'remove') removeAccount(id, role);
+});
+
+/* ============================================================
+   TABS
+   ============================================================ */
+tabsEl.addEventListener('click', function (e) {
+  var b = e.target.closest('.tab-btn');
+  if (!b) return;
+  var tab = b.dataset.tab;
+  if (!tab) return;
+  state.activeTab = tab;
+  tabsEl.querySelectorAll('.tab-btn').forEach(function (x) { x.classList.remove('active'); });
+  b.classList.add('active');
+  addBtnText.textContent = addLabelForTab(tab);
+  render();
+});
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+var modalOverlay = document.getElementById('modalOverlay');
+var modalTitle   = document.getElementById('modalTitle');
+var modalRole    = document.getElementById('modalRole');
+var modalSection = document.getElementById('modalSection');
+var modalUsername= document.getElementById('modalUsername');
+var modalPassword= document.getElementById('modalPassword');
+var modalPhone   = document.getElementById('modalPhone');
+var modalNote    = document.getElementById('modalNote');
+var roleGroup    = document.getElementById('roleGroup');
+var sectionGroup = document.getElementById('sectionGroup');
+var cancelBtn    = document.getElementById('cancelBtn');
+var saveBtn      = document.getElementById('saveBtn');
+var toast        = document.getElementById('toast');
+var logoutBtn    = document.getElementById('logoutBtn');
+var backBtn      = document.getElementById('backBtn');
+
+var toastTimer;
+function showToast(msg, type) {
+  toast.textContent = msg;
+  toast.className = 'toast show ' + (type || 'success');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 3200);
+}
+
+function allowedRolesForAdd(tab) {
+  if (IS_ADMIN) {
+    if (tab === 'core')         return ['admin','developer','branch_incharge'];
+    if (tab === 'user')         return ['user'];
+    if (tab === 'workshop')     return ['workshop'];
+    if (tab === 'designer')     return ['designer'];
+    if (tab === 'cad_designer') return ['cad_designer'];
+    if (tab === 'pp')           return ['stock_jama_incharge','plating_polish','packing','qc_section','dispatch_section'];
+    if (tab === 'stone')        return ['stone_stock'];
+    return [];
+  }
+  /* Developer */
+  if (tab === 'user')         return ['user'];
+  if (tab === 'workshop')     return ['workshop'];
+  if (tab === 'designer')     return ['designer'];
+  if (tab === 'cad_designer') return ['cad_designer'];
+  if (tab === 'pp')           return ['stock_jama_incharge','plating_polish','packing','qc_section','dispatch_section'];
+  return [];
+}
+
+function fillRoleSelect(roles, selected) {
+  modalRole.innerHTML = '';
+  roles.forEach(function (r) {
+    var opt = document.createElement('option');
+    opt.value = r;
+    opt.textContent = ROLE_LABEL[r] || r;
+    if (r === selected) opt.selected = true;
+    modalRole.appendChild(opt);
+  });
+}
+
+function openAddModal() {
+  state.editing = null;
+  var tab = state.activeTab;
+  var roles = allowedRolesForAdd(tab);
+  if (!roles.length) { showToast('You cannot add accounts in this section.', 'error'); return; }
+
+  modalTitle.innerHTML = '<i class="fas fa-plus-circle"></i> ' + addLabelForTab(tab);
+  modalUsername.value = '';
+  modalPassword.value = '';
+  modalPhone.value = '';
+  modalUsername.disabled = false;
+  roleGroup.style.display = roles.length > 1 ? 'block' : 'none';
+  fillRoleSelect(roles, roles[0]);
+  sectionGroup.style.display = (tab === 'designer') ? 'block' : 'none';
+  if (tab === 'designer') modalSection.value = 'Designs Bank';
+  modalNote.textContent = '';
+
+  modalOverlay.classList.add('show');
+  setTimeout(function () { modalUsername.focus(); }, 100);
+}
+
+function openEditModal(id, role) {
+  var acct = state.accounts.filter(function (a) { return a.id === id; })[0];
+  if (!acct) { showToast('Account not found.', 'error'); loadAll(); return; }
+
+  state.editing = { id: id, role: role };
+
+  modalTitle.innerHTML = '<i class="fas fa-pen"></i> Edit ' + (ROLE_LABEL[role] || role);
+  modalUsername.value = acct.username || '';
+  modalUsername.disabled = true;
+  modalPassword.value = '';  // never preload password
+  modalPassword.placeholder = 'Leave blank to keep current password';
+  modalPhone.value = acct.phone || acct.mobile || '';
+
+  roleGroup.style.display = 'none';
+  fillRoleSelect([role], role);
+  sectionGroup.style.display = (role === 'designer') ? 'block' : 'none';
+  if (role === 'designer') modalSection.value = acct.section || 'Designs Bank';
+  modalNote.textContent = 'Username cannot be changed. Leave password blank to keep the current one.';
+
+  modalOverlay.classList.add('show');
+  setTimeout(function () { modalPassword.focus(); }, 100);
+}
+
+function closeModal() {
+  modalOverlay.classList.remove('show');
+  state.editing = null;
+  modalPassword.placeholder = '';
+}
+
+function saveUser() {
+  var role = modalRole.value;
+  var username = (modalUsername.value || '').trim();
+  var password = (modalPassword.value || '').trim();
+  var phone = (modalPhone.value || '').trim();
+  var section = (modalSection.value || '').trim();
+
+  if (!state.editing && (!username || !password)) {
+    showToast('Username and password required.', 'error'); return;
+  }
+  if (!state.editing && username.length < 3) {
+    showToast('Username must be at least 3 characters.', 'error'); return;
+  }
+  if (!state.editing && password.length < 4) {
+    showToast('Password must be at least 4 characters.', 'error'); return;
+  }
+
+  saveBtn.disabled = true;
+
+  if (!state.editing) {
+    var payload = { username: username, password: password, role: role, phone: phone };
+    if (role === 'designer' || role === 'cad_designer') payload.section = section;
+    if (role === 'workshop') payload.branch = 'HQ';
+    if (role === 'stone_stock') payload.branch = 'HO';
+
+    GP_API.createAccount(payload).then(function () {
+      showToast('Account added.', 'success');
+      closeModal();
+      return loadAll();
+    }).catch(function (err) {
+      showToast((err.data && err.data.error) || err.message || 'Could not add account.', 'error');
+    }).then(function () { saveBtn.disabled = false; });
+
+  } else {
+    var upd = { phone: phone };
+    if (password) upd.password = password;
+    if (state.editing.role === 'designer') upd.section = section || 'Designs Bank';
+
+    GP_API.updateAccount(state.editing.id, upd).then(function () {
+      showToast('Account updated.', 'success');
+      closeModal();
+      return loadAll();
+    }).catch(function (err) {
+      showToast((err.data && err.data.error) || err.message || 'Could not update account.', 'error');
+    }).then(function () { saveBtn.disabled = false; });
+  }
+}
+
+function removeAccount(id, role) {
+  var acct = state.accounts.filter(function (a) { return a.id === id; })[0];
+  if (!acct) { showToast('Not found.', 'error'); loadAll(); return; }
+
+  if (!confirm('Remove "' + acct.username + '" (' + (ROLE_LABEL[role] || role) + ')?')) return;
+
+  GP_API.deleteAccount(id).then(function () {
+    showToast('Removed.', 'success');
+    return loadAll();
+  }).catch(function (err) {
+    showToast((err.data && err.data.error) || err.message || 'Could not remove.', 'error');
+  });
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+addBtn.addEventListener('click', openAddModal);
+cancelBtn.addEventListener('click', closeModal);
+saveBtn.addEventListener('click', saveUser);
+[modalUsername, modalPassword, modalPhone].forEach(function (inp) {
+  inp.addEventListener('keypress', function (e) { if (e.key === 'Enter') { e.preventDefault(); saveUser(); } });
+});
+modalOverlay.addEventListener('click', function (e) { if (e.target === modalOverlay) closeModal(); });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && modalOverlay.classList.contains('show')) closeModal(); });
+
+if (!IS_ADMIN) {
+  backBtn.href = 'developer.html';
+}
+
+logoutBtn.addEventListener('click', function () {
+  if (!confirm('Log out of GP Portal?')) return;
+  window.__GP_LOGGING_OUT__ = true;
+  GP_API.setToken('');
+  try { sessionStorage.clear(); } catch (e) {}
+  window.location.href = 'index.html?t=' + Date.now() + '&logout=1';
+});
+
+/* ============================================================
+   INITIAL RENDER
+   ============================================================ */
+addBtnText.textContent = addLabelForTab(state.activeTab);
+loadAll();
+window.addEventListener('focus', loadAll);

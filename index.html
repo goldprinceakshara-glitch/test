@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Login · GP Portal</title>
+
+<!-- ========================================================= -->
+<!-- PWA & WEB APP ICON SETUP (GoldPrince)                      -->
+<!-- ========================================================= -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-96x96.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+<!-- ========================================================= -->
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+:root{
+  --brand:#900143; --brand-dark:#6b0132; --brand-light:#b8005a;
+  --brand-soft:#f7e6ee; --gold:#d4af37; --gold-soft:#f7ecc8;
+  --ink:#3a0d24; --muted:#8a5a72; --white:#ffffff;
+  --danger:#e0284f; --danger-soft:#fde7ec;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,system-ui,sans-serif}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(400px 250px at 80% 0%, #f7f1e6 0%, transparent 25%),
+    radial-gradient(300px 250px at 0% 60%, #f7f1e6 0%, transparent 30%),
+    linear-gradient(135deg, #dddbd6 0%, #f0ede7 25%, #f5f3ef 55%);
+  display:flex;align-items:center;justify-content:center;padding:1.5rem;
+  position:relative;overflow:hidden;
+}
+body::before,body::after{content:"";position:fixed;border-radius:50%;filter:blur(60px);opacity:.35;pointer-events:none;z-index:0}
+body::before{width:340px;height:340px;background:#e9e3d7;top:-120px;left:-120px}
+body::after{width:380px;height:380px;background:#e4dfd5;bottom:-160px;right:-140px;opacity:.22}
+
+.login-card{
+  position:relative;z-index:1;background:rgb(250,244,240);
+  backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);
+  border-radius:2rem;padding:2.6rem 2.2rem 2.2rem;width:100%;max-width:450px;
+  box-shadow:0 30px 60px -20px rgba(144,1,67,.35),0 8px 24px -8px rgba(144,1,67,.18),0 0 0 1px rgba(144,1,67,.08) inset;
+  border:1px solid rgba(255,255,255,.85);
+}
+.login-card::before{
+  content:"";position:absolute;top:0;left:2.2rem;right:2.2rem;height:4px;border-radius:0 0 6px 6px;
+  background:linear-gradient(90deg,var(--gold),var(--brand),var(--gold));opacity:.9;
+}
+h1{color:var(--brand);font-weight:600;font-size:1.85rem;margin-bottom:.35rem;display:flex;align-items:center;gap:.65rem;letter-spacing:-.3px;justify-content:center}
+h1 img{height:90px;width:auto;border-radius:8px}
+.subhead{color:var(--muted);font-size:.85rem;margin-bottom:1.9rem;border-left:3px solid var(--gold);padding-left:.85rem;font-weight:500;letter-spacing:.2px}
+
+.input-group{margin-bottom:1.3rem;position:relative}
+.input-group i{position:absolute;left:1.25rem;top:50%;transform:translateY(-50%);color:var(--brand);font-size:1.05rem;pointer-events:none;opacity:.85}
+.input-group input{
+  width:100%;padding:1rem 3rem 1rem 3rem;background:rgba(255,255,255,.9);
+  border:1.5px solid rgba(144,1,67,.18);border-radius:1.1rem;color:var(--ink);font-size:1rem;
+  outline:none;transition:border-color .2s,box-shadow .2s,background .2s;
+}
+.input-group input:hover{border-color:rgba(109,3,52,.35)}
+.input-group input:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 4px rgba(144,1,67,.14)}
+.input-group input::placeholder{color:#b48aa0;font-weight:400}
+.input-group .toggle-password{
+  position:absolute;right:1.2rem;left:auto;top:50%;transform:translateY(-50%);
+  color:var(--brand);font-size:1.05rem;cursor:pointer;pointer-events:auto;
+  transition:color .2s,transform .2s;opacity:.75;
+}
+.input-group .toggle-password:hover{color:var(--brand-light);opacity:1}
+
+.login-btn{
+  width:100%;padding:1rem;background:linear-gradient(135deg,var(--brand) 0%,var(--brand-light) 100%);
+  border:none;border-radius:1.1rem;color:#fff;font-weight:600;font-size:1.05rem;letter-spacing:.3px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.6rem;
+  box-shadow:0 14px 26px -12px rgba(161,8,80,.7);
+  transition:transform .15s,box-shadow .2s,filter .2s;margin-top:.6rem;
+}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 18px 32px -14px rgba(144,1,67,.8);filter:brightness(1.05)}
+.login-btn:active{transform:translateY(0)}
+.login-btn:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+
+.message{
+  margin-top:.9rem;font-size:.85rem;padding:.8rem 1.1rem;border-radius:.9rem;
+  background:var(--danger-soft);color:var(--danger);border-left:4px solid var(--danger);
+  display:none;font-weight:500;
+}
+.message.show{display:block;animation:fadeIn .3s ease}
+.success-message{background:rgba(144,1,67,.08);color:var(--brand);border-left-color:var(--brand)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ---------- DEVICE ACCESS SECTION ---------- */
+.device-access{display:none;animation:fadeIn .3s ease}
+.device-access.show{display:block}
+.device-info{color:var(--brand);font-size:.85rem;margin-bottom:1.2rem;text-align:center;background:rgba(144,1,67,.06);padding:.7rem .9rem;border-radius:1rem;border:1px dashed rgba(144,1,67,.35);font-weight:500}
+.device-info i{color:var(--brand);margin-right:.4rem}
+.device-badge{display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.9rem 1.2rem;background:rgba(144,1,67,.05);border:1.5px solid rgba(144,1,67,.2);border-radius:1.1rem;margin-bottom:1.3rem;font-size:.95rem;color:var(--brand);font-weight:600}
+.device-badge i{font-size:1.2rem}
+.device-otp-hint{text-align:center;font-size:.8rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.5}
+.back-link{text-align:center;color:var(--brand);font-size:.85rem;font-weight:600;cursor:pointer;padding:.6rem;margin-top:.8rem;transition:color .2s}
+.back-link:hover{color:var(--brand-light);text-decoration:underline}
+.pending-status-box{margin-top:1rem;padding:1rem;border-radius:1rem;background:var(--gold-soft);border:1px dashed rgba(212,175,55,.85);font-size:.82rem;color:var(--brand-dark);line-height:1.6}
+.pending-status-box .otp-pill{display:inline-block;background:#fff;border:1px solid rgba(144,1,67,.3);padding:.2rem .6rem;border-radius:.5rem;font-weight:800;letter-spacing:2px;color:var(--brand)}
+@media(max-width:420px){.login-card{padding:2rem 1.4rem 1.6rem;border-radius:1.6rem}h1{font-size:1.55rem}}
+@media (max-width: 360px){
+  .login-card{ padding: 1.6rem 1rem 1.2rem; }
+  h1{ font-size: 1.3rem; }
+  h1 img{ height: 64px; }
+}
+</style>
+</head>
+<body>
+<div class="login-card">
+  <h1><img src="images/gp-gold42.png" alt="GoldPrince" onerror="this.style.display='none'"></h1>
+  <div class="subhead">Secure access · Admin login or device access</div>
+
+  <!-- LOGIN FORM (ADMIN / USER) -->
+  <div id="loginForm">
+    <div class="input-group">
+      <i class="fas fa-user"></i>
+      <input type="text" id="username" placeholder="Username" autocomplete="off">
+    </div>
+    <div class="input-group">
+      <i class="fas fa-lock"></i>
+      <input type="password" id="password" placeholder="Password">
+      <i class="fas fa-eye toggle-password" id="togglePassword" title="Show password"></i>
+    </div>
+    <button class="login-btn" id="loginBtn"><i class="fas fa-arrow-right-to-bracket"></i> Log In</button>
+
+    <div style="text-align:center;margin-top:1.2rem;">
+      <span id="goDeviceAccessLink" style="color:var(--brand);font-size:.9rem;font-weight:600;cursor:pointer;text-decoration:underline;">
+        <i class="fas fa-mobile-screen-button"></i> Check Device Approval Status
+      </span>
+    </div>
+  </div>
+
+  <!-- DEVICE ACCESS / PENDING APPROVAL SECTION -->
+  <div class="device-access" id="deviceAccessSection">
+    <div class="device-info">
+      <i class="fas fa-shield-halved"></i> First-time device login needs approval
+    </div>
+    <div class="device-badge">
+      <i class="fas fa-mobile-screen-button"></i>
+      <span id="deviceLabel">This device</span>
+    </div>
+    <div class="device-otp-hint">
+      <i class="fas fa-info-circle" style="color:var(--gold);"></i>
+      Enter your username &amp; password on the login screen.<br>
+      If this device is new for your account, a request is sent for approval.<br>
+      Once approved, this device is trusted for your account.
+    </div>
+    <div id="pendingStatusBox" class="pending-status-box" style="display:none"></div>
+    <button class="login-btn" id="refreshStatusBtn" style="display:none">
+      <i class="fas fa-rotate"></i> Check Approval Status
+    </button>
+    <div class="back-link" id="backToLoginLink">
+      <i class="fas fa-arrow-left"></i> Back to Login
+    </div>
+  </div>
+
+  <div id="messageBox" class="message"></div>
+</div>
+
+<!-- =========================================================
+     API base (change if backend is on a different host)
+     ========================================================= -->
+<!-- /config.js is generated by the UI server from the API_URL environment variable -->
+<script src="config.js"></script>
+<script>
+  /* API base: API_URL from /config.js (Railway). If empty: same origin, or localhost:4000 in local dev. */
+  window.GP_API_BASE = window.GP_API_BASE || (
+    (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      && location.port !== '4000'
+        ? 'http://localhost:4000'
+        : ''
+  );
+  window.GP_API_MISSING = !window.GP_API_BASE && !window.GP_API_PROXY && !(location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+</script>
+
+<script>
+/* ==========================================================
+   AUTO-REDIRECT if a VALID session already exists (client cache).
+   Server is still authoritative when the app calls /me.
+   ========================================================== */
+(function () {
+  try {
+    var raw = sessionStorage.getItem('gp_logged_user');
+    if (!raw) return;
+    var s = JSON.parse(raw);
+    if (!s || typeof s !== 'object' || !s.username || !s.role) {
+      sessionStorage.removeItem('gp_logged_user'); return;
+    }
+    if (s.role === 'admin')        { window.location.replace('gpadmin.html');     return; }
+    if (s.role === 'developer')    { window.location.replace('developer.html');   return; }
+    if (s.role === 'branch_incharge') { window.location.replace('branch_incharge.html'); return; }
+    if (s.role === 'user')         { window.location.replace('gpmain.html');      return; }
+    if (s.role === 'designer')     { window.location.replace('designs.html');     return; }
+    if (s.role === 'cad_designer') { window.location.replace('designs.html');     return; }
+    if (s.role === 'workshop' && s.branch) { window.location.replace('gpwork-shop.html'); return; }
+    if (s.role === 'stone_stock')  { window.location.replace('stone-stock.html'); return; }
+    if (s.role === 'stock_jama_incharge' || s.role === 'plating_polish' ||
+        s.role === 'packing' || s.role === 'qc_section' || s.role === 'dispatch_section') {
+      window.location.replace('stage-2 process.html'); return;
+    }
+    sessionStorage.removeItem('gp_logged_user');
+  } catch (e) { try { sessionStorage.removeItem('gp_logged_user'); } catch(_){} }
+})();
+
+/* ==========================================================
+   API CLIENT (inline copy of api-client.js)
+   ========================================================== */
+var GP_API = {
+  base: window.GP_API_BASE,
+  tokenKey: 'gp_jwt',
+
+  getToken: function () { return localStorage.getItem(this.tokenKey) || ''; },
+  setToken: function (t) { t ? localStorage.setItem(this.tokenKey, t) : localStorage.removeItem(this.tokenKey); },
+
+  req: function (path, opts) {
+    opts = opts || {};
+    var method = opts.method || 'GET';
+    var auth   = opts.auth !== false;
+    var headers = { 'Content-Type': 'application/json' };
+    if (auth && this.getToken()) headers.Authorization = 'Bearer ' + this.getToken();
+    if (window.GP_API_MISSING) {
+      var me = new Error('Server not configured: set API_URL on the "ui" service in Railway (https://<api-domain>) and redeploy.');
+      me.status = 0; return Promise.reject(me);
+    }
+    return fetch(this.base + path, {
+      method: method,
+      headers: headers,
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    }).catch(function () {
+      var ne = new Error('Cannot reach the server. Check that the API service is running and that CORS_ORIGIN on the API contains this site\'s address.');
+      ne.status = 0; throw ne;
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        if (!r.ok && r.status !== 202) {
+          var msg = (data && data.error) || r.statusText;
+          if (!(data && data.error) && (r.status === 404 || r.status === 405))
+            msg = 'Login API not found (HTTP ' + r.status + '). API_URL on the "ui" service is missing or points to the wrong service.';
+          var err = new Error(msg);
+          err.status = r.status; err.data = data; throw err;
+        }
+        return { status: r.status, data: data };
+      });
+    });
+  },
+
+  login: function (username, password, deviceId) {
+    return this.req('/api/auth/login', {
+      method: 'POST', auth: false,
+      body: { username: username, password: password, deviceId: deviceId, userAgent: navigator.userAgent }
+    });
+  },
+  pendingStatus: function (username, deviceId) {
+    return this.req('/api/auth/pending-status?username=' + encodeURIComponent(username) +
+                    '&deviceId=' + encodeURIComponent(deviceId), { auth: false });
+  },
+  me: function () { return this.req('/api/auth/me'); },
+
+  listAccounts: function (params) {
+    var q = new URLSearchParams(params || {}).toString();
+    return this.req('/api/accounts' + (q ? '?' + q : ''));
+  },
+  counts: function () { return this.req('/api/accounts/counts'); },
+  createAccount: function (payload) { return this.req('/api/accounts', { method: 'POST', body: payload }); },
+  updateAccount: function (id, payload) { return this.req('/api/accounts/' + id, { method: 'PUT', body: payload }); },
+  deleteAccount: function (id) { return this.req('/api/accounts/' + id, { method: 'DELETE' }); },
+
+  listDeviceRequests: function () { return this.req('/api/device-requests'); },
+  approveDeviceRequest: function (id) { return this.req('/api/device-requests/' + id + '/approve', { method: 'POST' }); },
+  rejectDeviceRequest:  function (id) { return this.req('/api/device-requests/' + id + '/reject',  { method: 'POST' }); },
+  listDevices:  function () { return this.req('/api/devices'); },
+  deleteDevice: function (id) { return this.req('/api/devices/' + id, { method: 'DELETE' }); }
+};
+
+/* ==========================================================
+   DOM refs
+   ========================================================== */
+var loginForm           = document.getElementById('loginForm');
+var deviceAccessSection = document.getElementById('deviceAccessSection');
+var loginBtn            = document.getElementById('loginBtn');
+var usernameInput       = document.getElementById('username');
+var passwordInput       = document.getElementById('password');
+var togglePassword      = document.getElementById('togglePassword');
+var messageBox          = document.getElementById('messageBox');
+var goDeviceAccessLink  = document.getElementById('goDeviceAccessLink');
+var backToLoginLink     = document.getElementById('backToLoginLink');
+var deviceLabel         = document.getElementById('deviceLabel');
+var pendingStatusBox    = document.getElementById('pendingStatusBox');
+var refreshStatusBtn    = document.getElementById('refreshStatusBtn');
+
+function showMessage(text, isError) {
+  messageBox.textContent = text;
+  messageBox.classList.add('show');
+  messageBox.classList.toggle('success-message', !isError);
+  clearTimeout(window.messageTimeout);
+  window.messageTimeout = setTimeout(function(){ messageBox.classList.remove('show'); }, 4500);
+}
+
+/* ==========================================================
+   DEVICE FINGERPRINT (same shape as before, still client-side)
+   ========================================================== */
+function getDeviceFingerprint() {
+  var nav = window.navigator, scr = window.screen;
+  var parts = [
+    nav.userAgent || '', nav.language || '',
+    scr.width + 'x' + scr.height, scr.colorDepth || '',
+    new Date().getTimezoneOffset()
+  ];
+  var str = parts.join('|'), hash = 0;
+  for (var i = 0; i < str.length; i++) {
+    var chr = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + chr; hash |= 0;
+  }
+  return 'dev_' + Math.abs(hash).toString(36);
+}
+function getDeviceName() {
+  var ua = navigator.userAgent;
+  if (/android/i.test(ua)) return 'Android Device';
+  if (/iphone|ipad|ipod/i.test(ua)) return 'iOS Device';
+  if (/windows/i.test(ua)) return 'Windows PC';
+  if (/mac/i.test(ua)) return 'Mac';
+  if (/linux/i.test(ua)) return 'Linux Device';
+  return 'Unknown Device';
+}
+
+function escapeHtml(v){
+  return String(v==null?'':v).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+/* ==========================================================
+   LOGIN FLOW (API-driven)
+   ========================================================== */
+var pendingAccountForStatus = null;  // { username, fingerprint, requestId }
+
+function handleLogin() {
+  var username = usernameInput.value.trim();
+  var password = passwordInput.value;
+  if (!username || !password) { showMessage('Please enter both username and password.', true); return; }
+
+  var fingerprint = getDeviceFingerprint();
+  loginBtn.disabled = true;
+
+  GP_API.login(username, password, fingerprint).then(function (resp) {
+    var status = resp.status, data = resp.data || {};
+
+    if (status === 200 && data.status === 'ok' && data.token && data.user) {
+      GP_API.setToken(data.token);
+      var u = data.user;
+      var phoneStr   = u.phone || '';
+      var mobileOnly = String(phoneStr).replace(/\D/g,'');
+      if (mobileOnly.length > 10) mobileOnly = mobileOnly.slice(-10);
+      var sessionData = {
+        username: u.username,
+        role:     u.role,
+        branch:   u.branch || '',
+        section:  u.section || '',
+        phone:    phoneStr,
+        mobile:   mobileOnly,
+        whatsapp: mobileOnly,
+        loginAt:  Date.now()
+      };
+      try { sessionStorage.setItem('gp_logged_user', JSON.stringify(sessionData)); }
+      catch (e) { showMessage('Could not save session. Please try again.', true); return; }
+
+      showMessage('Login successful! Redirecting...', false);
+      setTimeout(function () { redirectByRole(u.role); }, 500);
+      return;
+    }
+
+    if (status === 202 && data.status === 'pending' && data.request) {
+      var req = data.request;
+      pendingAccountForStatus = {
+        username: req.username,
+        fingerprint: fingerprint,
+        requestId: req.id
+      };
+      showPendingStatusScreen(
+        { username: req.username, role: req.role },
+        { id: req.id, username: req.username, role: req.role,
+          deviceId: req.deviceId, otp: req.otp, status: req.status || 'pending' }
+      );
+      return;
+    }
+
+    showMessage('Unexpected response from server.', true);
+  }).catch(function (err) {
+    var data = err.data || {};
+    if (err.status === 403 && data.status === 'rejected') {
+      showMessage('Admin rejected this device for your account. Please contact the admin.', true);
+      return;
+    }
+    showMessage(data.error || err.message || 'Login failed.', true);
+  }).then(function () {
+    loginBtn.disabled = false;
+  });
+}
+
+function redirectByRole(role) {
+  if (role === 'admin')        { window.location.replace('gpadmin.html');     return; }
+  if (role === 'developer')    { window.location.replace('developer.html');   return; }
+  if (role === 'branch_incharge') { window.location.replace('branch_incharge.html'); return; }
+  if (role === 'user')         { window.location.replace('gpmain.html');      return; }
+  if (role === 'designer')     { window.location.replace('designs.html');     return; }
+  if (role === 'cad_designer') { window.location.replace('designs.html');     return; }
+  if (role === 'workshop')     { window.location.replace('gpwork-shop.html'); return; }
+  if (role === 'stone_stock')  { window.location.replace('stone-stock.html'); return; }
+  if (role === 'stock_jama_incharge' || role === 'plating_polish' ||
+      role === 'packing' || role === 'qc_section' || role === 'dispatch_section') {
+    window.location.replace('stage-2 process.html'); return;
+  }
+  showMessage('Unknown role.', true);
+}
+
+/* ==========================================================
+   PENDING STATUS SCREEN
+   ========================================================== */
+function showPendingStatusScreen(account, req) {
+  loginForm.style.display = 'none';
+  deviceAccessSection.classList.add('show');
+  messageBox.classList.remove('show');
+
+  deviceLabel.textContent = getDeviceName() + ' (' + getDeviceFingerprint().slice(-8) + ')';
+
+  pendingStatusBox.style.display = 'block';
+  refreshStatusBtn.style.display = 'inline-flex';
+
+  renderPendingStatus(account, req);
+}
+
+function renderPendingStatus(account, req) {
+  if (!req) { pendingStatusBox.innerHTML = 'No pending request found.'; return; }
+  var statusLine = '';
+  if (req.status === 'pending') {
+    statusLine = '<b><i class="fas fa-hourglass-half"></i> Waiting for approval…</b>';
+  } else if (req.status === 'approved') {
+    statusLine = '<b style="color:#137333"><i class="fas fa-check-circle"></i> Approved!</b>';
+  } else if (req.status === 'rejected') {
+    statusLine = '<b style="color:#e0284f"><i class="fas fa-times-circle"></i> Rejected.</b>';
+  }
+  var note = (account.role === 'admin')
+    ? '<span style="color:#8a5a72;font-size:.78rem">An admin (this account or another admin) can approve from the Admin Dashboard → Device Login Requests.</span>'
+    : '<span style="color:#8a5a72;font-size:.78rem">An admin can approve this from the Admin Dashboard → Device Login Requests.</span>';
+
+  pendingStatusBox.innerHTML =
+    'Account: <b>' + escapeHtml(req.username) + '</b> (' + escapeHtml(req.role) + ')<br>' +
+    'Device: <b>' + escapeHtml(req.deviceId || '') + '</b><br>' +
+    'Request OTP (shared with admin): <span class="otp-pill">' + escapeHtml(req.otp || '') + '</span><br>' +
+    'Status: ' + statusLine + '<br>' + note;
+}
+
+function refreshPendingStatus() {
+  if (!pendingAccountForStatus) { showMessage('No pending request to check.', true); return; }
+  refreshStatusBtn.disabled = true;
+
+  GP_API.pendingStatus(pendingAccountForStatus.username, pendingAccountForStatus.fingerprint)
+    .then(function (resp) {
+      var data = resp.data || {};
+      if (data.status === 'none' || !data.request) {
+        showMessage('Pending request no longer exists. Please try logging in again.', true);
+        return;
+      }
+      var req = data.request;
+      renderPendingStatus(
+        { username: pendingAccountForStatus.username, role: req.role },
+        req
+      );
+      if (req.status === 'approved') {
+        // Now retry login — backend will return 200 because device is approved.
+        showMessage('Device approved! Logging you in…', false);
+        setTimeout(function(){ retryLoginAfterApproval(); }, 600);
+      } else if (req.status === 'rejected') {
+        showMessage('Admin rejected this device for your account.', true);
+      }
+    })
+    .catch(function (err) {
+      showMessage((err.data && err.data.error) || err.message || 'Could not check status.', true);
+    })
+    .then(function () { refreshStatusBtn.disabled = false; });
+}
+
+function retryLoginAfterApproval() {
+  var username = pendingAccountForStatus ? pendingAccountForStatus.username : '';
+  var password = passwordInput.value;
+  var fingerprint = getDeviceFingerprint();
+  if (!username || !password) {
+    // Force them back to the login form to re-enter credentials
+    deviceAccessSection.classList.remove('show');
+    loginForm.style.display = 'block';
+    showMessage('Approved. Please log in again with your password.', false);
+    return;
+  }
+  GP_API.login(username, password, fingerprint).then(function (resp) {
+    var data = resp.data || {};
+    if (resp.status === 200 && data.status === 'ok' && data.token && data.user) {
+      GP_API.setToken(data.token);
+      var u = data.user;
+      var phoneStr   = u.phone || '';
+      var mobileOnly = String(phoneStr).replace(/\D/g,'');
+      if (mobileOnly.length > 10) mobileOnly = mobileOnly.slice(-10);
+      sessionStorage.setItem('gp_logged_user', JSON.stringify({
+        username: u.username, role: u.role, branch: u.branch || '',
+        section: u.section || '', phone: phoneStr,
+        mobile: mobileOnly, whatsapp: mobileOnly, loginAt: Date.now()
+      }));
+      showMessage('Logged in! Redirecting…', false);
+      setTimeout(function () { redirectByRole(u.role); }, 500);
+    } else {
+      deviceAccessSection.classList.remove('show');
+      loginForm.style.display = 'block';
+      showMessage('Approved. Please log in again with your password.', false);
+    }
+  }).catch(function (err) {
+    deviceAccessSection.classList.remove('show');
+    loginForm.style.display = 'block';
+    showMessage((err.data && err.data.error) || err.message || 'Login failed.', true);
+  });
+}
+
+/* ==========================================================
+   UI BINDINGS
+   ========================================================== */
+togglePassword.addEventListener('click', function () {
+  var isHidden = passwordInput.type === 'password';
+  passwordInput.type = isHidden ? 'text' : 'password';
+  togglePassword.classList.toggle('fa-eye',       !isHidden);
+  togglePassword.classList.toggle('fa-eye-slash',  isHidden);
+  togglePassword.title = isHidden ? 'Hide password' : 'Show password';
+});
+
+loginBtn.addEventListener('click', handleLogin);
+passwordInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { e.preventDefault(); handleLogin(); } });
+usernameInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { e.preventDefault(); passwordInput.focus(); } });
+
+goDeviceAccessLink.addEventListener('click', function () {
+  loginForm.style.display = 'none';
+  deviceAccessSection.classList.add('show');
+  messageBox.classList.remove('show');
+  deviceLabel.textContent = getDeviceName() + ' (' + getDeviceFingerprint().slice(-8) + ')';
+  if (pendingAccountForStatus) {
+    refreshPendingStatus();
+  } else {
+    pendingStatusBox.style.display = 'none';
+    refreshStatusBtn.style.display = 'none';
+  }
+});
+
+backToLoginLink.addEventListener('click', function () {
+  deviceAccessSection.classList.remove('show');
+  loginForm.style.display = 'block';
+  messageBox.classList.remove('show');
+});
+
+refreshStatusBtn.addEventListener('click', refreshPendingStatus);
+
+setInterval(function () {
+  if (pendingAccountForStatus && deviceAccessSection.classList.contains('show')) {
+    refreshPendingStatus();
+  }
+}, 3000);
+
+usernameInput.focus();
+</script>
+</body>
+</html>

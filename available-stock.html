@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Available Stock - Stock Inventory</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- ExcelJS for real XLSX with images -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <!-- PWA & Web App Icon Setup -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+    <meta name="theme-color" content="#900143">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="GOLDPRINCE">
+
+    <style>
+        /* ============================================================
+           MOBILE-FIRST RESPONSIVE OVERRIDES FOR AVAILABLE STOCK
+           ============================================================ */
+
+        /* Mobile: tight body & container spacing */
+        @media (max-width: 600px) {
+            body {
+                padding: 8px !important;
+            }
+
+            .container {
+                padding: 0;
+            }
+
+            h1 {
+                font-size: 1.15rem !important;
+                margin-bottom: 0.9rem !important;
+                padding-bottom: 8px !important;
+                border-bottom-width: 2px !important;
+                gap: 7px !important;
+            }
+
+            h1 i {
+                font-size: 1rem;
+            }
+
+            .card {
+                padding: 10px 9px !important;
+                border-radius: 12px !important;
+                margin-bottom: 1rem !important;
+            }
+
+            /* Section header: stack title above actions */
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+                margin-bottom: 10px !important;
+            }
+
+            .section-header h2 {
+                font-size: 1rem !important;
+                margin-bottom: 0 !important;
+            }
+
+            .section-header .actions {
+                width: 100%;
+                gap: 6px;
+            }
+
+            .section-header .actions button {
+                flex: 1 1 calc(50% - 3px);
+                justify-content: center;
+                padding: 8px 6px !important;
+                font-size: 0.72rem !important;
+                gap: 5px;
+            }
+
+            .section-header .actions button i {
+                font-size: 0.8rem;
+            }
+
+            /* Filter row: search + dropdowns + clear side-by-side */
+            .form-row {
+                flex-direction: row !important;
+                align-items: flex-end !important;
+                gap: 6px !important;
+                flex-wrap: wrap;
+                margin-bottom: 10px !important;
+            }
+
+            .form-row .form-group {
+                flex: 1 1 45% !important;
+                min-width: 0 !important;
+            }
+
+            /* Search takes full width on its own row */
+            .form-row .form-group:first-child {
+                flex: 1 1 100% !important;
+            }
+
+            .form-group label {
+                font-size: 0.68rem !important;
+                font-weight: 700;
+                margin-bottom: 1px;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 8px 9px !important;
+                font-size: 16px !important; /* prevents iOS zoom */
+                border-radius: 8px !important;
+                min-height: 38px;
+            }
+
+            /* Clear button: full width below filters */
+            .form-row > button {
+                flex: 1 1 100% !important;
+                width: 100% !important;
+                height: 38px !important;
+                padding: 8px 10px !important;
+                font-size: 0.78rem !important;
+                margin-top: 2px;
+            }
+
+            /* Stats: 3 across in one row */
+            .summary-stats {
+                flex-direction: row !important;
+                gap: 6px !important;
+                margin-top: 10px !important;
+                margin-bottom: 12px !important;
+            }
+
+            .stat {
+                flex: 1 1 0 !important;
+                min-width: 0 !important;
+                padding: 8px 6px !important;
+                border-radius: 10px !important;
+                border-left-width: 3px !important;
+            }
+
+            .stat span {
+                font-size: 0.58rem !important;
+                letter-spacing: 0.2px;
+                margin-bottom: 3px;
+                line-height: 1.2;
+            }
+
+            .stat strong {
+                font-size: 1rem !important;
+                line-height: 1.1;
+            }
+
+            /* Table compact */
+            .table-wrap {
+                border-radius: 10px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            table {
+                font-size: 0.72rem;
+                min-width: 560px; /* forces horizontal scroll instead of squishing */
+            }
+
+            th {
+                padding: 7px 5px !important;
+                font-size: 0.64rem !important;
+                white-space: nowrap;
+            }
+
+            td {
+                padding: 6px 5px !important;
+                font-size: 0.72rem !important;
+            }
+
+            /* Product image: smaller on mobile */
+            .product-img {
+                width: 44px !important;
+                height: 44px !important;
+                border-radius: 6px;
+            }
+
+            .product-img:hover {
+                transform: none !important;
+            }
+
+            .img-placeholder {
+                width: 32px;
+                height: 32px;
+                font-size: 0.6rem;
+            }
+
+            .badge {
+                padding: 2px 7px;
+                font-size: 0.62rem;
+            }
+
+            /* Toast */
+            .toast-msg {
+                right: 12px;
+                left: 12px;
+                bottom: 16px;
+                text-align: center;
+                font-size: 0.8rem;
+                padding: 10px 18px;
+            }
+
+            .toast-msg.show {
+                bottom: 22px;
+            }
+        }
+
+        /* Extra small phones */
+        @media (max-width: 380px) {
+            h1 {
+                font-size: 1rem !important;
+            }
+
+            .form-row .form-group {
+                flex: 1 1 100% !important;
+            }
+
+            .stat strong {
+                font-size: 0.9rem !important;
+            }
+
+            .stat span {
+                font-size: 0.55rem !important;
+            }
+
+            .section-header .actions button {
+                flex: 1 1 100%;
+            }
+        }
+
+        /* Touch devices: disable image hover zoom */
+        @media (hover: none) {
+            .product-img:hover {
+                transform: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1><i class="fas fa-search"></i> Available Stock Details</h1>
+
+    <div class="card">
+        <div class="section-header">
+            <h2><i class="fas fa-filter"></i> Filter & Search</h2>
+            <div class="actions">
+                <button class="outline" onclick="exportExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+                <button class="outline" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="flex:1; min-width:180px;">
+                <label>Search (Art No / Product Name)</label>
+                <input type="text" id="searchInput" placeholder="Type art number or name..." autofocus>
+            </div>
+            <div class="form-group" style="min-width:130px;">
+                <label>Category</label>
+                <select id="filterCategory">
+                    <option value="">All Categories</option>
+                    <option value="3D Idols">3D Idols</option>
+                    <option value="2D Idols">2D Idols</option>
+                    <option value="Jewellery">Jewellery</option>
+                    <option value="God frames">God frames</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="min-width:130px;">
+                <label>Product Group</label>
+                <select id="filterGroup">
+                    <option value="">All Groups</option>
+                    <option value="Antique">Antique</option>
+                    <option value="Premium">Premium</option>
+                    <option value="GJ">GJ</option>
+                    <option value="Kundan">Kundan</option>
+                    <option value="Gatti">Gatti</option>
+                    <option value="Meenakari">Meenakari</option>
+                </select>
+            </div>
+            <button class="outline" onclick="clearFilters()" style="height:42px;"><i class="fas fa-times"></i> Clear</button>
+        </div>
+
+        <div class="summary-stats" style="margin-top:15px;">
+            <div class="stat green"><span>Total Quantity</span><strong id="totalQty">0</strong></div>
+            <div class="stat orange"><span>Total Weight (g)</span><strong id="totalWeight">0</strong></div>
+            <div class="stat"><span>Art Numbers</span><strong id="totalArt">0</strong></div>
+        </div>
+
+        <div class="table-wrap">
+            <table id="availableTable">
+                <thead>
+                    <tr>
+                        <th>Art No</th>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>Product Group</th>
+                        <th>Quantity</th>
+                        <th>Weight (g)</th>
+                        <th>Image</th>
+                    </tr>
+                </thead>
+                <tbody id="availableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="toast-msg" id="toastMsg"></div>
+
+<script src="data.js"></script>
+<script src="availableStock.js"></script>
+</body>
+</html>

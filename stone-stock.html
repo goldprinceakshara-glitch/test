@@ -1,0 +1,3920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Stone Stock Management · GP Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="gp-chat.css">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+:root{
+  --brand:#900143;
+  --brand-dark:#6b0132;
+  --brand-light:#b8005a;
+  --pink-soft:#fff5f9;
+  --pink-mid:#f8f2f5;
+  --pink-border:#f7e4ed;
+  --pink-accent:#f8f7f8;
+  --gold:#d4af37;
+  --ink:#2b0a1c;
+  --muted:#660535;
+  --card:rgba(255,255,255,.88);
+  --card-border:rgba(144,1,67,.10);
+  --danger:#e0284f;
+  --success:#9b0963;
+  --shadow:0 18px 40px -22px rgba(144,1,67,.22);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,system-ui,sans-serif}
+
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(600px 400px at 100% 0%, #fdf5f9 0%, transparent 60%),
+    radial-gradient(500px 300px at 0% 100%, #f7f2f4 0%, transparent 60%),
+    linear-gradient(135deg, #fcf9fa 0%, #fcf6f9 50%, #f5eef2 100%);
+  padding:2rem 1.5rem;
+  color:var(--ink);
+  position:relative;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;width:380px;height:380px;border-radius:50%;
+  background:#f4a6c8;filter:blur(110px);opacity:.20;top:-140px;right:-120px;
+  z-index:0;pointer-events:none;
+}
+body::after{
+  content:"";position:fixed;width:340px;height:340px;border-radius:50%;
+  background:#f7c9de;filter:blur(110px);opacity:.22;bottom:-140px;left:-120px;
+  z-index:0;pointer-events:none;
+}
+
+.container{max-width:1400px;margin:0 auto;position:relative;z-index:1}
+
+/* ================= TOPBAR ================= */
+.topbar{
+  background:linear-gradient(180deg,#ffffff 0%,#fdf4f8 100%);
+  border-bottom:1px solid var(--pink-border);
+  padding:14px 24px;
+  display:flex;justify-content:space-between;align-items:center;
+  gap:20px;flex-wrap:wrap;
+  box-shadow:var(--shadow);
+  position:sticky;top:0;z-index:900;
+  margin-bottom:1rem;
+  border-radius:0 0 1.2rem 1.2rem;
+}
+.brand{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;text-align:center;flex:0 0 auto}
+.brand h1{margin:0;padding:0;display:flex;align-items:center;justify-content:center;height:46px}
+.brand h1 img{height:100%;width:auto;max-height:46px;object-fit:contain;display:block}
+.brand p{font-size:12px;font-weight:800;color:var(--ink);margin-top:5px;letter-spacing:.8px;text-transform:uppercase;text-align:center;width:100%}
+
+.branch-pill{
+  background:linear-gradient(135deg,var(--brand),var(--brand-light));
+  color:#fff;padding:8px 18px;border-radius:24px;
+  font-weight:800;font-size:13px;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 6px 16px rgba(144,1,67,.28);
+  letter-spacing:.3px;
+}
+.branch-pill i{opacity:.9}
+
+.top-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.top-actions button,
+.top-actions a{
+  border:1px solid var(--pink-border);
+  background:#fff;
+  color:var(--brand);
+  padding:9px 16px;border-radius:10px;
+  font-weight:700;cursor:pointer;text-decoration:none;font-size:13px;
+  transition:all .18s ease;
+  display:inline-flex;align-items:center;gap:7px;
+}
+.top-actions button:hover,
+.top-actions a:hover{
+  background:var(--brand);
+  color:#fff;
+  border-color:var(--brand);
+  transform:translateY(-1px);
+  box-shadow:0 6px 14px rgba(144,1,67,.25);
+}
+
+/* ================= LOW STOCK ALERT — WHATSAPP STYLE ================= */
+.low-stock-banner{
+  display:none;
+  margin-bottom:1.2rem;
+  max-width:640px;
+  background:#ffdbf3;
+  border:1px solid #e6b2d5;
+  border-radius:14px;
+  padding:0;
+  box-shadow:0 8px 24px -12px rgba(0,100,0,.28);
+  overflow:hidden;
+  position:relative;
+}
+.low-stock-banner.show{display:block}
+.low-stock-banner .lsb-head{
+  background:#5e0744;
+  color:#fff;
+  padding:.7rem 1rem;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:.6rem;
+  font-size:.85rem;font-weight:700;
+}
+.low-stock-banner .lsb-head .lsb-head-left{
+  display:flex;align-items:center;gap:.5rem;
+}
+.low-stock-banner .lsb-head i{color:#d32576}
+.low-stock-banner .lsb-close-all{
+  background:rgba(255,255,255,.18);
+  border:none;color:#fff;cursor:pointer;
+  border-radius:50%;width:26px;height:26px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.8rem;transition:background .2s;
+}
+.low-stock-banner .lsb-close-all:hover{background:rgba(255,255,255,.35)}
+.low-stock-banner .lsb-body{
+  padding:.7rem .9rem .9rem .9rem;
+  font-size:.82rem;color:#3d0b24;
+}
+.low-stock-banner .lsb-sub{
+  color:#b91783;font-size:.75rem;margin-bottom:.6rem;
+  display:flex;align-items:center;gap:.35rem;
+}
+.low-stock-banner .lsb-sub i{color:#d3258a}
+.lsb-list{display:flex;flex-direction:column;gap:.5rem}
+.lsb-msg{
+  background:#fff;
+  border-radius:10px 10px 10px 3px;
+  padding:.55rem .7rem;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:.6rem;
+  box-shadow:0 1px 2px rgba(0,0,0,.05);
+  position:relative;
+  font-size:.82rem;
+}
+.lsb-msg::before{
+  content:"";
+  position:absolute;left:-6px;top:8px;
+  border:6px solid transparent;
+  border-right-color:#fff;
+}
+.lsb-msg .lsb-msg-text{flex:1;line-height:1.35}
+.lsb-msg .lsb-msg-text strong{color:#5e0744}
+.lsb-msg .lsb-msg-text .qty{color:#c0392b;font-weight:800}
+.lsb-msg .lsb-msg-text .min{color:#8a7d6a;font-size:.72rem}
+.lsb-msg .lsb-msg-time{
+  font-size:.65rem;color:#8a9b8f;margin-top:.2rem;
+}
+.lsb-msg .lsb-msg-close{
+  background:#f0f0f0;border:none;color:#666;cursor:pointer;
+  width:24px;height:24px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.7rem;transition:all .15s;flex-shrink:0;
+}
+.lsb-msg .lsb-msg-close:hover{background:#e74c3c;color:#fff}
+.lsb-msg.seen{opacity:.6}
+.lsb-out{display:inline-block;background:#e0284f;color:#fff;font-size:.62rem;font-weight:800;letter-spacing:.4px;padding:.05rem .4rem;border-radius:.4rem;margin-left:.3rem}
+.lsb-short{font-size:.74rem;color:#9c324f;font-weight:600;margin-top:.1rem}
+
+/* ================= MAIN PANELS ================= */
+.panel{
+  background:var(--card);
+  backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  padding:2rem;border-radius:1.5rem;
+  border:1px solid var(--card-border);box-shadow:var(--shadow);
+  margin-bottom:2rem;
+}
+.panel h2{
+  font-size:1.15rem;font-weight:600;margin-bottom:1.5rem;
+  display:flex;align-items:center;gap:.6rem;color:var(--brand);
+  letter-spacing:-.2px;flex-wrap:wrap;
+}
+.panel h2 i{color:var(--pink-accent)}
+.panel h2 .badge{
+  font-size:.7rem;background:var(--pink-mid);color:var(--brand);
+  padding:.2rem .6rem;border-radius:1rem;font-weight:600;margin-left:.3rem;
+}
+
+/* ================= TABS ================= */
+.tabs-bar{
+  display:flex;gap:.3rem;flex-wrap:wrap;
+  background:var(--card);backdrop-filter:blur(18px);
+  padding:.6rem;border-radius:1.2rem;margin-bottom:2rem;
+  border:1px solid var(--card-border);box-shadow:var(--shadow);
+}
+.tab-btn{
+  padding:.7rem 1.2rem;border:none;border-radius:1rem;
+  background:transparent;color:var(--muted);
+  font-weight:600;font-size:.85rem;cursor:pointer;
+  transition:all .2s;display:inline-flex;align-items:center;gap:.45rem;
+}
+.tab-btn:hover{background:var(--pink-mid);color:var(--brand)}
+.tab-btn.active{
+  background:linear-gradient(135deg, var(--brand), var(--brand-light));
+  color:#fff;box-shadow:0 8px 18px -10px rgba(144,1,67,.55);
+}
+
+/* ================= DASHBOARD STAT CARDS ================= */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:1rem;margin-bottom:1.5rem;
+}
+.stat-card{
+  background:#fff;padding:1.2rem 1.4rem;border-radius:1.2rem;
+  border:1px solid var(--card-border);box-shadow:var(--shadow);
+  transition:transform .2s, box-shadow .2s;position:relative;overflow:hidden;
+  cursor:pointer;
+  display:flex;flex-direction:column;justify-content:center;
+}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px -10px rgba(144,1,67,.28)}
+.stat-card::after{
+  content:"";position:absolute;bottom:0;right:0;width:60px;height:60px;
+  border-radius:50%;background:var(--brand);opacity:.04;transform:translate(30%,30%);
+}
+.stat-card .label{
+  font-size:11px;color:var(--brand);font-weight:500;
+  text-transform:uppercase;letter-spacing:.7px;
+  display:flex;align-items:center;gap:6px;
+}
+.stat-card .label i{font-size:12px;opacity:.85}
+.stat-card .sub{font-size:12px;color:var(--muted);margin-top:5px;font-weight:600}
+
+/* ================= TABLES ================= */
+.table-wrap{overflow-x:auto;border-radius:1rem;border:1px solid rgba(144,1,67,.08)}
+table{width:100%;border-collapse:collapse;font-size:.85rem;background:#fff;min-width:700px}
+table thead th{
+  background:linear-gradient(135deg, var(--brand), var(--brand-light));
+  color:#fff;padding:.8rem .9rem;text-align:left;font-weight:600;
+  font-size:.78rem;letter-spacing:.3px;text-transform:uppercase;
+  white-space:nowrap;
+}
+table thead th:first-child{border-radius:.9rem 0 0 0}
+table thead th:last-child{border-radius:0 .9rem 0 0}
+table tbody td{
+  padding:.7rem .9rem;border-bottom:1px solid #fdf0f7;
+  color:var(--ink);vertical-align:middle;
+}
+table tbody tr:last-child td{border-bottom:none}
+table tbody tr:hover{background:var(--pink-soft)}
+table tbody tr.master-row{background:#fdf0f7;font-weight:600}
+table tbody tr.master-row:hover{background:#fbe5ee}
+table tbody tr.line-row td:first-child{padding-left:2rem}
+table tfoot td{
+  padding:.8rem .9rem;background:var(--pink-mid);color:var(--brand);
+  font-weight:700;border-top:2px solid var(--brand);
+}
+table tbody td .actions-cell{display:flex;gap:.35rem;flex-wrap:wrap}
+.icon-btn{
+  width:30px;height:30px;border-radius:.6rem;border:none;
+  display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:.8rem;transition:all .2s;
+}
+.icon-btn.edit{background:#e3eeff;color:#9c0953}
+.icon-btn.edit:hover{background:#9c094e;color:#fff}
+.icon-btn.del{background:#fde7ec;color:var(--danger)}
+.icon-btn.del:hover{background:var(--danger);color:#fff}
+
+/* ================= FORMS ================= */
+.form-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:1rem;margin-bottom:1rem;
+}
+.form-group{display:flex;flex-direction:column;gap:.35rem}
+.form-group label{
+  font-size:.78rem;color:var(--muted);font-weight:600;
+  letter-spacing:.2px;
+}
+.form-group input,.form-group select,.form-group textarea{
+  padding:.7rem .9rem;border-radius:.8rem;
+  border:1.5px solid rgba(144,1,67,.16);background:#fff;
+  font-size:.88rem;color:var(--ink);outline:none;
+  transition:border-color .2s, box-shadow .2s;font-family:inherit;
+  width:100%;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  border-color:var(--brand);box-shadow:0 0 0 3px rgba(144,1,67,.10);
+}
+.form-group input::placeholder,.form-group textarea::placeholder{color:#c39ab1}
+.form-group input[readonly]{background:var(--pink-soft);font-weight:600;color:var(--brand)}
+
+.searchable-select{position:relative}
+.searchable-select input{padding-right:2.2rem}
+.searchable-select .dropdown{
+  position:absolute;top:100%;left:0;right:0;z-index:50;
+  background:#fff;border:1.5px solid var(--pink-border);
+  border-radius:.8rem;margin-top:.25rem;max-height:220px;overflow-y:auto;
+  box-shadow:0 12px 28px -12px rgba(144,1,67,.30);
+  display:none;
+}
+.searchable-select .dropdown.show{display:block}
+.searchable-select .dropdown .opt{
+  padding:.55rem .9rem;font-size:.85rem;cursor:pointer;
+  border-bottom:1px solid #fdf0f7;transition:background .15s;
+}
+.searchable-select .dropdown .opt:last-child{border-bottom:none}
+.searchable-select .dropdown .opt:hover{background:var(--pink-mid)}
+.searchable-select .dropdown .empty{padding:.8rem;text-align:center;font-size:.8rem;color:var(--muted)}
+
+.form-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem}
+
+/* ================= BUTTONS ================= */
+.btn{
+  padding:.7rem 1.3rem;border:none;border-radius:2rem;
+  font-weight:600;font-size:.85rem;cursor:pointer;
+  display:inline-flex;align-items:center;gap:.5rem;
+  transition:all .2s;text-decoration:none;
+}
+.btn-danger{
+  background:#fff;color:var(--danger);
+  border:1.5px solid rgba(224,40,79,.3);
+}
+.btn-danger:hover{
+  background:var(--danger);color:#fff;border-color:var(--danger);
+  box-shadow:0 10px 20px -10px rgba(224,40,79,.6);
+}
+.btn-primary{
+  background:linear-gradient(135deg, var(--brand), var(--brand-light));
+  color:#fff;border:none;
+  box-shadow:0 8px 18px -10px rgba(144,1,67,.55);
+}
+.btn-primary:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.btn-outline{
+  background:#fff;color:var(--brand);
+  border:1.5px solid rgba(144,1,67,.25);
+}
+.btn-outline:hover{background:var(--pink-mid);border-color:var(--brand)}
+.btn-sm{padding:.45rem .85rem;font-size:.78rem;border-radius:1rem}
+.btn-success{
+  background:linear-gradient(135deg, #9d0f6e, #7a0b30);
+  color:#fff;border:none;
+}
+.btn-success:hover{filter:brightness(1.06);transform:translateY(-1px)}
+
+.empty-state{
+  text-align:center;color:var(--muted);font-size:.9rem;
+  padding:2.5rem 1rem;background:rgba(255,255,255,.6);
+  border-radius:1rem;border:1px dashed rgba(144,1,67,.20);
+}
+.empty-state i{font-size:2rem;display:block;margin-bottom:.6rem;color:var(--pink-accent)}
+
+.tag{
+  display:inline-block;padding:.15rem .55rem;border-radius:.5rem;
+  font-size:.72rem;font-weight:600;letter-spacing:.2px;
+}
+.tag-issue{background:#fde7ec;color:var(--danger)}
+.tag-return{background:#e6f5ec;color:#7a0f4d}
+.tag-purchase{background:#e3eeff;color:#9c0953}
+
+.filter-bar{
+  display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end;
+  margin-bottom:1.2rem;padding:1rem;background:var(--pink-soft);
+  border-radius:1rem;border:1px solid var(--pink-border);
+}
+.filter-bar .form-group{min-width:150px;flex:1}
+.filter-bar .form-group label{font-size:.72rem}
+
+.section-header{
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:.8rem;margin-bottom:1.2rem;
+}
+.section-header h2{margin-bottom:0}
+.helper-text{font-size:.75rem;color:var(--muted);margin-top:.3rem;line-height:1.5}
+
+.line-items-table{margin-top:.5rem;border:1px solid var(--pink-border);border-radius:.8rem;overflow:hidden}
+.line-items-table table{min-width:100%}
+.line-items-table th{background:var(--pink-mid);color:var(--brand);font-size:.72rem;padding:.6rem .7rem}
+.line-items-table td{padding:.4rem .5rem}
+.line-items-table input{padding:.45rem .6rem;font-size:.82rem}
+.line-items-table .remove-line{
+  background:#fde7ec;color:var(--danger);border:none;
+  width:28px;height:28px;border-radius:.5rem;cursor:pointer;font-size:.75rem;
+}
+.line-items-table .remove-line:hover{background:var(--danger);color:#fff}
+
+.items-picker{
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:.5rem;
+  align-items:end;padding:.8rem;background:var(--pink-soft);
+  border-radius:.8rem;margin-bottom:.8rem;border:1px dashed var(--pink-border);
+}
+.items-picker .form-group{margin:0}
+
+@media(max-width:700px){
+  .items-picker{grid-template-columns:1fr 1fr;}
+  .items-picker .form-group:first-child{grid-column:1/-1}
+}
+
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(43,10,28,.45);
+  backdrop-filter:blur(4px);z-index:1000;
+  display:none;align-items:center;justify-content:center;padding:1rem;
+}
+.modal-overlay.show{display:flex}
+.modal{
+  background:#fff;border-radius:1.4rem;padding:2rem;
+  width:100%;max-width:700px;max-height:90vh;overflow-y:auto;
+  box-shadow:0 30px 60px -20px rgba(144,1,67,.4);
+  position:relative;animation:modalIn .25s ease;
+}
+.modal.wide{max-width:1100px}
+@keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal h3{
+  font-size:1.1rem;color:var(--brand);margin-bottom:1.2rem;
+  display:flex;align-items:center;gap:.5rem;
+}
+.modal .modal-close{
+  position:absolute;top:1rem;right:1rem;width:34px;height:34px;
+  border-radius:.7rem;border:none;background:var(--pink-mid);
+  color:var(--brand);cursor:pointer;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.modal .modal-close:hover{background:var(--brand);color:#fff}
+
+.toast{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:2000;
+  background:var(--brand);color:#fff;padding:1rem 1.4rem;
+  border-radius:1rem;font-size:.88rem;font-weight:500;
+  box-shadow:0 18px 40px -18px rgba(144,1,67,.6);
+  display:flex;align-items:center;gap:.6rem;
+  transform:translateY(120%);transition:transform .3s ease;max-width:360px;
+}
+.toast.show{transform:translateY(0)}
+.toast.error{background:var(--danger)}
+.toast.success{background:#99094c}
+
+/* Order-saved action modal */
+.order-saved-box .order-meta{
+  background:var(--pink-soft);border:1px dashed var(--pink-border);
+  border-radius:.8rem;padding:.8rem 1rem;margin-bottom:1rem;font-size:.82rem;
+  color:var(--brand-dark);
+}
+.order-saved-box .order-meta strong{color:var(--brand)}
+.order-saved-box .lines-preview{
+  max-height:220px;overflow:auto;border:1px solid var(--pink-border);
+  border-radius:.8rem;margin-bottom:1rem;
+}
+.order-saved-box .lines-preview table{min-width:100%;font-size:.8rem}
+.order-saved-box .lines-preview th{
+  background:var(--pink-mid);color:var(--brand);font-size:.72rem;
+  position:sticky;top:0;
+}
+
+@media(max-width:600px){
+  body{padding:1.2rem .9rem}
+  .topbar{padding:12px}
+  .brand h1{height:36px}
+  .brand h1 img{max-height:36px}
+  .brand p{font-size:10.5px;letter-spacing:.4px}
+  .panel{padding:1.4rem;border-radius:1.2rem}
+  .modal{padding:1.4rem}
+  .tab-btn{padding:.55rem .9rem;font-size:.78rem}
+}
+@media(max-width:420px){
+  .brand h1 img{max-height:30px}
+  .brand p{font-size:8.5px;letter-spacing:.3px}
+  .filter-bar .form-group{min-width:120px}
+}
+@media print{
+  body{background:#fff;padding:0}
+  .topbar,.tabs-bar,.tab-btn,.form-actions,.filter-bar .form-group:last-child,.no-print,.low-stock-banner{display:none!important}
+  .panel{box-shadow:none;border:1px solid #ddd;background:#fff;backdrop-filter:none}
+  .modal-overlay{position:static;background:none;backdrop-filter:none;display:block!important;padding:0}
+  .modal{box-shadow:none;max-width:100%;padding:1rem}
+  .modal-close{display:none}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ================= TOPBAR ================= -->
+  <header class="topbar">
+    <div class="brand">
+      <h1><img src="images/gplogo1.png" alt="GoldPrince" onerror="this.style.display='none'"></h1>
+      <p>JEWEL INDUSTRY INDIA PVT LTD</p>
+    </div>
+    <div class="branch-pill">
+      <i class="fas fa-gem"></i> <span>Stone Stock</span>
+    </div>
+    
+    <div class="top-actions">
+      <span class="user-badge" style="background:linear-gradient(135deg,var(--brand),var(--brand-light));color:#fff;padding:9px 16px;border-radius:10px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:7px;box-shadow:0 6px 16px rgba(144,1,67,.28)">
+        <i class="fas fa-user-shield"></i> <span id="adminName">Admin</span>
+      </span>
+      <a href="gpadmin.html" class="btn-outline" id="backToDashboardBtn" style="border:1px solid var(--pink-border);background:#fff;color:var(--brand);padding:9px 16px;border-radius:10px;font-weight:700;text-decoration:none;font-size:13px;display:inline-flex;align-items:center;gap:7px;transition:all .18s ease;">
+        <i class="fas fa-arrow-left"></i> Dashboard
+      </a>
+      <button class="tab-btn active" data-tab="dashboard"><i class="fas fa-home"></i> Home</button>
+      <button class="btn-outline" id="logoutBtn" type="button" style="border:1px solid var(--pink-border);background:#fff;color:var(--brand);padding:9px 16px;border-radius:10px;font-weight:700;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:7px;transition:all .18s ease;">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= LOW STOCK REMINDER — WHATSAPP STYLE ================= -->
+  <div class="low-stock-banner" id="lowStockBanner">
+    <div class="lsb-head">
+      <div class="lsb-head-left">
+        <i class="fab fa-whatsapp" style="font-size:1.1rem"></i>
+        <span>Stone Stock Reminder</span>
+      </div>
+      <button class="lsb-close-all" id="lsbCloseAll" title="Dismiss all for today">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="lsb-body">
+      <div class="lsb-sub">
+        <i class="fas fa-circle-info"></i>
+        Low stock — raise a purchase to clear. Dismissed items will reappear tomorrow at 9:00 AM.
+      </div>
+      <div class="lsb-list" id="lowStockList"></div>
+    </div>
+  </div>
+
+  <div class="tabs-bar" id="tabsBar">
+    
+    <button class="tab-btn" data-tab="catalogue"><i class="fas fa-list"></i> Stone Catalogue</button>
+    <button class="tab-btn" data-tab="opening"><i class="fas fa-box-open"></i> Opening Stock</button>
+    <button class="tab-btn" data-tab="purchase"><i class="fas fa-truck-arrow-right"></i> Purchase (Inward)</button>
+    <button class="tab-btn" data-tab="issue"><i class="fas fa-share-from-square"></i> Issue to Branch</button>
+    <button class="tab-btn" data-tab="return"><i class="fas fa-rotate-left"></i> Return from Branch</button>
+    <button class="tab-btn" data-tab="closing"><i class="fas fa-clipboard-check"></i> Closing Stock</button>
+    <button class="tab-btn" data-tab="reports"><i class="fas fa-file-export"></i> Reports</button>
+    <button class="tab-btn" data-tab="tracking"><i class="fas fa-magnifying-glass-chart"></i> Tracking</button>
+    <button class="tab-btn" data-tab="artstone"><i class="fas fa-gem"></i> Add new Product</button>
+  </div>
+
+  <!-- ================= DASHBOARD ================= -->
+  <div class="tab-content" id="tab-dashboard">
+    <div class="panel">
+      <h2><i class="fas fa-info-circle"></i> Welcome to Stone Stock</h2>
+      <div class="helper-text" style="font-size:.85rem">
+        Use the tabs above to manage your stone inventory.
+        <br>• <b>Reports</b> tab contains the <i>Branch-wise Issued Report</i>, <i>Recent Transactions</i>, and record overviews.
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CATALOGUE ================= -->
+  <div class="tab-content" id="tab-catalogue" style="display:none">
+    <div class="panel">
+      <div class="section-header">
+        <h2><i class="fas fa-list"></i> Stone Catalogue <span class="badge" id="catalogueCount">0</span></h2>
+        <button class="btn btn-primary btn-sm" id="addCatalogueBtn"><i class="fas fa-plus"></i> Add Stone Type</button>
+      </div>
+      <div class="table-wrap">
+        <table id="catalogueTable">
+          <thead><tr><th>S.No</th><th>Stone Type</th><th>Color</th><th>Size</th><th>Shape</th><th>Min Qty</th><th>Actions</th></tr></thead>
+          <tbody id="catalogueBody">
+            <tr><td colspan="7" class="empty-state"><i class="fas fa-inbox"></i> No stone types in catalogue. Click "Add Stone Type" to begin.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= OPENING STOCK ================= -->
+  <div class="tab-content" id="tab-opening" style="display:none">
+    <div class="panel">
+      <div class="section-header">
+        <h2><i class="fas fa-box-open"></i> Opening Stock Entry</h2>
+        <button class="btn btn-outline btn-sm" id="openOpeningRecordsBtn"><i class="fas fa-list"></i> Opening Stock Records <span class="badge" id="openingHeaderCount">0</span></button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group searchable-select" id="openingStoneWrap">
+          <label>Stone Type (searchable)</label>
+          <input type="text" id="openingStoneInput" placeholder="Search stone type…" autocomplete="off">
+          <div class="dropdown" id="openingStoneDropdown"></div>
+        </div>
+        <div class="form-group">
+          <label>Color</label>
+          <input type="text" id="openingColor" placeholder="e.g. 2 side green">
+        </div>
+        <div class="form-group">
+          <label>Size</label>
+          <input type="text" id="openingSize" placeholder="e.g. 2x4">
+        </div>
+        <div class="form-group">
+          <label>Opening Quantity</label>
+          <input type="number" id="openingQty" placeholder="0" min="0" step="1">
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="openingDate">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" id="saveOpeningBtn"><i class="fas fa-save"></i> Save Opening Stock</button>
+        <button class="btn btn-outline" id="resetOpeningBtn"><i class="fas fa-rotate"></i> Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PURCHASE ================= -->
+  <div class="tab-content" id="tab-purchase" style="display:none">
+    <div class="panel" id="purchaseEntryPanel">
+      <div class="section-header">
+        <h2><i class="fas fa-truck-arrow-right"></i> New Purchase Order</h2>
+        <button class="btn btn-outline btn-sm" id="openPurchaseRecordsBtn"><i class="fas fa-list"></i> Purchase Records <span class="badge" id="purchaseHeaderCount">0</span></button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Order No.</label>
+          <input type="text" id="purchaseOrderNo" placeholder="e.g. S-1017">
+        </div>
+        <div class="form-group">
+          <label>Order Date</label>
+          <input type="date" id="purchaseDate">
+        </div>
+        <div class="form-group">
+          <label>Party Name</label>
+          <input type="text" id="purchaseParty" placeholder="Enter party name">
+        </div>
+      </div>
+
+      <div class="items-picker">
+        <div class="form-group searchable-select" id="purchaseStoneWrap">
+          <label>Stone Type</label>
+          <input type="text" id="purchaseStoneInput" placeholder="Search stone type…" autocomplete="off">
+          <div class="dropdown" id="purchaseStoneDropdown"></div>
+        </div>
+        <div class="form-group">
+          <label>Color</label>
+          <input type="text" id="purchaseColor" placeholder="Color">
+        </div>
+        <div class="form-group">
+          <label>Size</label>
+          <input type="text" id="purchaseSize" placeholder="Size">
+        </div>
+        <div class="form-group">
+          <label>Qty (Enter to add)</label>
+          <input type="number" id="purchaseQty" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary btn-sm" id="addPurchaseLineBtn"><i class="fas fa-plus"></i> Add</button>
+        </div>
+      </div>
+
+      <div class="line-items-table">
+        <table>
+          <thead><tr><th>Stone Type</th><th>Color</th><th>Size</th><th>Qty</th><th style="width:60px"></th></tr></thead>
+          <tbody id="purchaseLinesBody">
+            <tr><td colspan="5" class="empty-state" style="padding:1rem;font-size:.82rem"><i class="fas fa-inbox"></i> No items yet. Add stone types above.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" id="savePurchaseBtn"><i class="fas fa-save"></i> Save Purchase Order</button>
+        <button class="btn btn-outline" id="cancelPurchaseBtn"><i class="fas fa-xmark"></i> Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ISSUE ================= -->
+  <div class="tab-content" id="tab-issue" style="display:none">
+    <div class="panel" id="issueEntryPanel">
+      <div class="section-header">
+        <h2><i class="fas fa-share-from-square"></i> New Issue Order</h2>
+        <button class="btn btn-outline btn-sm" id="openIssueRecordsBtn"><i class="fas fa-list"></i> Issue Records <span class="badge" id="issueHeaderCount">0</span></button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Issue Order No. <span style="color:var(--danger);font-size:.7rem">(auto)</span></label>
+          <input type="text" id="issueOrderNo" placeholder="Auto (3501)">
+        </div>
+        <div class="form-group">
+          <label>Issue Date</label>
+          <input type="date" id="issueDate">
+        </div>
+        <div class="form-group">
+          <label>Branch</label>
+          <div style="display:flex;gap:.5rem">
+            <select id="issueBranch" style="flex:1">
+              <option value="">— Select branch —</option>
+            </select>
+            <button class="btn btn-primary btn-sm" id="addBranchBtn" title="Add new branch"><i class="fas fa-plus"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="items-picker">
+        <div class="form-group searchable-select" id="issueStoneWrap">
+          <label>Stone Type</label>
+          <input type="text" id="issueStoneInput" placeholder="Search stone type…" autocomplete="off">
+          <div class="dropdown" id="issueStoneDropdown"></div>
+        </div>
+        <div class="form-group">
+          <label>Color</label>
+          <input type="text" id="issueColor" placeholder="Color">
+        </div>
+        <div class="form-group">
+          <label>Size</label>
+          <input type="text" id="issueSize" placeholder="Size">
+        </div>
+        <div class="form-group">
+          <label>Qty (Enter to add)</label>
+          <input type="number" id="issueQty" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary btn-sm" id="addIssueLineBtn"><i class="fas fa-plus"></i> Add</button>
+        </div>
+      </div>
+      <div style="margin:.2rem 0 .4rem;font-size:.8rem;font-weight:700;color:var(--brand)"><i class="fas fa-gem"></i> Issue by Art No. (adds all stones of the art × pieces)</div>
+      <div class="items-picker" style="grid-template-columns:2fr 1fr auto">
+        <div class="form-group">
+          <label>Art No. (select / search)</label>
+          <input type="text" id="issueArtInput" list="issueArtList" placeholder="Search art no…" autocomplete="off">
+          <datalist id="issueArtList"></datalist>
+        </div>
+        <div class="form-group">
+          <label>Pieces (Enter to add)</label>
+          <input type="number" id="issueArtPcs" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary btn-sm" id="addIssueArtBtn"><i class="fas fa-plus"></i> Add Art</button>
+        </div>
+      </div>
+      <div class="helper-text" id="issueArtPreview" style="margin:-.3rem 0 .8rem"></div>
+      <div class="line-items-table" id="issueArtWrap" style="display:none;margin-bottom:.8rem">
+        <table>
+          <thead><tr><th>Art No.</th><th>Product</th><th>Pcs</th><th>Stones / pc</th><th>Total Stones</th><th style="width:60px"></th></tr></thead>
+          <tbody id="issueArtBody"></tbody>
+        </table>
+      </div>
+      <div class="form-group" style="margin-bottom:.8rem">
+        <label>Note (applies to whole order)</label>
+        <input type="text" id="issueNote" placeholder="Optional note for this issue order">
+      </div>
+
+      <div class="line-items-table">
+        <table>
+          <thead><tr><th>Stone Type</th><th>Color</th><th>Size</th><th>Qty</th><th style="width:60px"></th></tr></thead>
+          <tbody id="issueLinesBody">
+            <tr><td colspan="5" class="empty-state" style="padding:1rem;font-size:.82rem"><i class="fas fa-inbox"></i> No items yet. Add stone types above.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="issueCombinedWrap" style="display:none;margin-top:1rem">
+        <div style="font-size:.8rem;font-weight:700;color:var(--brand);margin-bottom:.4rem"><i class="fas fa-layer-group"></i> Total stones to be issued (all art lines + manual lines)</div>
+        <div class="line-items-table">
+          <table>
+            <thead><tr><th>Stone Type</th><th>Color</th><th>Size</th><th>Qty</th></tr></thead>
+            <tbody id="issueCombinedBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" id="saveIssueBtn"><i class="fas fa-save"></i> Save Issue Order</button>
+        <button class="btn btn-outline" id="cancelIssueBtn"><i class="fas fa-xmark"></i> Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= RETURN ================= -->
+  <div class="tab-content" id="tab-return" style="display:none">
+    <div class="panel" id="returnEntryPanel">
+      <div class="section-header">
+        <h2><i class="fas fa-rotate-left"></i> New Return Order</h2>
+        <button class="btn btn-outline btn-sm" id="openReturnRecordsBtn"><i class="fas fa-list"></i> Return Records <span class="badge" id="returnHeaderCount">0</span></button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Return Order No. <span style="color:var(--danger);font-size:.7rem">(auto)</span></label>
+          <input type="text" id="returnOrderNo" placeholder="Auto (1101)">
+        </div>
+        <div class="form-group">
+          <label>Return Date</label>
+          <input type="date" id="returnDate">
+        </div>
+        <div class="form-group">
+          <label>Branch</label>
+          <select id="returnBranch">
+            <option value="">— Select branch —</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="items-picker">
+        <div class="form-group searchable-select" id="returnStoneWrap">
+          <label>Stone Type</label>
+          <input type="text" id="returnStoneInput" placeholder="Search stone type…" autocomplete="off">
+          <div class="dropdown" id="returnStoneDropdown"></div>
+        </div>
+        <div class="form-group">
+          <label>Color</label>
+          <input type="text" id="returnColor" placeholder="Color">
+        </div>
+        <div class="form-group">
+          <label>Size</label>
+          <input type="text" id="returnSize" placeholder="Size">
+        </div>
+        <div class="form-group">
+          <label>Qty (Enter to add)</label>
+          <input type="number" id="returnQty" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary btn-sm" id="addReturnLineBtn"><i class="fas fa-plus"></i> Add</button>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:.8rem">
+        <label>Note (applies to whole order)</label>
+        <input type="text" id="returnNote" placeholder="Optional note for this return order">
+      </div>
+
+      <div class="line-items-table">
+        <table>
+          <thead><tr><th>Stone Type</th><th>Color</th><th>Size</th><th>Qty</th><th style="width:60px"></th></tr></thead>
+          <tbody id="returnLinesBody">
+            <tr><td colspan="5" class="empty-state" style="padding:1rem;font-size:.82rem"><i class="fas fa-inbox"></i> No items yet. Add stone types above.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" id="saveReturnBtn"><i class="fas fa-save"></i> Save Return Order</button>
+        <button class="btn btn-outline" id="cancelReturnBtn"><i class="fas fa-xmark"></i> Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CLOSING STOCK ================= -->
+  <div class="tab-content" id="tab-closing" style="display:none">
+    <div class="panel">
+      <div class="section-header">
+        <h2><i class="fas fa-clipboard-check"></i> Closing Stock (as on now)</h2>
+        <div class="form-actions">
+          <button class="btn btn-success btn-sm" id="exportClosingExcel"><i class="fas fa-file-excel"></i> Excel</button>
+          <button class="btn btn-danger btn-sm" id="exportClosingPdf"><i class="fas fa-file-pdf"></i> PDF</button>
+          <button class="btn btn-primary btn-sm" id="printClosingBtn"><i class="fas fa-print"></i> Print</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="form-group">
+          <label><i class="fas fa-filter"></i> Filter by Stone Type</label>
+          <input type="text" id="closingFilterStone" placeholder="Search stone type…">
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-ruler"></i> Filter by Size</label>
+          <input type="text" id="closingFilterSize" placeholder="e.g. 2x4">
+        </div>
+        <div class="form-group" style="flex:0 0 auto">
+          <label>&nbsp;</label>
+          <button class="btn btn-outline btn-sm" id="clearClosingFilter"><i class="fas fa-xmark"></i> Clear</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="closingTable">
+          <thead>
+            <tr>
+              <th>S.No</th><th>Stone Type</th><th>Color</th><th>Size</th>
+              <th>Opening</th><th>Purchased</th><th>Issued</th><th>Returned</th>
+              <th>Damage</th><th>Purchase Return</th><th>Min Qty</th><th>Closing Qty</th>
+            </tr>
+          </thead>
+          <tbody id="closingBody">
+            <tr><td colspan="12" class="empty-state"><i class="fas fa-inbox"></i> No stock data yet.</td></tr>
+          </tbody>
+          <tfoot id="closingFoot" style="display:none">
+            <tr>
+              <td colspan="4" style="text-align:right">Total Packets / Stones</td>
+              <td id="ctOpening">0</td>
+              <td id="ctPurchased">0</td>
+              <td id="ctIssued">0</td>
+              <td id="ctReturned">0</td>
+              <td id="ctDamage">0</td>
+              <td id="ctPReturn">0</td>
+              <td></td>
+              <td id="ctClosing">0</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="helper-text" style="margin-top:.8rem">
+        <i class="fas fa-info-circle" style="color:var(--pink-accent);"></i>
+        Closing Qty = Opening + Purchased − Issued + Returned − Damage − Purchase Return
+        · <span style="color:var(--danger);font-weight:700">Red</span> row = closing at or below minimum qty
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= REPORTS ================= -->
+  <div class="tab-content" id="tab-reports" style="display:none">
+    <div class="panel">
+      <div class="section-header">
+        <h2><i class="fas fa-file-export"></i> Branch-wise Issued Report</h2>
+        <button class="btn btn-outline btn-sm" id="openBranchReportBtn"><i class="fas fa-list"></i> Open Report</button>
+      </div>
+      <div class="helper-text">Click <b>Open Report</b> to filter and generate the branch-wise issued report with Excel/PDF download.</div>
+    </div>
+
+    <div class="panel">
+      <div class="section-header">
+        <h2><i class="fas fa-clock-rotate-left"></i> Recent Transactions</h2>
+        <button class="btn btn-outline btn-sm" id="openRecentTxnsBtn"><i class="fas fa-list"></i> Open Recent Transactions</button>
+      </div>
+      <div class="helper-text">Click <b>Open Recent Transactions</b> to view all purchase/issue/return transactions with edit option.</div>
+    </div>
+
+    <!-- Moved Cards Section -->
+    <div class="panel">
+      <div class="stats-grid" id="dashStats">
+        <div class="stat-card" id="cardOpening">
+          <div class="label"><i class="fas fa-box-open"></i> Opening Stock</div>
+          <div class="sub">View & manage opening stock records</div>
+        </div>
+        <div class="stat-card" id="cardPurchase">
+          <div class="label"><i class="fas fa-truck-arrow-right"></i> Purchase Records</div>
+          <div class="sub">View all purchase orders and items</div>
+        </div>
+        <div class="stat-card" id="cardIssue">
+          <div class="label"><i class="fas fa-share-from-square"></i> Issue Records</div>
+          <div class="sub">View all issued stock to branches</div>
+        </div>
+        <div class="stat-card" id="cardReturn">
+          <div class="label"><i class="fas fa-rotate-left"></i> Return Records</div>
+          <div class="sub">View all returned stock from branches</div>
+        </div>
+        <div class="stat-card" id="cardBranchReport">
+          <div class="label"><i class="fas fa-file-export"></i> Branch-wise Issued Report</div>
+          <div class="sub">Generate and download branch report</div>
+        </div>
+        <div class="stat-card" id="cardRecent">
+          <div class="label"><i class="fas fa-clock-rotate-left"></i> Recent Transactions</div>
+          <div class="sub">View and edit recent transactions</div>
+        </div>
+        <div class="stat-card" id="cardLowStock">
+          <div class="label"><i class="fas fa-triangle-exclamation"></i> Low Stock Items</div>
+          <div id="lowStockCardCount" style="font-size:1.8rem;font-weight:800;color:var(--brand);margin-top:.2rem;line-height:1.1">0</div>
+          <div class="sub">At or below minimum qty — click to view</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ART NO WISE STONE DETAILS ================= -->
+  <div class="tab-content" id="tab-artstone" style="display:none">
+    <div class="panel">
+      <div class="section-header">
+        <h2><i class="fas fa-gem"></i> Art no wise stone details <span class="badge" id="artCount">0</span></h2>
+        <button class="btn btn-primary btn-sm" id="addArtBtn"><i class="fas fa-plus"></i> Add Art Details</button>
+      </div>
+      <div class="filter-bar">
+        <div class="form-group">
+          <label><i class="fas fa-filter"></i> Search (Art No / Product / Stone)</label>
+          <input type="text" id="artFilter" placeholder="Search…">
+        </div>
+        <div class="form-group" style="flex:0 0 auto">
+          <label>&nbsp;</label>
+          <button class="btn btn-outline btn-sm" id="clearArtFilter"><i class="fas fa-xmark"></i> Clear</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="artTable">
+          <thead><tr><th>Stone Type</th><th>Color</th><th>Size</th><th>Shape</th><th>Qty</th><th style="width:90px">Actions</th></tr></thead>
+          <tbody id="artBody">
+            <tr><td colspan="6" class="empty-state"><i class="fas fa-inbox"></i> No art details yet. Click "Add Art Details" to begin.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TRACKING ================= -->
+  <div class="tab-content" id="tab-tracking" style="display:none">
+    <div class="panel">
+      <h2><i class="fas fa-magnifying-glass-chart"></i> Track Stone Type Availability</h2>
+      <div class="filter-bar">
+        <div class="form-group searchable-select" id="trackStoneWrap">
+          <label>Stone Type</label>
+          <input type="text" id="trackStoneInput" placeholder="Search stone type…" autocomplete="off">
+          <div class="dropdown" id="trackStoneDropdown"></div>
+        </div>
+        <div class="form-group">
+          <label>Color</label>
+          <input type="text" id="trackColor" placeholder="All colors">
+        </div>
+        <div class="form-group">
+          <label>Size</label>
+          <input type="text" id="trackSize" placeholder="All sizes">
+        </div>
+        <div class="form-group" style="flex:0 0 auto">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary btn-sm" id="trackBtn"><i class="fas fa-search"></i> Track</button>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-top:1rem">
+        <table id="trackResultTable">
+          <thead><tr><th>Stone Type</th><th>Color</th><th>Size</th><th>Opening</th><th>Purchased</th><th>Issued</th><th>Returned</th><th>Closing Qty</th></tr></thead>
+          <tbody id="trackResultBody">
+            <tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i> Search for a stone type to see availability.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2><i class="fas fa-building"></i> Branch-wise Transaction Tracking</h2>
+      <div class="filter-bar">
+        <div class="form-group">
+          <label>Branch</label>
+          <select id="trackBranch"><option value="">All branches</option></select>
+        </div>
+        <div class="form-group">
+          <label>Transaction Type</label>
+          <select id="trackType">
+            <option value="">All types</option>
+            <option value="issue">Issued</option>
+            <option value="return">Returned</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:0 0 auto">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary btn-sm" id="trackBranchBtn"><i class="fas fa-search"></i> Track</button>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-top:1rem">
+        <table id="trackBranchTable">
+          <thead><tr><th>Date</th><th>Type</th><th>Order No.</th><th>Branch</th><th>Stone Type</th><th>Color</th><th>Size</th><th>Qty</th><th>Note</th></tr></thead>
+          <tbody id="trackBranchBody">
+            <tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> Select a branch and click "Track".</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================= OPENING STOCK RECORDS MODAL ================= -->
+<div class="modal-overlay" id="openingRecordsOverlay">
+  <div class="modal wide">
+    <button class="modal-close" onclick="document.getElementById('openingRecordsOverlay').classList.remove('show')"><i class="fas fa-times"></i></button>
+    <h3><i class="fas fa-list"></i> Opening Stock Records</h3>
+    <div class="filter-bar">
+      <div class="form-group">
+        <label>Stone Type</label>
+        <input type="text" id="openingFilterStone" placeholder="Search stone…">
+      </div>
+      <div class="form-group">
+        <label>From Date</label>
+        <input type="date" id="openingFilterFrom">
+      </div>
+      <div class="form-group">
+        <label>To Date</label>
+        <input type="date" id="openingFilterTo">
+      </div>
+      <div class="form-group" style="flex:0 0 auto">
+        <label>&nbsp;</label>
+        <button class="btn btn-outline btn-sm" id="clearOpeningFilter"><i class="fas fa-xmark"></i> Clear</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="openingTable">
+        <thead><tr><th>S.No</th><th>Stone Type</th><th>Color</th><th>Size</th><th>Opening Qty</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody id="openingBody">
+          <tr><td colspan="7" class="empty-state"><i class="fas fa-inbox"></i> No opening stock records yet.</td></tr>
+        </tbody>
+        <tfoot id="openingFoot" style="display:none">
+          <tr><td colspan="4" style="text-align:right">Grand Total</td><td id="openingGrandTotal">0</td><td colspan="2"></td></tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PURCHASE RECORDS MODAL ================= -->
+<div class="modal-overlay" id="purchaseRecordsOverlay">
+  <div class="modal wide">
+    <button class="modal-close" onclick="document.getElementById('purchaseRecordsOverlay').classList.remove('show')"><i class="fas fa-times"></i></button>
+    <h3><i class="fas fa-list"></i> Purchase Records</h3>
+    <div class="filter-bar">
+      <div class="form-group">
+        <label>Order No.</label>
+        <input type="text" id="purchaseFilterOrder" placeholder="e.g. S-1017">
+      </div>
+      <div class="form-group">
+        <label>Party Name</label>
+        <input type="text" id="purchaseFilterParty" placeholder="Search party…">
+      </div>
+      <div class="form-group">
+        <label>From Date</label>
+        <input type="date" id="purchaseFilterFrom">
+      </div>
+      <div class="form-group">
+        <label>To Date</label>
+        <input type="date" id="purchaseFilterTo">
+      </div>
+      <div class="form-group">
+        <label>Stone Type</label>
+        <input type="text" id="purchaseFilterStone" placeholder="Search stone…">
+      </div>
+      <div class="form-group" style="flex:0 0 auto">
+        <label>&nbsp;</label>
+        <button class="btn btn-outline btn-sm" id="clearPurchaseFilter"><i class="fas fa-xmark"></i> Clear</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="purchaseTable">
+        <thead><tr><th>Order No.</th><th>Date</th><th>Party</th><th>Stone Type</th><th>Color</th><th>Size</th><th>Qty</th><th>Actions</th></tr></thead>
+        <tbody id="purchaseBody">
+          <tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i> No purchase records yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ISSUE RECORDS MODAL ================= -->
+<div class="modal-overlay" id="issueRecordsOverlay">
+  <div class="modal wide">
+    <button class="modal-close" onclick="document.getElementById('issueRecordsOverlay').classList.remove('show')"><i class="fas fa-times"></i></button>
+    <h3><i class="fas fa-list"></i> Issue Records</h3>
+    <div class="filter-bar">
+      <div class="form-group">
+        <label>Order No.</label>
+        <input type="text" id="issueFilterOrder" placeholder="e.g. 3501">
+      </div>
+      <div class="form-group">
+        <label>Branch</label>
+        <select id="issueFilterBranch"><option value="">All branches</option></select>
+      </div>
+      <div class="form-group">
+        <label>From Date</label>
+        <input type="date" id="issueFilterFrom">
+      </div>
+      <div class="form-group">
+        <label>To Date</label>
+        <input type="date" id="issueFilterTo">
+      </div>
+      <div class="form-group">
+        <label>Stone Type</label>
+        <input type="text" id="issueFilterStone" placeholder="Search stone…">
+      </div>
+      <div class="form-group" style="flex:0 0 auto">
+        <label>&nbsp;</label>
+        <button class="btn btn-outline btn-sm" id="clearIssueFilter"><i class="fas fa-xmark"></i> Clear</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="issueTable">
+        <thead><tr><th>Order No.</th><th>Date</th><th>Branch</th><th>Stone Type</th><th>Color</th><th>Size</th><th>Qty</th><th>Note</th><th>Actions</th></tr></thead>
+        <tbody id="issueBody">
+          <tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> No issue records yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ================= RETURN RECORDS MODAL ================= -->
+<div class="modal-overlay" id="returnRecordsOverlay">
+  <div class="modal wide">
+    <button class="modal-close" onclick="document.getElementById('returnRecordsOverlay').classList.remove('show')"><i class="fas fa-times"></i></button>
+    <h3><i class="fas fa-list"></i> Return Records</h3>
+    <div class="filter-bar">
+      <div class="form-group">
+        <label>Order No.</label>
+        <input type="text" id="returnFilterOrder" placeholder="e.g. 1101">
+      </div>
+      <div class="form-group">
+        <label>Branch</label>
+        <select id="returnFilterBranch"><option value="">All branches</option></select>
+      </div>
+      <div class="form-group">
+        <label>From Date</label>
+        <input type="date" id="returnFilterFrom">
+      </div>
+      <div class="form-group">
+        <label>To Date</label>
+        <input type="date" id="returnFilterTo">
+      </div>
+      <div class="form-group">
+        <label>Stone Type</label>
+        <input type="text" id="returnFilterStone" placeholder="Search stone…">
+      </div>
+      <div class="form-group" style="flex:0 0 auto">
+        <label>&nbsp;</label>
+        <button class="btn btn-outline btn-sm" id="clearReturnFilter"><i class="fas fa-xmark"></i> Clear</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="returnTable">
+        <thead><tr><th>Order No.</th><th>Date</th><th>Branch</th><th>Stone Type</th><th>Color</th><th>Size</th><th>Qty</th><th>Note</th><th>Actions</th></tr></thead>
+        <tbody id="returnBody">
+          <tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> No return records yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ================= BRANCH REPORT MODAL ================= -->
+<div class="modal-overlay" id="branchReportOverlay">
+  <div class="modal wide">
+    <button class="modal-close" onclick="document.getElementById('branchReportOverlay').classList.remove('show')"><i class="fas fa-times"></i></button>
+    <h3><i class="fas fa-file-export"></i> Branch-wise Issued Report</h3>
+    <div class="filter-bar">
+      <div class="form-group">
+        <label>Branch</label>
+        <select id="reportBranch"><option value="">All branches</option></select>
+      </div>
+      <div class="form-group">
+        <label>From Date</label>
+        <input type="date" id="reportFromDate">
+      </div>
+      <div class="form-group">
+        <label>To Date</label>
+        <input type="date" id="reportToDate">
+      </div>
+      <div class="form-group" style="flex:0 0 auto">
+        <label>&nbsp;</label>
+        <button class="btn btn-primary btn-sm" id="generateReportBtn"><i class="fas fa-search"></i> Generate</button>
+      </div>
+    </div>
+    <div class="table-wrap" style="margin-top:1rem">
+      <table id="reportTable">
+        <thead><tr><th>Date</th><th>Order No.</th><th>Branch</th><th>Stone Type</th><th>Color</th><th>Size</th><th>Qty</th><th>Note</th></tr></thead>
+        <tbody id="reportBody">
+          <tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i> Use the filters above and click "Generate".</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="form-actions" style="margin-top:1rem">
+      <button class="btn btn-success" id="exportReportExcel"><i class="fas fa-file-excel"></i> Download Excel</button>
+      <button class="btn btn-danger" id="exportReportPdf"><i class="fas fa-file-pdf"></i> Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= RECENT TRANSACTIONS MODAL ================= -->
+<div class="modal-overlay" id="recentTxnsOverlay">
+  <div class="modal wide">
+    <button class="modal-close" onclick="document.getElementById('recentTxnsOverlay').classList.remove('show')"><i class="fas fa-times"></i></button>
+    <h3><i class="fas fa-clock-rotate-left"></i> Recent Transactions</h3>
+    <div class="filter-bar">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="recentTypeFilter">
+          <option value="">All types</option>
+          <option value="purchase">Purchase</option>
+          <option value="issue">Issue</option>
+          <option value="return">Return</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:0 0 auto">
+        <label>&nbsp;</label>
+        <button class="btn btn-primary btn-sm" id="refreshRecentBtn"><i class="fas fa-rotate"></i> Refresh</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="recentTable">
+        <thead><tr><th>Date</th><th>Type</th><th>Order No.</th><th>Stone</th><th>Color</th><th>Size</th><th>Qty</th><th>Branch</th><th>Note</th><th>Actions</th></tr></thead>
+        <tbody id="recentBody">
+          <tr><td colspan="10" class="empty-state"><i class="fas fa-inbox"></i> No transactions yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ================= GENERIC MODAL ================= -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBox">
+    <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+    <h3 id="modalTitle"><i class="fas fa-edit"></i> Edit Record</h3>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- ================= ORDER SAVED (PRINT/DOWNLOAD) MODAL ================= -->
+<div class="modal-overlay" id="orderSavedOverlay">
+  <div class="modal" style="max-width:820px">
+    <button class="modal-close" id="orderSavedClose"><i class="fas fa-times"></i></button>
+    <h3 id="orderSavedTitle"><i class="fas fa-check-circle"></i> Order Saved</h3>
+    <div id="orderSavedContent" class="order-saved-box"></div>
+    <div class="form-actions" style="margin-top:1rem">
+      <button class="btn btn-primary" id="orderSavedPrintBtn"><i class="fas fa-print"></i> Print</button>
+      <button class="btn btn-success" id="orderSavedExcelBtn"><i class="fas fa-file-excel"></i> Download Excel</button>
+      <button class="btn btn-outline" id="orderSavedDoneBtn"><i class="fas fa-check"></i> Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TOAST ================= -->
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toastMsg">Saved</span></div>
+
+<!-- ============ PROTECTION SCRIPT ============ -->
+<script>
+(function () {
+  if (window.__GP_LOGGING_OUT__) return;
+  function checkSession() {
+    var s = null;
+    try { s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null'); } catch (e) {}
+    if (!s || !s.username || (s.role !== 'admin' && s.role !== 'stone_stock' && s.role !== 'branch_incharge')) {
+      try { sessionStorage.clear(); } catch (e) {}
+      window.location.replace('index.html?t=' + Date.now());
+      return false;
+    }
+    return true;
+  }
+  if (!checkSession()) return;
+  window.addEventListener('pageshow', function () { checkSession(); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') checkSession();
+  });
+  window.addEventListener('focus', function () { checkSession(); });
+})();
+</script>
+
+<!-- ============ MAIN APP SCRIPT ============ -->
+<script>
+/* ============================================================
+   STORAGE KEYS
+   ============================================================ */
+var CATALOGUE_KEY   = 'gp_stone_catalogue';
+var OPENING_KEY     = 'gp_stone_opening';
+var PURCHASE_KEY    = 'gp_stone_purchase_orders';
+var ISSUE_KEY       = 'gp_stone_issue_orders';
+var RETURN_KEY      = 'gp_stone_return_orders';
+var DAMAGE_KEY      = 'gp_stone_damage';
+var PURCHASE_RET_KEY= 'gp_stone_purchase_return';
+var BRANCH_KEY      = 'gp_stone_branches';
+var OLD_PURCHASE_KEY = 'gp_stone_purchase';
+var OLD_ISSUE_KEY    = 'gp_stone_issue';
+var OLD_RETURN_KEY   = 'gp_stone_return';
+
+/* Low stock dismissal tracking */
+var LOWSTOCK_DISMISS_KEY = 'gp_stone_lowstock_dismissed'; // { 'stone||color||size': { dismissedOn: 'YYYY-MM-DD', lastShownOn: 'YYYY-MM-DD' } }
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function readJSON(key, fallback) {
+  try {
+    var raw = localStorage.getItem(key);
+    if (!raw) return fallback !== undefined ? fallback : [];
+    var parsed = JSON.parse(raw);
+    if (Array.isArray(fallback) && !Array.isArray(parsed)) return fallback;
+    return parsed;
+  } catch (e) { return fallback !== undefined ? fallback : []; }
+}
+function writeJSON(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); return true; }
+  catch (e) {
+    try { showToast('Could not save - browser storage is full or blocked. Clear old data and retry.', 'error', 6000); } catch (e2) {}
+    return false;
+  }
+}
+function uid() { return 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); }
+function escapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function todayISO() {
+  var d = new Date();
+  var m = String(d.getMonth() + 1).padStart(2, '0');
+  var day = String(d.getDate()).padStart(2, '0');
+  return d.getFullYear() + '-' + m + '-' + day;
+}
+function formatDate(iso) {
+  if (!iso) return '';
+  try {
+    var p = String(iso).split('-');
+    var d = new Date(p[0], p[1] - 1, p[2]);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch (e) { return iso; }
+}
+function formatDateTime(ts) {
+  try {
+    var d = new Date(ts);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' +
+           d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  } catch (e) { return ''; }
+}
+function toNumber(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function showToast(msg, type, ms) {
+  var t = document.getElementById('toast');
+  var m = document.getElementById('toastMsg');
+  m.textContent = msg;
+  t.className = 'toast show ' + (type || '');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(function () { t.classList.remove('show'); }, ms || 3500);
+}
+
+/* ============================================================
+   LOW STOCK DISMISSAL LOGIC (daily reset at 9 AM)
+   ============================================================ */
+function normPart(v) { return String(v == null ? '' : v).toLowerCase().replace(/[\u00d7*]/g, 'x').replace(/\s+/g, ''); }
+function keyForStone(stoneType, color, size) {
+  return normPart(stoneType) + '||' + normPart(color) + '||' + normPart(size);
+}
+function getDismissedStore() {
+  var raw = localStorage.getItem(LOWSTOCK_DISMISS_KEY);
+  if (!raw) return {};
+  try { return JSON.parse(raw) || {}; } catch (e) { return {}; }
+}
+function saveDismissedStore(s) {
+  localStorage.setItem(LOWSTOCK_DISMISS_KEY, JSON.stringify(s));
+}
+
+/* 9 AM boundary check:
+   - If a key was dismissed today but 9:00 AM has not yet passed today, keep it hidden.
+   - If 9:00 AM has passed today OR dismissal date is before today, show again. */
+function getDismissalCycleDate() {
+  var now = new Date();
+  var cycle = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0);
+  // If current time is before 9 AM today, we're still in *yesterday's* cycle.
+  if (now.getTime() < cycle.getTime()) {
+    cycle.setDate(cycle.getDate() - 1);
+  }
+  return cycle.getFullYear() + '-' +
+         String(cycle.getMonth() + 1).padStart(2, '0') + '-' +
+         String(cycle.getDate()).padStart(2, '0');
+}
+
+function isDismissedForCycle(key) {
+  var store = getDismissedStore();
+  var entry = store[key];
+  if (!entry) return false;
+  var cycle = getDismissalCycleDate();
+  return entry.dismissedCycle === cycle;
+}
+function dismissForCycle(key) {
+  var store = getDismissedStore();
+  var cycle = getDismissalCycleDate();
+  store[key] = { dismissedCycle: cycle, dismissedAt: Date.now() };
+  saveDismissedStore(store);
+}
+function dismissAllForCycle(keys) {
+  var store = getDismissedStore();
+  var cycle = getDismissalCycleDate();
+  var now = Date.now();
+  keys.forEach(function (k) {
+    store[k] = { dismissedCycle: cycle, dismissedAt: now };
+  });
+  saveDismissedStore(store);
+}
+
+/* ============================================================
+   MIGRATION
+   ============================================================ */
+function migrateLegacy() {
+  var oldP = readJSON(OLD_PURCHASE_KEY, []);
+  if (Array.isArray(oldP) && oldP.length) {
+    var gP = {};
+    oldP.forEach(function (r) {
+      var key = r.orderNo || ('MIG-' + r.id);
+      if (!gP[key]) gP[key] = { id: uid(), orderNo: key, date: r.date || todayISO(), party: r.party || '', items: [] };
+      gP[key].items.push({ stoneType: r.stoneType || '', color: r.color || '', size: r.size || '', qty: toNumber(r.qty) });
+    });
+    writeJSON(PURCHASE_KEY, Object.keys(gP).map(function (k) { return gP[k]; }));
+    localStorage.removeItem(OLD_PURCHASE_KEY);
+  }
+  var oldI = readJSON(OLD_ISSUE_KEY, []);
+  if (Array.isArray(oldI) && oldI.length) {
+    var gI = {};
+    oldI.forEach(function (r) {
+      var key = r.orderNo || ('MIG-' + r.id);
+      if (!gI[key]) gI[key] = { id: uid(), orderNo: key, date: r.date || todayISO(), branch: r.branch || '', note: r.note || '', items: [] };
+      gI[key].items.push({ stoneType: r.stoneType || '', color: r.color || '', size: r.size || '', qty: toNumber(r.qty) });
+    });
+    writeJSON(ISSUE_KEY, Object.keys(gI).map(function (k) { return gI[k]; }));
+    localStorage.removeItem(OLD_ISSUE_KEY);
+  }
+  var oldR = readJSON(OLD_RETURN_KEY, []);
+  if (Array.isArray(oldR) && oldR.length) {
+    var gR = {};
+    oldR.forEach(function (r) {
+      var key = r.orderNo || ('MIG-' + r.id);
+      if (!gR[key]) gR[key] = { id: uid(), orderNo: key, date: r.date || todayISO(), branch: r.branch || '', note: r.note || '', items: [] };
+      gR[key].items.push({ stoneType: r.stoneType || '', color: r.color || '', size: r.size || '', qty: toNumber(r.qty) });
+    });
+    writeJSON(RETURN_KEY, Object.keys(gR).map(function (k) { return gR[k]; }));
+    localStorage.removeItem(OLD_RETURN_KEY);
+  }
+}
+
+/* ============================================================
+   BRANCHES
+   ============================================================ */
+function getBranches() {
+  var list = readJSON(BRANCH_KEY, null);
+  if (!list || !Array.isArray(list) || !list.length) {
+    list = ['Kalimatha', 'Ambhaji', 'Gomatha', 'Vanisri'];
+    writeJSON(BRANCH_KEY, list);
+  }
+  return list;
+}
+function addBranch(name) {
+  var list = getBranches();
+  var clean = String(name || '').trim();
+  if (!clean) return false;
+  if (list.some(function (b) { return b.toLowerCase() === clean.toLowerCase(); })) return false;
+  list.push(clean);
+  writeJSON(BRANCH_KEY, list);
+  return true;
+}
+function populateBranchSelects() {
+  var branches = getBranches();
+  var ids = ['issueBranch', 'returnBranch', 'issueFilterBranch', 'returnFilterBranch', 'reportBranch', 'trackBranch'];
+  ids.forEach(function (id) {
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    var current = sel.value;
+    var isFilter = (id === 'issueFilterBranch' || id === 'returnFilterBranch' || id === 'reportBranch' || id === 'trackBranch');
+    var opts = '<option value="">' + (isFilter ? 'All branches' : '— Select branch —') + '</option>';
+    branches.forEach(function (b) {
+      opts += '<option value="' + escapeHtml(b) + '">' + escapeHtml(b) + '</option>';
+    });
+    sel.innerHTML = opts;
+    if (current && branches.indexOf(current) !== -1) sel.value = current;
+  });
+}
+
+/* ============================================================
+   CATALOGUE
+   ============================================================ */
+function getCatalogue() {
+  return readJSON(CATALOGUE_KEY, []).filter(function (x) { return x && typeof x === 'object' && x.stoneType != null; });
+}
+function saveCatalogue(list) { return writeJSON(CATALOGUE_KEY, list); }
+function renderCatalogue() {
+  var list = getCatalogue();
+  var body = document.getElementById('catalogueBody');
+  document.getElementById('catalogueCount').textContent = list.length;
+  if (!list.length) {
+    body.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="fas fa-inbox"></i> No stone types in catalogue. Click "Add Stone Type" to begin.</td></tr>';
+    return;
+  }
+  var html = '';
+  list.forEach(function (item, i) {
+    html += '<tr>'
+      + '<td>' + (i + 1) + '</td>'
+      + '<td><strong>' + escapeHtml(item.stoneType) + '</strong></td>'
+      + '<td>' + escapeHtml(item.color) + '</td>'
+      + '<td>' + escapeHtml(item.size) + '</td>'
+      + '<td>' + escapeHtml(item.shape || '—') + '</td>'
+      + '<td>' + (toNumber(item.minQty) || 0) + '</td>'
+      + '<td><div class="actions-cell">'
+      + '<button class="icon-btn edit" data-cat-edit="' + escapeHtml(item.id) + '" title="Edit"><i class="fas fa-pen"></i></button>'
+      + '<button class="icon-btn del" data-cat-del="' + escapeHtml(item.id) + '" title="Delete"><i class="fas fa-trash"></i></button>'
+      + '</div></td>'
+      + '</tr>';
+  });
+  body.innerHTML = html;
+}
+
+/* ============================================================
+   OPENING
+   ============================================================ */
+function getOpening() { return readJSON(OPENING_KEY, []); }
+function saveOpening(list) { writeJSON(OPENING_KEY, list); }
+
+function renderOpening() {
+  var list = getOpening();
+  document.getElementById('openingHeaderCount').textContent = list.length;
+
+  var fStone = (document.getElementById('openingFilterStone') || {}).value || '';
+  fStone = fStone.trim().toLowerCase();
+  var fFrom = (document.getElementById('openingFilterFrom') || {}).value || '';
+  var fTo = (document.getElementById('openingFilterTo') || {}).value || '';
+
+  var filtered = list.filter(function (it) {
+    if (fStone && String(it.stoneType).toLowerCase().indexOf(fStone) === -1
+        && String(it.color).toLowerCase().indexOf(fStone) === -1
+        && String(it.size).toLowerCase().indexOf(fStone) === -1) return false;
+    if (fFrom && it.date < fFrom) return false;
+    if (fTo && it.date > fTo) return false;
+    return true;
+  });
+
+  var body = document.getElementById('openingBody');
+  var foot = document.getElementById('openingFoot');
+  var gt = document.getElementById('openingGrandTotal');
+  if (!filtered.length) {
+    body.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="fas fa-inbox"></i> No opening stock records match the filters.</td></tr>';
+    foot.style.display = 'none';
+    return;
+  }
+  var html = '';
+  var total = 0;
+  filtered.forEach(function (item, i) {
+    total += toNumber(item.qty);
+    html += '<tr>'
+      + '<td>' + (i + 1) + '</td>'
+      + '<td><strong>' + escapeHtml(item.stoneType) + '</strong></td>'
+      + '<td>' + escapeHtml(item.color) + '</td>'
+      + '<td>' + escapeHtml(item.size) + '</td>'
+      + '<td>' + toNumber(item.qty) + '</td>'
+      + '<td>' + formatDate(item.date) + '</td>'
+      + '<td><div class="actions-cell">'
+      + '<button class="icon-btn edit" data-opening-edit="' + escapeHtml(item.id) + '" title="Edit"><i class="fas fa-pen"></i></button>'
+      + '<button class="icon-btn del" data-opening-del="' + escapeHtml(item.id) + '" title="Delete"><i class="fas fa-trash"></i></button>'
+      + '</div></td>'
+      + '</tr>';
+  });
+  body.innerHTML = html;
+  gt.textContent = total;
+  foot.style.display = '';
+}
+
+/* ============================================================
+   PURCHASE
+   ============================================================ */
+function getPurchaseOrders() { return readJSON(PURCHASE_KEY, []); }
+function savePurchaseOrders(list) { writeJSON(PURCHASE_KEY, list); }
+var purchaseDraft = { orderNo: '', date: '', party: '', items: [] };
+
+function renderPurchaseLines() {
+  var body = document.getElementById('purchaseLinesBody');
+  if (!purchaseDraft.items.length) {
+    body.innerHTML = '<tr><td colspan="5" class="empty-state" style="padding:1rem;font-size:.82rem"><i class="fas fa-inbox"></i> No items yet. Add stone types above.</td></tr>';
+    return;
+  }
+  var html = '';
+  purchaseDraft.items.forEach(function (it, i) {
+    html += '<tr>'
+      + '<td>' + escapeHtml(it.stoneType) + '</td>'
+      + '<td>' + escapeHtml(it.color) + '</td>'
+      + '<td>' + escapeHtml(it.size) + '</td>'
+      + '<td>' + toNumber(it.qty) + '</td>'
+      + '<td><button class="remove-line" data-remove-purchase="' + i + '"><i class="fas fa-trash"></i></button></td>'
+      + '</tr>';
+  });
+  body.innerHTML = html;
+}
+
+function addPurchaseLineFromForm() {
+  var st = document.getElementById('purchaseStoneInput').value.trim();
+  var co = document.getElementById('purchaseColor').value.trim();
+  var si = document.getElementById('purchaseSize').value.trim();
+  var qtyEl = document.getElementById('purchaseQty');
+  var qty = toNumber(qtyEl.value);
+  if (!st) { showToast('Stone type required.', 'error'); return false; }
+  if (qty <= 0) { showToast('Qty > 0.', 'error'); return false; }
+  purchaseDraft.items.push({ stoneType: st, color: co, size: si, qty: qty });
+  renderPurchaseLines();
+  document.getElementById('purchaseStoneInput').value = '';
+  document.getElementById('purchaseColor').value = '';
+  document.getElementById('purchaseSize').value = '';
+  qtyEl.value = '';
+  document.getElementById('purchaseStoneInput').focus();
+  return true;
+}
+
+function renderPurchase() {
+  var orders = getPurchaseOrders();
+  document.getElementById('purchaseHeaderCount').textContent = orders.length;
+
+  var fOrder = (document.getElementById('purchaseFilterOrder') || {}).value || '';
+  fOrder = fOrder.trim().toLowerCase();
+  var fParty = (document.getElementById('purchaseFilterParty') || {}).value || '';
+  fParty = fParty.trim().toLowerCase();
+  var fFrom = (document.getElementById('purchaseFilterFrom') || {}).value || '';
+  var fTo = (document.getElementById('purchaseFilterTo') || {}).value || '';
+  var fStone = (document.getElementById('purchaseFilterStone') || {}).value || '';
+  fStone = fStone.trim().toLowerCase();
+
+  var filtered = orders.filter(function (o) {
+    if (fOrder && String(o.orderNo).toLowerCase().indexOf(fOrder) === -1) return false;
+    if (fParty && String(o.party || '').toLowerCase().indexOf(fParty) === -1) return false;
+    if (fFrom && o.date < fFrom) return false;
+    if (fTo && o.date > fTo) return false;
+    if (fStone) {
+      var hit = o.items.some(function (it) {
+        return String(it.stoneType).toLowerCase().indexOf(fStone) !== -1;
+      });
+      if (!hit) return false;
+    }
+    return true;
+  });
+
+  var body = document.getElementById('purchaseBody');
+  if (!filtered.length) {
+    body.innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i> No purchase records match the filters.</td></tr>';
+    return;
+  }
+  filtered.sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
+  var html = '';
+  filtered.forEach(function (o) {
+    var partyStr = o.party ? ' · Party: ' + escapeHtml(o.party) : '';
+    html += '<tr class="master-row">'
+      + '<td colspan="7"><strong>Order ' + escapeHtml(o.orderNo) + '</strong> · ' + formatDate(o.date) + partyStr + ' · ' + o.items.length + ' item(s)</td>'
+      + '<td><div class="actions-cell">'
+      + '<button class="icon-btn edit" data-purchase-order-edit="' + escapeHtml(o.id) + '" title="Edit Order"><i class="fas fa-pen"></i></button>'
+      + '<button class="icon-btn del" data-purchase-order-del="' + escapeHtml(o.id) + '" title="Delete Order"><i class="fas fa-trash"></i></button>'
+      + '</div></td>'
+      + '</tr>';
+    o.items.forEach(function (it) {
+      html += '<tr class="line-row">'
+        + '<td>' + escapeHtml(o.orderNo) + '</td>'
+        + '<td>' + formatDate(o.date) + '</td>'
+        + '<td>' + escapeHtml(o.party || '—') + '</td>'
+        + '<td>' + escapeHtml(it.stoneType) + '</td>'
+        + '<td>' + escapeHtml(it.color) + '</td>'
+        + '<td>' + escapeHtml(it.size) + '</td>'
+        + '<td>' + toNumber(it.qty) + '</td>'
+        + '<td></td>'
+        + '</tr>';
+    });
+  });
+  body.innerHTML = html;
+}
+
+function resetPurchaseDraft() {
+  purchaseDraft = { orderNo: '', date: todayISO(), party: '', items: [] };
+  document.getElementById('purchaseOrderNo').value = '';
+  document.getElementById('purchaseDate').value = todayISO();
+  document.getElementById('purchaseParty').value = '';
+  document.getElementById('purchaseStoneInput').value = '';
+  document.getElementById('purchaseColor').value = '';
+  document.getElementById('purchaseSize').value = '';
+  document.getElementById('purchaseQty').value = '';
+  renderPurchaseLines();
+}
+
+/* ============================================================
+   ISSUE
+   ============================================================ */
+function getIssueOrders() { return readJSON(ISSUE_KEY, []); }
+function saveIssueOrders(list) { writeJSON(ISSUE_KEY, list); }
+var issueDraft = { orderNo: '', date: '', branch: '', note: '', items: [], arts: [] };
+
+function issueKey(it) {
+  return keyForStone(it.stoneType, it.color, it.size);
+}
+/* manual lines + every art's stones x pieces, merged by stone/color/size */
+function allIssueDraftItems() {
+  var map = {}, order = [];
+  function add(st, co, si, q) {
+    var k = issueKey({ stoneType: st, color: co, size: si });
+    if (!map[k]) { map[k] = { stoneType: st, color: co, size: si, qty: 0 }; order.push(k); }
+    map[k].qty += toNumber(q);
+  }
+  issueDraft.items.forEach(function (it) { add(it.stoneType, it.color, it.size, it.qty); });
+  (issueDraft.arts || []).forEach(function (a) {
+    a.stones.forEach(function (s) { add(s.stoneType, s.color, s.size, toNumber(s.qty) * a.pcs); });
+  });
+  return order.map(function (k) { return map[k]; });
+}
+function artPerPc(a) { return a.stones.reduce(function (t, s) { return t + toNumber(s.qty); }, 0); }
+function findArtByNo(no) {
+  var n = String(no || '').trim().toLowerCase();
+  if (!n) return null;
+  return getArtDetails().find(function (a) { return String(a.artNo).toLowerCase() === n; }) || null;
+}
+function populateIssueArtList() {
+  var dl = document.getElementById('issueArtList');
+  if (!dl) return;
+  dl.innerHTML = getArtDetails().map(function (a) {
+    return '<option value="' + escapeHtml(a.artNo) + '">' + escapeHtml(a.productName || '') + '</option>';
+  }).join('');
+}
+function updateIssueArtPreview() {
+  var el = document.getElementById('issueArtPreview');
+  var no = document.getElementById('issueArtInput').value;
+  var pcs = toNumber(document.getElementById('issueArtPcs').value);
+  var art = findArtByNo(no);
+  if (!no.trim()) { el.innerHTML = ''; return; }
+  if (!art) { el.innerHTML = '<span style="color:var(--danger)">Art no. not found in "Art no wise stone details".</span>'; return; }
+  var per = artPerPc({ stones: art.stones });
+  el.innerHTML = '<b>' + escapeHtml(art.artNo) + '</b> · ' + escapeHtml(art.productName || '') + ' — ' + per + ' stones per piece'
+    + (pcs > 0 ? ' → ' + pcs + ' pcs = <b>' + (per * pcs) + '</b> stones' : '');
+}
+function renderIssueArts() {
+  populateIssueArtList();
+  var arts = issueDraft.arts || [];
+  var wrap = document.getElementById('issueArtWrap');
+  var body = document.getElementById('issueArtBody');
+  var cw = document.getElementById('issueCombinedWrap');
+  if (!arts.length) {
+    wrap.style.display = 'none'; cw.style.display = 'none';
+    body.innerHTML = ''; document.getElementById('issueCombinedBody').innerHTML = '';
+    return;
+  }
+  var html = '', grand = 0;
+  arts.forEach(function (a, i) {
+    var per = artPerPc(a), tot = per * a.pcs;
+    grand += tot;
+    html += '<tr><td><strong>' + escapeHtml(a.artNo) + '</strong></td><td>' + escapeHtml(a.productName || '—') + '</td><td>' + a.pcs + '</td><td>' + per + '</td><td>' + tot + '</td>'
+      + '<td><button class="remove-line" data-remove-issue-art="' + i + '"><i class="fas fa-trash"></i></button></td></tr>';
+  });
+  html += '<tr style="background:var(--pink-mid)"><td colspan="4" style="text-align:right;font-weight:700;color:var(--brand)">Total stones (art lines)</td><td style="font-weight:700;color:var(--brand)">' + grand + '</td><td></td></tr>';
+  body.innerHTML = html;
+  wrap.style.display = '';
+
+  var items = allIssueDraftItems(), ch = '', ct = 0;
+  items.forEach(function (it) {
+    ct += it.qty;
+    ch += '<tr><td>' + escapeHtml(it.stoneType) + '</td><td>' + escapeHtml(it.color) + '</td><td>' + escapeHtml(it.size) + '</td><td>' + it.qty + '</td></tr>';
+  });
+  ch += '<tr style="background:var(--pink-mid)"><td colspan="3" style="text-align:right;font-weight:700;color:var(--brand)">Grand Total</td><td style="font-weight:700;color:var(--brand)">' + ct + '</td></tr>';
+  document.getElementById('issueCombinedBody').innerHTML = ch;
+  cw.style.display = '';
+}
+function addIssueArtFromForm() {
+  var no = document.getElementById('issueArtInput').value;
+  var pcsEl = document.getElementById('issueArtPcs');
+  var pcs = toNumber(pcsEl.value);
+  var art = findArtByNo(no);
+  if (!no.trim()) { showToast('Select an art no.', 'error'); return false; }
+  if (!art) { showToast('Art no. not found in Art no wise stone details.', 'error'); return false; }
+  if (pcs <= 0) { showToast('Pieces must be > 0.', 'error'); return false; }
+  if (!art.stones || !art.stones.length) { showToast('This art has no stone details.', 'error'); return false; }
+
+  var arts = issueDraft.arts;
+  var existing = arts.find(function (a) { return a.artNo.toLowerCase() === art.artNo.toLowerCase(); });
+  if (existing) existing.pcs += pcs;
+  else arts.push({ artNo: art.artNo, productName: art.productName || '', pcs: pcs, stones: art.stones.map(function (x) { return Object.assign({}, x); }) });
+
+  // stock check on the combined requirement
+  var closing = computeClosing('', '', null), cmap = {};
+  closing.forEach(function (e) { cmap[issueKey(e)] = e.closing; });
+  var short = [];
+  allIssueDraftItems().forEach(function (it) {
+    var have = cmap[issueKey(it)] || 0;
+    if (it.qty > have) short.push(it.stoneType + (it.color ? ' ' + it.color : '') + (it.size ? ' ' + it.size : '') + ' (need ' + it.qty + ', have ' + (have < 0 ? 0 : have) + ')');
+  });
+  if (short.length) {
+    if (existing) existing.pcs -= pcs; else arts.pop();
+    showToast('Not enough stock: ' + short.slice(0, 3).join('; ') + (short.length > 3 ? ' …+' + (short.length - 3) + ' more' : ''), 'error');
+    return false;
+  }
+  renderIssueLines();
+  document.getElementById('issueArtInput').value = '';
+  pcsEl.value = '';
+  document.getElementById('issueArtPreview').innerHTML = '';
+  document.getElementById('issueArtInput').focus();
+  return true;
+}
+function artLinesText(order) {
+  if (!order.artLines || !order.artLines.length) return '';
+  return order.artLines.map(function (a) { return a.artNo + ' × ' + a.pcs + ' pcs (' + (a.perPc * a.pcs) + ' stones)'; }).join(', ');
+}
+
+function getNextIssueOrderNo() {
+  var orders = getIssueOrders();
+  var maxNum = 3500;
+  orders.forEach(function (o) {
+    var n = parseInt(String(o.orderNo).replace(/[^0-9]/g, ''), 10);
+    if (!isNaN(n) && n > maxNum) maxNum = n;
+  });
+  return String(maxNum + 1);
+}
+
+function renderIssueLines() {
+  renderIssueArts();
+  var body = document.getElementById('issueLinesBody');
+  if (!issueDraft.items.length) {
+    body.innerHTML = '<tr><td colspan="5" class="empty-state" style="padding:1rem;font-size:.82rem"><i class="fas fa-inbox"></i> No items yet. Add stone types above.</td></tr>';
+    return;
+  }
+  var html = '';
+  issueDraft.items.forEach(function (it, i) {
+    html += '<tr>'
+      + '<td>' + escapeHtml(it.stoneType) + '</td>'
+      + '<td>' + escapeHtml(it.color) + '</td>'
+      + '<td>' + escapeHtml(it.size) + '</td>'
+      + '<td>' + toNumber(it.qty) + '</td>'
+      + '<td><button class="remove-line" data-remove-issue="' + i + '"><i class="fas fa-trash"></i></button></td>'
+      + '</tr>';
+  });
+  body.innerHTML = html;
+}
+
+function getAvailableQtyForIssue(stoneType, color, size) {
+  var list = computeClosing('', '', null);
+  var key = keyForStone(stoneType, color, size);
+  var found = 0;
+  list.forEach(function (e) {
+    var k = keyForStone(e.stoneType, e.color, e.size);
+    if (k === key) found = e.closing;
+  });
+  var inDraft = 0;
+  allIssueDraftItems().forEach(function (it) {
+    var k = keyForStone(it.stoneType, it.color, it.size);
+    if (k === key) inDraft += toNumber(it.qty);
+  });
+  return { available: found - inDraft, totalClosing: found };
+}
+
+function addIssueLineFromForm() {
+  var st = document.getElementById('issueStoneInput').value.trim();
+  var co = document.getElementById('issueColor').value.trim();
+  var si = document.getElementById('issueSize').value.trim();
+  var qtyEl = document.getElementById('issueQty');
+  var qty = toNumber(qtyEl.value);
+  if (!st) { showToast('Stone type required.', 'error'); return false; }
+  if (qty <= 0) { showToast('Qty > 0.', 'error'); return false; }
+
+  var avail = getAvailableQtyForIssue(st, co, si).available;
+  if (qty > avail) {
+    showToast('Cannot issue ' + qty + '. Available closing qty is only ' + (avail < 0 ? 0 : avail) + '.', 'error');
+    return false;
+  }
+
+  issueDraft.items.push({ stoneType: st, color: co, size: si, qty: qty });
+  renderIssueLines();
+  document.getElementById('issueStoneInput').value = '';
+  document.getElementById('issueColor').value = '';
+  document.getElementById('issueSize').value = '';
+  qtyEl.value = '';
+  document.getElementById('issueStoneInput').focus();
+  return true;
+}
+
+function renderIssue() {
+  var orders = getIssueOrders();
+  document.getElementById('issueHeaderCount').textContent = orders.length;
+
+  var fOrder = (document.getElementById('issueFilterOrder') || {}).value || '';
+  fOrder = fOrder.trim().toLowerCase();
+  var fBranch = (document.getElementById('issueFilterBranch') || {}).value || '';
+  var fFrom = (document.getElementById('issueFilterFrom') || {}).value || '';
+  var fTo = (document.getElementById('issueFilterTo') || {}).value || '';
+  var fStone = (document.getElementById('issueFilterStone') || {}).value || '';
+  fStone = fStone.trim().toLowerCase();
+
+  var filtered = orders.filter(function (o) {
+    if (fOrder && String(o.orderNo).toLowerCase().indexOf(fOrder) === -1) return false;
+    if (fBranch && String(o.branch).toLowerCase() !== fBranch.toLowerCase()) return false;
+    if (fFrom && o.date < fFrom) return false;
+    if (fTo && o.date > fTo) return false;
+    if (fStone) {
+      var hit = o.items.some(function (it) {
+        return String(it.stoneType).toLowerCase().indexOf(fStone) !== -1;
+      });
+      if (!hit) return false;
+    }
+    return true;
+  });
+
+  var body = document.getElementById('issueBody');
+  if (!filtered.length) {
+    body.innerHTML = '<tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> No issue records match the filters.</td></tr>';
+    return;
+  }
+  filtered.sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
+  var html = '';
+  filtered.forEach(function (o) {
+    html += '<tr class="master-row">'
+      + '<td colspan="8"><strong>Order ' + escapeHtml(o.orderNo) + '</strong> · ' + formatDate(o.date) + ' · Branch: ' + escapeHtml(o.branch) + (o.note ? ' · ' + escapeHtml(o.note) : '') + ' · ' + o.items.length + ' item(s)</td>'
+      + '<td><div class="actions-cell">'
+      + '<button class="icon-btn edit" data-issue-order-edit="' + escapeHtml(o.id) + '" title="Edit Order"><i class="fas fa-pen"></i></button>'
+      + '<button class="icon-btn del" data-issue-order-del="' + escapeHtml(o.id) + '" title="Delete Order"><i class="fas fa-trash"></i></button>'
+      + '</div></td>'
+      + '</tr>';
+    o.items.forEach(function (it) {
+      html += '<tr class="line-row">'
+        + '<td>' + escapeHtml(o.orderNo) + '</td>'
+        + '<td>' + formatDate(o.date) + '</td>'
+        + '<td>' + escapeHtml(o.branch) + '</td>'
+        + '<td>' + escapeHtml(it.stoneType) + '</td>'
+        + '<td>' + escapeHtml(it.color) + '</td>'
+        + '<td>' + escapeHtml(it.size) + '</td>'
+        + '<td>' + toNumber(it.qty) + '</td>'
+        + '<td>' + escapeHtml(o.note || '—') + '</td>'
+        + '<td></td>'
+        + '</tr>';
+    });
+  });
+  body.innerHTML = html;
+}
+
+function resetIssueDraft() {
+  issueDraft = { orderNo: '', date: todayISO(), branch: '', note: '', items: [], arts: [] };
+  document.getElementById('issueArtInput').value = '';
+  document.getElementById('issueArtPcs').value = '';
+  document.getElementById('issueArtPreview').innerHTML = '';
+  document.getElementById('issueOrderNo').value = getNextIssueOrderNo();
+  document.getElementById('issueDate').value = todayISO();
+  document.getElementById('issueBranch').value = '';
+  document.getElementById('issueNote').value = '';
+  document.getElementById('issueStoneInput').value = '';
+  document.getElementById('issueColor').value = '';
+  document.getElementById('issueSize').value = '';
+  document.getElementById('issueQty').value = '';
+  renderIssueLines();
+}
+
+/* ============================================================
+   RETURN
+   ============================================================ */
+function getReturnOrders() { return readJSON(RETURN_KEY, []); }
+function saveReturnOrders(list) { writeJSON(RETURN_KEY, list); }
+var returnDraft = { orderNo: '', date: '', branch: '', note: '', items: [] };
+
+function getNextReturnOrderNo() {
+  var orders = getReturnOrders();
+  var maxNum = 1100;
+  orders.forEach(function (o) {
+    var n = parseInt(String(o.orderNo).replace(/[^0-9]/g, ''), 10);
+    if (!isNaN(n) && n > maxNum) maxNum = n;
+  });
+  return String(maxNum + 1);
+}
+
+function renderReturnLines() {
+  var body = document.getElementById('returnLinesBody');
+  if (!returnDraft.items.length) {
+    body.innerHTML = '<tr><td colspan="5" class="empty-state" style="padding:1rem;font-size:.82rem"><i class="fas fa-inbox"></i> No items yet. Add stone types above.</td></tr>';
+    return;
+  }
+  var html = '';
+  returnDraft.items.forEach(function (it, i) {
+    html += '<tr>'
+      + '<td>' + escapeHtml(it.stoneType) + '</td>'
+      + '<td>' + escapeHtml(it.color) + '</td>'
+      + '<td>' + escapeHtml(it.size) + '</td>'
+      + '<td>' + toNumber(it.qty) + '</td>'
+      + '<td><button class="remove-line" data-remove-return="' + i + '"><i class="fas fa-trash"></i></button></td>'
+      + '</tr>';
+  });
+  body.innerHTML = html;
+}
+
+function addReturnLineFromForm() {
+  var st = document.getElementById('returnStoneInput').value.trim();
+  var co = document.getElementById('returnColor').value.trim();
+  var si = document.getElementById('returnSize').value.trim();
+  var qtyEl = document.getElementById('returnQty');
+  var qty = toNumber(qtyEl.value);
+  if (!st) { showToast('Stone type required.', 'error'); return false; }
+  if (qty <= 0) { showToast('Qty > 0.', 'error'); return false; }
+  returnDraft.items.push({ stoneType: st, color: co, size: si, qty: qty });
+  renderReturnLines();
+  document.getElementById('returnStoneInput').value = '';
+  document.getElementById('returnColor').value = '';
+  document.getElementById('returnSize').value = '';
+  qtyEl.value = '';
+  document.getElementById('returnStoneInput').focus();
+  return true;
+}
+
+function renderReturn() {
+  var orders = getReturnOrders();
+  document.getElementById('returnHeaderCount').textContent = orders.length;
+
+  var fOrder = (document.getElementById('returnFilterOrder') || {}).value || '';
+  fOrder = fOrder.trim().toLowerCase();
+  var fBranch = (document.getElementById('returnFilterBranch') || {}).value || '';
+  var fFrom = (document.getElementById('returnFilterFrom') || {}).value || '';
+  var fTo = (document.getElementById('returnFilterTo') || {}).value || '';
+  var fStone = (document.getElementById('returnFilterStone') || {}).value || '';
+  fStone = fStone.trim().toLowerCase();
+
+  var filtered = orders.filter(function (o) {
+    if (fOrder && String(o.orderNo).toLowerCase().indexOf(fOrder) === -1) return false;
+    if (fBranch && String(o.branch).toLowerCase() !== fBranch.toLowerCase()) return false;
+    if (fFrom && o.date < fFrom) return false;
+    if (fTo && o.date > fTo) return false;
+    if (fStone) {
+      var hit = o.items.some(function (it) {
+        return String(it.stoneType).toLowerCase().indexOf(fStone) !== -1;
+      });
+      if (!hit) return false;
+    }
+    return true;
+  });
+
+  var body = document.getElementById('returnBody');
+  if (!filtered.length) {
+    body.innerHTML = '<tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> No return records match the filters.</td></tr>';
+    return;
+  }
+  filtered.sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
+  var html = '';
+  filtered.forEach(function (o) {
+    html += '<tr class="master-row">'
+      + '<td colspan="8"><strong>Order ' + escapeHtml(o.orderNo) + '</strong> · ' + formatDate(o.date) + ' · Branch: ' + escapeHtml(o.branch) + (o.note ? ' · ' + escapeHtml(o.note) : '') + ' · ' + o.items.length + ' item(s)</td>'
+      + '<td><div class="actions-cell">'
+      + '<button class="icon-btn edit" data-return-order-edit="' + escapeHtml(o.id) + '" title="Edit Order"><i class="fas fa-pen"></i></button>'
+      + '<button class="icon-btn del" data-return-order-del="' + escapeHtml(o.id) + '" title="Delete Order"><i class="fas fa-trash"></i></button>'
+      + '</div></td>'
+      + '</tr>';
+    o.items.forEach(function (it) {
+      html += '<tr class="line-row">'
+        + '<td>' + escapeHtml(o.orderNo) + '</td>'
+        + '<td>' + formatDate(o.date) + '</td>'
+        + '<td>' + escapeHtml(o.branch) + '</td>'
+        + '<td>' + escapeHtml(it.stoneType) + '</td>'
+        + '<td>' + escapeHtml(it.color) + '</td>'
+        + '<td>' + escapeHtml(it.size) + '</td>'
+        + '<td>' + toNumber(it.qty) + '</td>'
+        + '<td>' + escapeHtml(o.note || '—') + '</td>'
+        + '<td></td>'
+        + '</tr>';
+    });
+  });
+  body.innerHTML = html;
+}
+
+function resetReturnDraft() {
+  returnDraft = { orderNo: '', date: todayISO(), branch: '', note: '', items: [] };
+  document.getElementById('returnOrderNo').value = getNextReturnOrderNo();
+  document.getElementById('returnDate').value = todayISO();
+  document.getElementById('returnBranch').value = '';
+  document.getElementById('returnNote').value = '';
+  document.getElementById('returnStoneInput').value = '';
+  document.getElementById('returnColor').value = '';
+  document.getElementById('returnSize').value = '';
+  document.getElementById('returnQty').value = '';
+  renderReturnLines();
+}
+
+/* ============================================================
+   CLOSING STOCK ENGINE
+   ============================================================ */
+function flattenPurchase() {
+  var out = [];
+  getPurchaseOrders().forEach(function (o) {
+    o.items.forEach(function (it) {
+      out.push({ date: o.date, orderNo: o.orderNo, party: o.party || '', stoneType: it.stoneType, color: it.color, size: it.size, qty: it.qty });
+    });
+  });
+  return out;
+}
+function flattenIssue() {
+  var out = [];
+  getIssueOrders().forEach(function (o) {
+    o.items.forEach(function (it) {
+      out.push({ date: o.date, orderNo: o.orderNo, branch: o.branch, stoneType: it.stoneType, color: it.color, size: it.size, qty: it.qty, note: o.note || '' });
+    });
+  });
+  return out;
+}
+function flattenReturn() {
+  var out = [];
+  getReturnOrders().forEach(function (o) {
+    o.items.forEach(function (it) {
+      out.push({ date: o.date, orderNo: o.orderNo, branch: o.branch, stoneType: it.stoneType, color: it.color, size: it.size, qty: it.qty, note: o.note || '' });
+    });
+  });
+  return out;
+}
+
+function computeClosing(filterStone, filterSize, asOnDate) {
+  var catalogue = getCatalogue();
+  var opening  = getOpening();
+  var purchase = flattenPurchase();
+  var issue    = flattenIssue();
+  var ret      = flattenReturn();
+  var damage   = readJSON(DAMAGE_KEY, []);
+  var pret     = readJSON(PURCHASE_RET_KEY, []);
+  var map = {};
+
+  function ensure(stoneType, color, size) {
+    var key = keyForStone(stoneType, color, size);
+    if (!map[key]) {
+      map[key] = {
+        stoneType: stoneType || '',
+        color: color || '',
+        size: size || '',
+        minQty: 0,
+        opening: 0, purchased: 0, issued: 0, returned: 0,
+        damage: 0, purchaseReturn: 0
+      };
+    }
+    return map[key];
+  }
+
+  catalogue.forEach(function (c) {
+    var e = ensure(c.stoneType, c.color, c.size);
+    e.minQty = toNumber(c.minQty);
+  });
+
+  var dLimit = asOnDate ? new Date(asOnDate + 'T23:59:59').getTime() : Infinity;
+  function within(dateStr) {
+    if (!asOnDate) return true;
+    if (!dateStr) return true;
+    return new Date(dateStr + 'T00:00:00').getTime() <= dLimit;
+  }
+
+  opening.forEach(function (r) { if (within(r.date)) ensure(r.stoneType, r.color, r.size).opening += toNumber(r.qty); });
+  purchase.forEach(function (r) { if (within(r.date)) ensure(r.stoneType, r.color, r.size).purchased += toNumber(r.qty); });
+  issue.forEach(function (r) { if (within(r.date)) ensure(r.stoneType, r.color, r.size).issued += toNumber(r.qty); });
+  ret.forEach(function (r) { if (within(r.date)) ensure(r.stoneType, r.color, r.size).returned += toNumber(r.qty); });
+  damage.forEach(function (r) { if (within(r.date)) ensure(r.stoneType, r.color, r.size).damage += toNumber(r.qty); });
+  pret.forEach(function (r) { if (within(r.date)) ensure(r.stoneType, r.color, r.size).purchaseReturn += toNumber(r.qty); });
+
+  var result = Object.keys(map).map(function (k) {
+    var e = map[k];
+    e.closing = e.opening + e.purchased - e.issued + e.returned - e.damage - e.purchaseReturn;
+    return e;
+  });
+
+  if (filterStone) {
+    var fs = String(filterStone).toLowerCase();
+    result = result.filter(function (e) {
+      return e.stoneType.toLowerCase().indexOf(fs) !== -1 || e.color.toLowerCase().indexOf(fs) !== -1;
+    });
+  }
+  if (filterSize) {
+    var fz = String(filterSize).toLowerCase();
+    result = result.filter(function (e) { return e.size.toLowerCase().indexOf(fz) !== -1; });
+  }
+
+  result.sort(function (a, b) {
+    return (a.stoneType + a.color + a.size).localeCompare(b.stoneType + b.color + b.size);
+  });
+  return result;
+}
+
+function renderClosing() {
+  var fStone = document.getElementById('closingFilterStone').value.trim();
+  var fSize = document.getElementById('closingFilterSize').value.trim();
+  var list = computeClosing(fStone, fSize, null);
+  var body = document.getElementById('closingBody');
+  var foot = document.getElementById('closingFoot');
+  if (!list.length) {
+    body.innerHTML = '<tr><td colspan="12" class="empty-state"><i class="fas fa-inbox"></i> No stock data yet.</td></tr>';
+    foot.style.display = 'none';
+    return;
+  }
+  var html = '';
+  var tot = { opening: 0, purchased: 0, issued: 0, returned: 0, damage: 0, purchaseReturn: 0, closing: 0 };
+  list.forEach(function (e, i) {
+    tot.opening += e.opening; tot.purchased += e.purchased; tot.issued += e.issued;
+    tot.returned += e.returned; tot.damage += e.damage; tot.purchaseReturn += e.purchaseReturn; tot.closing += e.closing;
+    var low = e.minQty > 0 && e.closing <= e.minQty;
+    var rowStyle = low ? 'background:#fde7ec;' : '';
+    var closingStyle = low ? 'color:var(--danger);font-weight:800;' : 'font-weight:700;';
+    html += '<tr style="' + rowStyle + '">'
+      + '<td>' + (i + 1) + '</td>'
+      + '<td><strong>' + escapeHtml(e.stoneType) + '</strong></td>'
+      + '<td>' + escapeHtml(e.color) + '</td>'
+      + '<td>' + escapeHtml(e.size) + '</td>'
+      + '<td>' + e.opening + '</td>'
+      + '<td>' + e.purchased + '</td>'
+      + '<td>' + e.issued + '</td>'
+      + '<td>' + e.returned + '</td>'
+      + '<td>' + e.damage + '</td>'
+      + '<td>' + e.purchaseReturn + '</td>'
+      + '<td>' + (e.minQty || 0) + '</td>'
+      + '<td style="' + closingStyle + '">' + e.closing + '</td>'
+      + '</tr>';
+  });
+  body.innerHTML = html;
+  document.getElementById('ctOpening').textContent = tot.opening;
+  document.getElementById('ctPurchased').textContent = tot.purchased;
+  document.getElementById('ctIssued').textContent = tot.issued;
+  document.getElementById('ctReturned').textContent = tot.returned;
+  document.getElementById('ctDamage').textContent = tot.damage;
+  document.getElementById('ctPReturn').textContent = tot.purchaseReturn;
+  document.getElementById('ctClosing').textContent = tot.closing;
+  foot.style.display = '';
+  renderLowStockBanner();
+}
+
+/* ============================================================
+   LOW STOCK BANNER — WHATSAPP STYLE
+   ============================================================ */
+function renderLowStockBanner() {
+  var list = computeClosing('', '', null);
+  var low = list.filter(function (e) { return e.minQty > 0 && e.closing <= e.minQty; });
+  updateLowStockCard(low.length);
+  var banner = document.getElementById('lowStockBanner');
+  var wrap = document.getElementById('lowStockList');
+
+  // Filter out any dismissed for the current cycle
+  var visible = low.filter(function (e) {
+    return !isDismissedForCycle(keyForStone(e.stoneType, e.color, e.size));
+  });
+
+  if (!visible.length) {
+    banner.classList.remove('show');
+    wrap.innerHTML = '';
+    return;
+  }
+
+  var html = '';
+  var now = Date.now();
+  visible.forEach(function (e) {
+    var k = keyForStone(e.stoneType, e.color, e.size);
+    var desc = e.stoneType + (e.color ? ' · ' + e.color : '') + (e.size ? ' · ' + e.size : '');
+    html += '<div class="lsb-msg" data-key="' + escapeHtml(k) + '">'
+      + '<div class="lsb-msg-text">'
+      +   '<strong>' + escapeHtml(desc) + '</strong>'
+      +   '<div>Qty <span class="qty">' + e.closing + '</span> <span class="min">/ min ' + e.minQty + '</span>' + (e.closing <= 0 ? ' <span class="lsb-out">OUT OF STOCK</span>' : '') + '</div>'
+      +   '<div class="lsb-short">' + (e.minQty - e.closing > 0 ? 'Short by <b>' + (e.minQty - e.closing) + '</b> \u00b7 purchase at least ' + (e.minQty - e.closing) + ' to reach minimum' : 'At minimum level \u00b7 reorder now') + '</div>'
+      +   '<div class="lsb-msg-time"><i class="fas fa-clock" style="font-size:.6rem"></i> ' + formatDateTime(now) + '</div>'
+      + '</div>'
+      + '<button class="lsb-msg-close" data-dismiss-key="' + escapeHtml(k) + '" title="Dismiss for today (reappears tomorrow 9 AM)">'
+      +   '<i class="fas fa-times"></i>'
+      + '</button>'
+      + '</div>';
+  });
+  wrap.innerHTML = html;
+  banner.classList.add('show');
+
+  // Wire per-item close
+  wrap.querySelectorAll('.lsb-msg-close').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var k = btn.getAttribute('data-dismiss-key');
+      dismissForCycle(k);
+      renderLowStockBanner();
+      showToast('Reminder dismissed. Will reappear tomorrow at 9:00 AM.', 'success');
+    });
+  });
+}
+
+function dismissAllLowStock() {
+  var list = computeClosing('', '', null);
+  var low = list.filter(function (e) { return e.minQty > 0 && e.closing <= e.minQty; });
+  var keys = low.map(function (e) { return keyForStone(e.stoneType, e.color, e.size); });
+  dismissAllForCycle(keys);
+  renderLowStockBanner();
+  showToast('All reminders dismissed. Will reappear tomorrow at 9:00 AM.', 'success');
+}
+
+/* ============================================================
+   SEARCHABLE STONE SELECT
+   ============================================================ */
+function initStoneSearch(inputId, dropdownId, wrapId, onSelect) {
+  var input = document.getElementById(inputId);
+  var dropdown = document.getElementById(dropdownId);
+  var wrap = document.getElementById(wrapId);
+  if (!input || !dropdown) return;
+
+  function populate(filter) {
+    var cat = getCatalogue();
+    var f = (filter || '').toLowerCase();
+    var matches = cat.filter(function (c) {
+      return !f || c.stoneType.toLowerCase().indexOf(f) !== -1
+        || (c.color || '').toLowerCase().indexOf(f) !== -1
+        || (c.size || '').toLowerCase().indexOf(f) !== -1;
+    });
+    if (!matches.length) {
+      dropdown.innerHTML = '<div class="empty">No matching stone types. Add to catalogue first.</div>';
+      dropdown.classList.add('show');
+      return;
+    }
+    var html = '';
+    matches.forEach(function (c) {
+      html += '<div class="opt" data-stone="' + escapeHtml(c.stoneType) + '" data-color="' + escapeHtml(c.color) + '" data-size="' + escapeHtml(c.size) + '">'
+        + '<strong>' + escapeHtml(c.stoneType) + '</strong> &nbsp;'
+        + '<span style="color:var(--muted);font-size:.78rem">' + escapeHtml(c.color) + ' · ' + escapeHtml(c.size) + '</span>'
+        + '</div>';
+    });
+    dropdown.innerHTML = html;
+    dropdown.classList.add('show');
+  }
+
+  input.addEventListener('focus', function () { populate(input.value); });
+  input.addEventListener('input', function () { populate(input.value); });
+
+  dropdown.addEventListener('click', function (e) {
+    var opt = e.target.closest('.opt');
+    if (!opt) return;
+    var st = opt.getAttribute('data-stone');
+    var co = opt.getAttribute('data-color');
+    var si = opt.getAttribute('data-size');
+    input.value = st;
+    dropdown.classList.remove('show');
+    if (typeof onSelect === 'function') onSelect({ stoneType: st, color: co, size: si });
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!wrap.contains(e.target)) dropdown.classList.remove('show');
+  });
+}
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+function openModal(title, contentHtml) {
+  var overlay = document.getElementById('modalOverlay');
+  var titleEl = document.getElementById('modalTitle');
+  var content = document.getElementById('modalContent');
+  titleEl.innerHTML = '<i class="fas fa-edit"></i> ' + title;
+  content.innerHTML = contentHtml;
+  overlay.classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modalBox').style.maxWidth = '';
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+var SHAPES = ['Round','Square','Oval','Pan','Pear','Marquise','Emerald','Heart','Princess','Other',
+              'Octagon','Cushion','Baguette','Trillion','Hexagon','Asscher','Radiant','Cabochon',
+              'Round Cabochon','Oval Cabochon','Fancy','Triangle','Rectangle','Flower','Star',
+              'Drop','Tear Drop','Briolette','Checkerboard','Rose Cut'];
+
+function openCatalogueModal(existing) {
+  if (existing && existing.target) existing = null; // ignore click Event objects
+  var isEdit = !!existing;
+  var shapeOpts = SHAPES.map(function (s) {
+    return '<option value="' + s + '"' + (isEdit && existing.shape === s ? ' selected' : '') + '>' + s + '</option>';
+  }).join('');
+  var html = ''
+    + '<div class="form-grid">'
+    + '<div class="form-group"><label>Stone Type</label><input type="text" id="mStoneType" value="' + escapeHtml(isEdit ? existing.stoneType : '') + '"></div>'
+    + '<div class="form-group"><label>Color</label><input type="text" id="mColor" value="' + escapeHtml(isEdit ? existing.color : '') + '"></div>'
+    + '<div class="form-group"><label>Size</label><input type="text" id="mSize" value="' + escapeHtml(isEdit ? existing.size : '') + '"></div>'
+    + '<div class="form-group"><label>Shape</label><select id="mShape"><option value="">— Select —</option>' + shapeOpts + '</select></div>'
+    + '<div class="form-group"><label>Minimum Qty</label><input type="number" id="mMinQty" min="0" step="1" value="' + (isEdit ? (toNumber(existing.minQty) || '') : '') + '" placeholder="e.g. 10"></div>'
+    + '</div>'
+    + '<div class="form-actions"><button class="btn btn-primary" id="modalSaveBtn"><i class="fas fa-save"></i> ' + (isEdit ? 'Update' : 'Add') + '</button>'
+    + '<button class="btn btn-outline" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button></div>';
+  openModal(isEdit ? 'Edit Stone Type' : 'Add Stone Type', html);
+
+  document.getElementById('modalSaveBtn').addEventListener('click', function () {
+    var st = document.getElementById('mStoneType').value.trim();
+    var co = document.getElementById('mColor').value.trim();
+    var si = document.getElementById('mSize').value.trim();
+    var sh = document.getElementById('mShape').value;
+    var minQ = toNumber(document.getElementById('mMinQty').value);
+    if (!st) { showToast('Stone type is required.', 'error'); return; }
+    var list = getCatalogue();
+    if (isEdit) {
+      var idx = list.findIndex(function (x) { return x.id === existing.id; });
+      if (idx !== -1) list[idx] = { id: existing.id, stoneType: st, color: co, size: si, shape: sh, minQty: minQ };
+    } else {
+      list.push({ id: uid(), stoneType: st, color: co, size: si, shape: sh, minQty: minQ });
+    }
+    if (!saveCatalogue(list)) return;
+    closeModal();
+    try { renderCatalogue(); } catch (e) { console.error('renderCatalogue failed', e); }
+    try { renderLowStockBanner(); } catch (e) { console.error('renderLowStockBanner failed', e); }
+    showToast(isEdit ? 'Updated.' : 'Added.', 'success');
+  });
+}
+
+function openOpeningModal(existing) {
+  var isEdit = !!existing;
+  var html = ''
+    + '<div class="form-grid">'
+    + '<div class="form-group"><label>Stone Type</label><input type="text" id="mStoneType" value="' + escapeHtml(isEdit ? existing.stoneType : '') + '"></div>'
+    + '<div class="form-group"><label>Color</label><input type="text" id="mColor" value="' + escapeHtml(isEdit ? existing.color : '') + '"></div>'
+    + '<div class="form-group"><label>Size</label><input type="text" id="mSize" value="' + escapeHtml(isEdit ? existing.size : '') + '"></div>'
+    + '<div class="form-group"><label>Qty</label><input type="number" id="mQty" value="' + (isEdit ? existing.qty : '') + '" min="0"></div>'
+    + '<div class="form-group"><label>Date</label><input type="date" id="mDate" value="' + (isEdit ? existing.date : todayISO()) + '"></div>'
+    + '</div>'
+    + '<div class="form-actions"><button class="btn btn-primary" id="modalSaveBtn"><i class="fas fa-save"></i> ' + (isEdit ? 'Update' : 'Save') + '</button>'
+    + '<button class="btn btn-outline" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button></div>';
+  openModal(isEdit ? 'Edit Opening Stock' : 'Add Opening Stock', html);
+
+  document.getElementById('modalSaveBtn').addEventListener('click', function () {
+    var st = document.getElementById('mStoneType').value.trim();
+    var co = document.getElementById('mColor').value.trim();
+    var si = document.getElementById('mSize').value.trim();
+    var qty = toNumber(document.getElementById('mQty').value);
+    var dt = document.getElementById('mDate').value || todayISO();
+    if (!st) { showToast('Stone type required.', 'error'); return; }
+    if (qty <= 0) { showToast('Qty must be > 0.', 'error'); return; }
+    var list = getOpening();
+    if (isEdit) {
+      var idx = list.findIndex(function (x) { return x.id === existing.id; });
+      if (idx !== -1) list[idx] = { id: existing.id, stoneType: st, color: co, size: si, qty: qty, date: dt };
+    } else {
+      list.push({ id: uid(), stoneType: st, color: co, size: si, qty: qty, date: dt });
+    }
+    saveOpening(list);
+    renderOpening();
+    closeModal();
+    renderLowStockBanner();
+    showToast(isEdit ? 'Updated.' : 'Saved.', 'success');
+  });
+}
+
+/* ============================================================
+   MASTER ORDER EDIT MODALS
+   ============================================================ */
+function openPurchaseOrderModal(order) {
+  var html = ''
+    + '<div class="form-grid">'
+    + '<div class="form-group"><label>Order No.</label><input type="text" id="mOrderNo" value="' + escapeHtml(order.orderNo) + '"></div>'
+    + '<div class="form-group"><label>Date</label><input type="date" id="mDate" value="' + escapeHtml(order.date) + '"></div>'
+    + '<div class="form-group"><label>Party Name</label><input type="text" id="mParty" value="' + escapeHtml(order.party || '') + '"></div>'
+    + '</div>'
+    + '<h4 style="color:var(--brand);margin:1rem 0 .5rem">Items</h4>'
+    + '<div id="mItemsWrap"></div>'
+    + '<button class="btn btn-outline btn-sm" id="mAddItemBtn" style="margin-top:.5rem"><i class="fas fa-plus"></i> Add Item</button>'
+    + '<div class="form-actions" style="margin-top:1rem"><button class="btn btn-primary" id="modalSaveBtn"><i class="fas fa-save"></i> Update Order</button>'
+    + '<button class="btn btn-outline" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button></div>';
+  openModal('Edit Purchase Order', html);
+
+  function renderItems(items) {
+    var wrap = document.getElementById('mItemsWrap');
+    var h = '';
+    items.forEach(function (it, i) {
+      h += '<div class="items-picker" style="margin-bottom:.5rem">'
+        + '<div class="form-group"><label>Stone</label><input type="text" data-m-field="stoneType" data-m-idx="' + i + '" value="' + escapeHtml(it.stoneType) + '"></div>'
+        + '<div class="form-group"><label>Color</label><input type="text" data-m-field="color" data-m-idx="' + i + '" value="' + escapeHtml(it.color) + '"></div>'
+        + '<div class="form-group"><label>Size</label><input type="text" data-m-field="size" data-m-idx="' + i + '" value="' + escapeHtml(it.size) + '"></div>'
+        + '<div class="form-group"><label>Qty</label><input type="number" data-m-field="qty" data-m-idx="' + i + '" value="' + toNumber(it.qty) + '"></div>'
+        + '<div class="form-group"><label>&nbsp;</label><button class="btn btn-danger btn-sm" data-m-remove="' + i + '"><i class="fas fa-trash"></i></button></div>'
+        + '</div>';
+    });
+    wrap.innerHTML = h;
+  }
+  var items = order.items.map(function (x) { return Object.assign({}, x); });
+  renderItems(items);
+
+  document.getElementById('mAddItemBtn').addEventListener('click', function () {
+    items.push({ stoneType: '', color: '', size: '', qty: 0 });
+    renderItems(items);
+  });
+  document.getElementById('mItemsWrap').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-m-remove]');
+    if (!btn) return;
+    items.splice(parseInt(btn.getAttribute('data-m-remove'), 10), 1);
+    renderItems(items);
+  });
+  document.getElementById('mItemsWrap').addEventListener('change', function (e) {
+    var inp = e.target.closest('[data-m-field]');
+    if (!inp) return;
+    var idx = parseInt(inp.getAttribute('data-m-idx'), 10);
+    var field = inp.getAttribute('data-m-field');
+    items[idx][field] = field === 'qty' ? toNumber(inp.value) : inp.value;
+  });
+
+  document.getElementById('modalSaveBtn').addEventListener('click', function () {
+    var newOrderNo = document.getElementById('mOrderNo').value.trim();
+    var newDate = document.getElementById('mDate').value;
+    var newParty = document.getElementById('mParty').value.trim();
+    if (!newOrderNo || !newDate) { showToast('Order No. and Date required.', 'error'); return; }
+    var cleanItems = items.filter(function (it) { return it.stoneType && toNumber(it.qty) > 0; });
+    if (!cleanItems.length) { showToast('Add at least one valid item.', 'error'); return; }
+    var all = getPurchaseOrders();
+    var idx = all.findIndex(function (o) { return o.id === order.id; });
+    if (idx !== -1) {
+      all[idx] = { id: order.id, orderNo: newOrderNo, date: newDate, party: newParty, items: cleanItems };
+      savePurchaseOrders(all);
+      renderPurchase();
+      closeModal();
+      renderLowStockBanner();
+      showToast('Order updated.', 'success');
+    }
+  });
+}
+
+function openIssueOrderModal(order) {
+  var html = ''
+    + '<div class="form-grid">'
+    + '<div class="form-group"><label>Order No.</label><input type="text" id="mOrderNo" value="' + escapeHtml(order.orderNo) + '"></div>'
+    + '<div class="form-group"><label>Date</label><input type="date" id="mDate" value="' + escapeHtml(order.date) + '"></div>'
+    + '<div class="form-group"><label>Branch</label><select id="mBranch"></select></div>'
+    + '</div>'
+    + '<div class="form-group"><label>Note</label><input type="text" id="mNote" value="' + escapeHtml(order.note || '') + '"></div>'
+    + '<h4 style="color:var(--brand);margin:1rem 0 .5rem">Items</h4>'
+    + '<div id="mItemsWrap"></div>'
+    + '<button class="btn btn-outline btn-sm" id="mAddItemBtn" style="margin-top:.5rem"><i class="fas fa-plus"></i> Add Item</button>'
+    + '<div class="form-actions" style="margin-top:1rem"><button class="btn btn-primary" id="modalSaveBtn"><i class="fas fa-save"></i> Update Order</button>'
+    + '<button class="btn btn-outline" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button></div>';
+  openModal('Edit Issue Order', html);
+
+  var branches = getBranches();
+  var sel = document.getElementById('mBranch');
+  sel.innerHTML = branches.map(function (b) {
+    return '<option value="' + escapeHtml(b) + '"' + (b === order.branch ? ' selected' : '') + '>' + escapeHtml(b) + '</option>';
+  }).join('');
+
+  function renderItems(items) {
+    var wrap = document.getElementById('mItemsWrap');
+    var h = '';
+    items.forEach(function (it, i) {
+      h += '<div class="items-picker" style="margin-bottom:.5rem">'
+        + '<div class="form-group"><label>Stone</label><input type="text" data-m-field="stoneType" data-m-idx="' + i + '" value="' + escapeHtml(it.stoneType) + '"></div>'
+        + '<div class="form-group"><label>Color</label><input type="text" data-m-field="color" data-m-idx="' + i + '" value="' + escapeHtml(it.color) + '"></div>'
+        + '<div class="form-group"><label>Size</label><input type="text" data-m-field="size" data-m-idx="' + i + '" value="' + escapeHtml(it.size) + '"></div>'
+        + '<div class="form-group"><label>Qty</label><input type="number" data-m-field="qty" data-m-idx="' + i + '" value="' + toNumber(it.qty) + '"></div>'
+        + '<div class="form-group"><label>&nbsp;</label><button class="btn btn-danger btn-sm" data-m-remove="' + i + '"><i class="fas fa-trash"></i></button></div>'
+        + '</div>';
+    });
+    wrap.innerHTML = h;
+  }
+  var items = order.items.map(function (x) { return Object.assign({}, x); });
+  renderItems(items);
+
+  document.getElementById('mAddItemBtn').addEventListener('click', function () {
+    items.push({ stoneType: '', color: '', size: '', qty: 0 });
+    renderItems(items);
+  });
+  document.getElementById('mItemsWrap').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-m-remove]');
+    if (!btn) return;
+    items.splice(parseInt(btn.getAttribute('data-m-remove'), 10), 1);
+    renderItems(items);
+  });
+  document.getElementById('mItemsWrap').addEventListener('change', function (e) {
+    var inp = e.target.closest('[data-m-field]');
+    if (!inp) return;
+    var idx = parseInt(inp.getAttribute('data-m-idx'), 10);
+    var field = inp.getAttribute('data-m-field');
+    items[idx][field] = field === 'qty' ? toNumber(inp.value) : inp.value;
+  });
+
+  document.getElementById('modalSaveBtn').addEventListener('click', function () {
+    var newOrderNo = document.getElementById('mOrderNo').value.trim();
+    var newDate = document.getElementById('mDate').value;
+    var newBranch = document.getElementById('mBranch').value;
+    var newNote = document.getElementById('mNote').value.trim();
+    if (!newOrderNo || !newDate || !newBranch) { showToast('Order No., Date, and Branch required.', 'error'); return; }
+    var cleanItems = items.filter(function (it) { return it.stoneType && toNumber(it.qty) > 0; });
+    if (!cleanItems.length) { showToast('Add at least one valid item.', 'error'); return; }
+    var all = getIssueOrders();
+    var idx = all.findIndex(function (o) { return o.id === order.id; });
+    if (idx !== -1) {
+      all[idx] = { id: order.id, orderNo: newOrderNo, date: newDate, branch: newBranch, note: newNote, items: cleanItems };
+      saveIssueOrders(all);
+      renderIssue();
+      closeModal();
+      renderLowStockBanner();
+      showToast('Order updated.', 'success');
+    }
+  });
+}
+
+function openReturnOrderModal(order) {
+  var html = ''
+    + '<div class="form-grid">'
+    + '<div class="form-group"><label>Order No.</label><input type="text" id="mOrderNo" value="' + escapeHtml(order.orderNo) + '"></div>'
+    + '<div class="form-group"><label>Date</label><input type="date" id="mDate" value="' + escapeHtml(order.date) + '"></div>'
+    + '<div class="form-group"><label>Branch</label><select id="mBranch"></select></div>'
+    + '</div>'
+    + '<div class="form-group"><label>Note</label><input type="text" id="mNote" value="' + escapeHtml(order.note || '') + '"></div>'
+    + '<h4 style="color:var(--brand);margin:1rem 0 .5rem">Items</h4>'
+    + '<div id="mItemsWrap"></div>'
+    + '<button class="btn btn-outline btn-sm" id="mAddItemBtn" style="margin-top:.5rem"><i class="fas fa-plus"></i> Add Item</button>'
+    + '<div class="form-actions" style="margin-top:1rem"><button class="btn btn-primary" id="modalSaveBtn"><i class="fas fa-save"></i> Update Order</button>'
+    + '<button class="btn btn-outline" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button></div>';
+  openModal('Edit Return Order', html);
+
+  var branches = getBranches();
+  var sel = document.getElementById('mBranch');
+  sel.innerHTML = branches.map(function (b) {
+    return '<option value="' + escapeHtml(b) + '"' + (b === order.branch ? ' selected' : '') + '>' + escapeHtml(b) + '</option>';
+  }).join('');
+
+  function renderItems(items) {
+    var wrap = document.getElementById('mItemsWrap');
+    var h = '';
+    items.forEach(function (it, i) {
+      h += '<div class="items-picker" style="margin-bottom:.5rem">'
+        + '<div class="form-group"><label>Stone</label><input type="text" data-m-field="stoneType" data-m-idx="' + i + '" value="' + escapeHtml(it.stoneType) + '"></div>'
+        + '<div class="form-group"><label>Color</label><input type="text" data-m-field="color" data-m-idx="' + i + '" value="' + escapeHtml(it.color) + '"></div>'
+        + '<div class="form-group"><label>Size</label><input type="text" data-m-field="size" data-m-idx="' + i + '" value="' + escapeHtml(it.size) + '"></div>'
+        + '<div class="form-group"><label>Qty</label><input type="number" data-m-field="qty" data-m-idx="' + i + '" value="' + toNumber(it.qty) + '"></div>'
+        + '<div class="form-group"><label>&nbsp;</label><button class="btn btn-danger btn-sm" data-m-remove="' + i + '"><i class="fas fa-trash"></i></button></div>'
+        + '</div>';
+    });
+    wrap.innerHTML = h;
+  }
+  var items = order.items.map(function (x) { return Object.assign({}, x); });
+  renderItems(items);
+
+  document.getElementById('mAddItemBtn').addEventListener('click', function () {
+    items.push({ stoneType: '', color: '', size: '', qty: 0 });
+    renderItems(items);
+  });
+  document.getElementById('mItemsWrap').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-m-remove]');
+    if (!btn) return;
+    items.splice(parseInt(btn.getAttribute('data-m-remove'), 10), 1);
+    renderItems(items);
+  });
+  document.getElementById('mItemsWrap').addEventListener('change', function (e) {
+    var inp = e.target.closest('[data-m-field]');
+    if (!inp) return;
+    var idx = parseInt(inp.getAttribute('data-m-idx'), 10);
+    var field = inp.getAttribute('data-m-field');
+    items[idx][field] = field === 'qty' ? toNumber(inp.value) : inp.value;
+  });
+
+  document.getElementById('modalSaveBtn').addEventListener('click', function () {
+    var newOrderNo = document.getElementById('mOrderNo').value.trim();
+    var newDate = document.getElementById('mDate').value;
+    var newBranch = document.getElementById('mBranch').value;
+    var newNote = document.getElementById('mNote').value.trim();
+    if (!newOrderNo || !newDate || !newBranch) { showToast('Order No., Date, and Branch required.', 'error'); return; }
+    var cleanItems = items.filter(function (it) { return it.stoneType && toNumber(it.qty) > 0; });
+    if (!cleanItems.length) { showToast('Add at least one valid item.', 'error'); return; }
+    var all = getReturnOrders();
+    var idx = all.findIndex(function (o) { return o.id === order.id; });
+    if (idx !== -1) {
+      all[idx] = { id: order.id, orderNo: newOrderNo, date: newDate, branch: newBranch, note: newNote, items: cleanItems };
+      saveReturnOrders(all);
+      renderReturn();
+      closeModal();
+      renderLowStockBanner();
+      showToast('Order updated.', 'success');
+    }
+  });
+}
+
+/* ============================================================
+   RECENT TRANSACTIONS
+   ============================================================ */
+function renderRecentTransactions() {
+  var typeFilter = document.getElementById('recentTypeFilter').value;
+  var all = [];
+  getPurchaseOrders().forEach(function (o) {
+    o.items.forEach(function (it, itemIdx) {
+      all.push({ type: 'purchase', date: o.date, orderNo: o.orderNo, stoneType: it.stoneType, color: it.color, size: it.size, qty: it.qty, branch: '—', note: '', orderId: o.id, itemIdx: itemIdx });
+    });
+  });
+  getIssueOrders().forEach(function (o) {
+    o.items.forEach(function (it, itemIdx) {
+      all.push({ type: 'issue', date: o.date, orderNo: o.orderNo, stoneType: it.stoneType, color: it.color, size: it.size, qty: it.qty, branch: o.branch, note: o.note || '', orderId: o.id, itemIdx: itemIdx });
+    });
+  });
+  getReturnOrders().forEach(function (o) {
+    o.items.forEach(function (it, itemIdx) {
+      all.push({ type: 'return', date: o.date, orderNo: o.orderNo, stoneType: it.stoneType, color: it.color, size: it.size, qty: it.qty, branch: o.branch, note: o.note || '', orderId: o.id, itemIdx: itemIdx });
+    });
+  });
+
+  if (typeFilter) all = all.filter(function (r) { return r.type === typeFilter; });
+  all.sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
+
+  var body = document.getElementById('recentBody');
+  if (!all.length) {
+    body.innerHTML = '<tr><td colspan="10" class="empty-state"><i class="fas fa-inbox"></i> No transactions yet.</td></tr>';
+    return;
+  }
+  var html = '';
+  all.forEach(function (r) {
+    var tagClass = r.type === 'issue' ? 'tag-issue' : (r.type === 'return' ? 'tag-return' : 'tag-purchase');
+    html += '<tr>'
+      + '<td>' + formatDate(r.date) + '</td>'
+      + '<td><span class="tag ' + tagClass + '">' + r.type + '</span></td>'
+      + '<td>' + escapeHtml(r.orderNo) + '</td>'
+      + '<td>' + escapeHtml(r.stoneType) + '</td>'
+      + '<td>' + escapeHtml(r.color) + '</td>'
+      + '<td>' + escapeHtml(r.size) + '</td>'
+      + '<td>' + toNumber(r.qty) + '</td>'
+      + '<td>' + escapeHtml(r.branch) + '</td>'
+      + '<td>' + escapeHtml(r.note || '—') + '</td>'
+      + '<td><button class="icon-btn edit" data-recent-edit="1" data-recent-type="' + r.type + '" data-recent-order="' + escapeHtml(r.orderId) + '" data-recent-item="' + r.itemIdx + '"><i class="fas fa-pen"></i></button></td>'
+      + '</tr>';
+  });
+  body.innerHTML = html;
+}
+
+function openRecentItemEdit(type, order, itemIdx, item) {
+  var html = ''
+    + '<div class="form-grid">'
+    + '<div class="form-group"><label>Stone Type</label><input type="text" id="mStoneType" value="' + escapeHtml(item.stoneType) + '"></div>'
+    + '<div class="form-group"><label>Color</label><input type="text" id="mColor" value="' + escapeHtml(item.color) + '"></div>'
+    + '<div class="form-group"><label>Size</label><input type="text" id="mSize" value="' + escapeHtml(item.size) + '"></div>'
+    + '<div class="form-group"><label>Qty</label><input type="number" id="mQty" value="' + toNumber(item.qty) + '"></div>'
+    + '</div>'
+    + '<div class="form-actions"><button class="btn btn-primary" id="modalSaveBtn"><i class="fas fa-save"></i> Update</button>'
+    + '<button class="btn btn-outline" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button></div>';
+  openModal('Edit ' + type + ' item (order ' + order.orderNo + ')', html);
+
+  document.getElementById('modalSaveBtn').addEventListener('click', function () {
+    var newSt = document.getElementById('mStoneType').value.trim();
+    var newCo = document.getElementById('mColor').value.trim();
+    var newSi = document.getElementById('mSize').value.trim();
+    var newQty = toNumber(document.getElementById('mQty').value);
+    if (!newSt) { showToast('Stone type required.', 'error'); return; }
+    if (newQty <= 0) { showToast('Qty > 0.', 'error'); return; }
+    if (type === 'purchase') {
+      var orders = getPurchaseOrders();
+      var o = orders.find(function (x) { return x.id === order.id; });
+      if (o) { o.items[itemIdx] = { stoneType: newSt, color: newCo, size: newSi, qty: newQty }; savePurchaseOrders(orders); renderPurchase(); }
+    } else if (type === 'issue') {
+      var io = getIssueOrders();
+      var oi = io.find(function (x) { return x.id === order.id; });
+      if (oi) { oi.items[itemIdx] = { stoneType: newSt, color: newCo, size: newSi, qty: newQty }; saveIssueOrders(io); renderIssue(); }
+    } else if (type === 'return') {
+      var ro = getReturnOrders();
+      var or = ro.find(function (x) { return x.id === order.id; });
+      if (or) { or.items[itemIdx] = { stoneType: newSt, color: newCo, size: newSi, qty: newQty }; saveReturnOrders(ro); renderReturn(); }
+    }
+    renderRecentTransactions();
+    closeModal();
+    renderLowStockBanner();
+    showToast('Item updated.', 'success');
+  });
+}
+
+/* ============================================================
+   BRANCH-WISE ISSUED REPORT
+   ============================================================ */
+function generateIssueReport() {
+  var branch = document.getElementById('reportBranch').value;
+  var from = document.getElementById('reportFromDate').value;
+  var to = document.getElementById('reportToDate').value;
+  var list = flattenIssue();
+  if (branch) list = list.filter(function (x) { return String(x.branch).toLowerCase() === branch.toLowerCase(); });
+  if (from) list = list.filter(function (x) { return x.date >= from; });
+  if (to) list = list.filter(function (x) { return x.date <= to; });
+  list.sort(function (a, b) { return String(a.date || '').localeCompare(String(b.date || '')); });
+  var body = document.getElementById('reportBody');
+  if (!list.length) {
+    body.innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i> No matching issue records.</td></tr>';
+    return list;
+  }
+  var html = '';
+  list.forEach(function (x) {
+    html += '<tr>'
+      + '<td>' + formatDate(x.date) + '</td>'
+      + '<td>' + escapeHtml(x.orderNo) + '</td>'
+      + '<td>' + escapeHtml(x.branch) + '</td>'
+      + '<td>' + escapeHtml(x.stoneType) + '</td>'
+      + '<td>' + escapeHtml(x.color) + '</td>'
+      + '<td>' + escapeHtml(x.size) + '</td>'
+      + '<td>' + toNumber(x.qty) + '</td>'
+      + '<td>' + escapeHtml(x.note || '—') + '</td>'
+      + '</tr>';
+  });
+  body.innerHTML = html;
+  return list;
+}
+
+/* ============================================================
+   EXPORTS / PRINT
+   ============================================================ */
+function exportTableToExcel(tableId, filename) {
+  var table = document.getElementById(tableId);
+  if (!table) return;
+  var wb = XLSX.utils.table_to_book(table, { sheet: 'Sheet1' });
+  XLSX.writeFile(wb, filename || 'export.xlsx');
+}
+function exportTableToPdf(tableId, filename, title) {
+  var table = document.getElementById(tableId);
+  if (!table) return;
+  var doc = new jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  doc.setFontSize(14);
+  doc.setTextColor(144, 1, 67);
+  doc.text(title || 'Report', 40, 40);
+  doc.setFontSize(9);
+  doc.setTextColor(160, 106, 133);
+  doc.text('Generated: ' + new Date().toLocaleString(), 40, 58);
+  doc.autoTable({
+    html: table,
+    startY: 70,
+    styles: { fontSize: 7, cellPadding: 3 },
+    headStyles: { fillColor: [144, 1, 67], textColor: 255, fontSize: 7 },
+    alternateRowStyles: { fillColor: [255, 245, 249] },
+    margin: { left: 30, right: 30 }
+  });
+  doc.save(filename || 'report.pdf');
+}
+
+function exportClosingToExcel() {
+  var list = computeClosing(
+    document.getElementById('closingFilterStone').value.trim(),
+    document.getElementById('closingFilterSize').value.trim(),
+    null
+  );
+  if (!list.length) { showToast('No data to export.', 'error'); return; }
+  var rows = [['S.No','Stone Type','Colour','Size','ObQty','Rcpts','Issues','Returned','Damage','Purchase Return','Min Qty','ClQty']];
+  var tot = { o: 0, p: 0, i: 0, r: 0, d: 0, pr: 0, c: 0 };
+  list.forEach(function (e, i) {
+    rows.push([i + 1, e.stoneType, e.color, e.size, e.opening, e.purchased, e.issued, e.returned, e.damage, e.purchaseReturn, e.minQty, e.closing]);
+    tot.o += e.opening; tot.p += e.purchased; tot.i += e.issued; tot.r += e.returned;
+    tot.d += e.damage; tot.pr += e.purchaseReturn; tot.c += e.closing;
+  });
+  rows.push(['', '', '', 'Total Packets / Stones', tot.o, tot.p, tot.i, tot.r, tot.d, tot.pr, '', tot.c]);
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Closing Stock');
+  XLSX.writeFile(wb, 'closing_stock_' + todayISO() + '.xlsx');
+}
+
+function exportClosingToPdf() {
+  var list = computeClosing(
+    document.getElementById('closingFilterStone').value.trim(),
+    document.getElementById('closingFilterSize').value.trim(),
+    null
+  );
+  if (!list.length) { showToast('No data to export.', 'error'); return; }
+  var doc = new jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  doc.setFontSize(14);
+  doc.setTextColor(144, 1, 67);
+  doc.text('Closing Stock Report as on ' + new Date().toLocaleString(), 40, 40);
+  doc.setFontSize(9);
+  doc.setTextColor(160, 106, 133);
+  doc.text('GOLDPRINCE · Jewel Industry India Pvt. Ltd. — Stone Stock', 40, 56);
+
+  var body = [];
+  var tot = { o: 0, p: 0, i: 0, r: 0, d: 0, pr: 0, c: 0 };
+  list.forEach(function (e, i) {
+    body.push([i + 1, e.stoneType, e.color, e.size, e.opening, e.purchased, e.issued, e.returned, e.damage, e.purchaseReturn, e.minQty, e.closing]);
+    tot.o += e.opening; tot.p += e.purchased; tot.i += e.issued; tot.r += e.returned;
+    tot.d += e.damage; tot.pr += e.purchaseReturn; tot.c += e.closing;
+  });
+  body.push(['', '', '', 'Total Packets / Stones', tot.o, tot.p, tot.i, tot.r, tot.d, tot.pr, '', tot.c]);
+
+  doc.autoTable({
+    startY: 70,
+    head: [['S.No', 'Stone Type', 'Colour', 'Size', 'ObQty', 'Rcpts', 'Issues', 'Returned', 'Damage', 'Pur.Return', 'Min Qty', 'ClQty']],
+    body: body,
+    styles: { fontSize: 7, cellPadding: 3 },
+    headStyles: { fillColor: [144, 1, 67], textColor: 255, fontSize: 7 },
+    alternateRowStyles: { fillColor: [255, 245, 249] },
+    didParseCell: function (data) {
+      if (data.row.index === body.length - 1) {
+        data.cell.styles.fillColor = [253, 233, 243];
+        data.cell.styles.textColor = [144, 1, 67];
+        data.cell.styles.fontStyle = 'bold';
+      }
+    },
+    margin: { left: 30, right: 30 }
+  });
+  doc.save('closing_stock_' + todayISO() + '.pdf');
+}
+
+function printClosingStock() {
+  var node = document.getElementById('tab-closing').cloneNode(true);
+  var wrapper = document.createElement('div');
+  var html = '<html><head><title>Closing Stock Report</title><style>'
+    + 'body{font-family:Segoe UI,Arial,sans-serif;padding:20px;color:#2b0a1c}'
+    + 'h2{color:#900143;margin-bottom:6px;font-size:16px}'
+    + '.meta{font-size:11px;color:#a06a85;margin-bottom:14px}'
+    + 'table{width:100%;border-collapse:collapse;font-size:11px}'
+    + 'th{background:#900143;color:#fff;padding:6px 8px;text-align:left;font-size:10px}'
+    + 'td{padding:5px 8px;border-bottom:1px solid #f0d8e4}'
+    + 'tfoot td{background:#fde9f3;font-weight:700;color:#900143;border-top:2px solid #900143}'
+    + '.no-print,.filter-bar,.section-header .form-actions,.section-header .btn{display:none!important}'
+    + '</style></head><body>'
+    + '<h2>GOLDPRINCE · Closing Stock Report</h2>'
+    + '<div class="meta">Jewel Industry India Pvt. Ltd. · Generated ' + new Date().toLocaleString() + '</div>';
+  wrapper.appendChild(node);
+  html += wrapper.innerHTML + '</body></html>';
+  var w = window.open('', '_blank');
+  if (!w) { showToast('Please allow pop-ups to print.', 'error'); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function () { w.focus(); w.print(); }, 400);
+}
+
+/* ============================================================
+   TRACKING
+   ============================================================ */
+function trackStone() {
+  var stone = document.getElementById('trackStoneInput').value.trim();
+  var color = document.getElementById('trackColor').value.trim();
+  var size = document.getElementById('trackSize').value.trim();
+  var list = computeClosing(stone, '', null);
+  if (color) list = list.filter(function (e) { return e.color.toLowerCase().indexOf(color.toLowerCase()) !== -1; });
+  if (size) list = list.filter(function (e) { return e.size.toLowerCase().indexOf(size.toLowerCase()) !== -1; });
+  var body = document.getElementById('trackResultBody');
+  if (!list.length) {
+    body.innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i> No matching stone found.</td></tr>';
+    return;
+  }
+  var html = '';
+  list.forEach(function (e) {
+    html += '<tr>'
+      + '<td><strong>' + escapeHtml(e.stoneType) + '</strong></td>'
+      + '<td>' + escapeHtml(e.color) + '</td>'
+      + '<td>' + escapeHtml(e.size) + '</td>'
+      + '<td>' + e.opening + '</td>'
+      + '<td>' + e.purchased + '</td>'
+      + '<td>' + e.issued + '</td>'
+      + '<td>' + e.returned + '</td>'
+      + '<td><strong>' + e.closing + '</strong></td>'
+      + '</tr>';
+  });
+  body.innerHTML = html;
+}
+function trackBranchTransactions() {
+  var branch = document.getElementById('trackBranch').value;
+  var type = document.getElementById('trackType').value;
+  var all = [];
+  flattenIssue().forEach(function (x) { all.push({ type: 'issue', date: x.date, orderNo: x.orderNo, branch: x.branch, stone: x.stoneType, color: x.color, size: x.size, qty: x.qty, note: x.note || '' }); });
+  flattenReturn().forEach(function (x) { all.push({ type: 'return', date: x.date, orderNo: x.orderNo, branch: x.branch, stone: x.stoneType, color: x.color, size: x.size, qty: x.qty, note: x.note || '' }); });
+  if (branch) all = all.filter(function (x) { return String(x.branch).toLowerCase() === branch.toLowerCase(); });
+  if (type) all = all.filter(function (x) { return x.type === type; });
+  all.sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
+  var body = document.getElementById('trackBranchBody');
+  if (!all.length) {
+    body.innerHTML = '<tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> No matching transactions.</td></tr>';
+    return;
+  }
+  var html = '';
+  all.forEach(function (x) {
+    var tagClass = x.type === 'issue' ? 'tag-issue' : 'tag-return';
+    html += '<tr>'
+      + '<td>' + formatDate(x.date) + '</td>'
+      + '<td><span class="tag ' + tagClass + '">' + x.type + '</span></td>'
+      + '<td>' + escapeHtml(x.orderNo) + '</td>'
+      + '<td>' + escapeHtml(x.branch) + '</td>'
+      + '<td>' + escapeHtml(x.stone) + '</td>'
+      + '<td>' + escapeHtml(x.color) + '</td>'
+      + '<td>' + escapeHtml(x.size) + '</td>'
+      + '<td>' + toNumber(x.qty) + '</td>'
+      + '<td>' + escapeHtml(x.note || '—') + '</td>'
+      + '</tr>';
+  });
+  body.innerHTML = html;
+}
+
+/* ============================================================
+   TAB SWITCHING
+   ============================================================ */
+var TAB_IDS = ['dashboard', 'catalogue', 'opening', 'purchase', 'issue', 'return', 'closing', 'reports', 'tracking', 'artstone'];
+function switchTab(tab) {
+  TAB_IDS.forEach(function (t) {
+    var el = document.getElementById('tab-' + t);
+    if (el) el.style.display = (t === tab ? 'block' : 'none');
+  });
+  document.querySelectorAll('.tab-btn').forEach(function (b) {
+    b.classList.toggle('active', b.getAttribute('data-tab') === tab);
+  });
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'catalogue') renderCatalogue();
+  if (tab === 'opening') renderOpening();
+  if (tab === 'purchase') renderPurchase();
+  if (tab === 'issue') renderIssue();
+  if (tab === 'return') renderReturn();
+  if (tab === 'closing') renderClosing();
+  if (tab === 'artstone') renderArtStone();
+  renderLowStockBanner();
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function renderDashboard() {
+  renderLowStockBanner();
+}
+
+/* ============================================================
+   ORDER SAVED (PRINT / EXCEL) MODAL
+   ============================================================ */
+var __savedOrderPayload = null;
+
+function showSavedOrderModal(kind, order, warnings) {
+  __savedOrderPayload = { kind: kind, order: order };
+  var titleEl = document.getElementById('orderSavedTitle');
+  var content = document.getElementById('orderSavedContent');
+  var isIssue = kind === 'issue';
+  titleEl.innerHTML = '<i class="fas fa-check-circle"></i> ' + (isIssue ? 'Issue Order Saved' : 'Return Order Saved');
+  var meta = '<div class="order-meta">'
+    + '<div><strong>Order No.:</strong> ' + escapeHtml(order.orderNo) + '</div>'
+    + '<div><strong>Date:</strong> ' + formatDate(order.date) + '</div>'
+    + '<div><strong>Branch:</strong> ' + escapeHtml(order.branch) + '</div>'
+    + (order.note ? '<div><strong>Note:</strong> ' + escapeHtml(order.note) + '</div>' : '')
+    + (artLinesText(order) ? '<div><strong>Art No.:</strong> ' + escapeHtml(artLinesText(order)) + '</div>' : '')
+    + '<div><strong>Total Items:</strong> ' + order.items.length + '</div>'
+    + '</div>';
+  var tableHtml = '<div class="lines-preview"><table><thead><tr>'
+    + '<th>Stone</th><th>Color</th><th>Size</th><th>Qty</th>'
+    + '</tr></thead><tbody>';
+  order.items.forEach(function (it) {
+    tableHtml += '<tr><td>' + escapeHtml(it.stoneType) + '</td><td>' + escapeHtml(it.color) + '</td><td>' + escapeHtml(it.size) + '</td><td>' + toNumber(it.qty) + '</td></tr>';
+  });
+  tableHtml += '</tbody></table></div>';
+  var warnHtml = '';
+  if (warnings && warnings.length) {
+    warnHtml = '<div style="background:#fff1f4;border:1px solid #f7a0b2;border-left:5px solid var(--danger);border-radius:.8rem;padding:.7rem .9rem;margin-bottom:1rem;font-size:.82rem;color:#7a122c">'
+      + '<b><i class="fas fa-triangle-exclamation"></i> Low stock after this issue — raise a purchase</b>';
+    warnings.forEach(function (e) {
+      var short = e.minQty - e.closing;
+      warnHtml += '<div style="margin-top:.3rem">' + escapeHtml(lowDesc(e)) + ' — now <b style="color:var(--danger)">' + e.closing + '</b> (min ' + e.minQty + ')'
+        + (e.closing <= 0 ? ' · <b>OUT OF STOCK</b>' : '') + (short > 0 ? ' · short by ' + short : ' · at minimum') + '</div>';
+    });
+    warnHtml += '</div>';
+  }
+  content.innerHTML = meta + warnHtml + tableHtml;
+  document.getElementById('orderSavedOverlay').classList.add('show');
+}
+
+function printSavedOrder() {
+  if (!__savedOrderPayload) return;
+  var k = __savedOrderPayload.kind;
+  var o = __savedOrderPayload.order;
+  var isIssue = k === 'issue';
+  var title = isIssue ? 'Issue Order' : 'Return Order';
+  var branchLabel = isIssue ? 'Issue To Branch' : 'Return From Branch';
+  var html = '<html><head><title>' + title + ' ' + escapeHtml(o.orderNo) + '</title><style>'
+    + 'body{font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#2b0a1c}'
+    + 'h1{color:#900143;font-size:20px;margin:0 0 4px}'
+    + '.sub{font-size:11px;color:#a06a85;margin-bottom:16px}'
+    + '.meta{background:#fde9f3;border:1px solid #f5c6dd;border-radius:8px;padding:10px 14px;font-size:12px;margin-bottom:16px}'
+    + '.meta div{margin:3px 0}'
+    + 'table{width:100%;border-collapse:collapse;font-size:12px}'
+    + 'th{background:#900143;color:#fff;padding:8px 10px;text-align:left}'
+    + 'td{padding:7px 10px;border-bottom:1px solid #f0d8e4}'
+    + 'tfoot td{background:#fde9f3;font-weight:700;color:#900143;border-top:2px solid #900143}'
+    + '</style></head><body>'
+    + '<h1>GOLDPRINCE · ' + title + '</h1>'
+    + '<div class="sub">Jewel Industry India Pvt. Ltd. · Printed ' + new Date().toLocaleString() + '</div>'
+    + '<div class="meta">'
+    + '<div><strong>Order No.:</strong> ' + escapeHtml(o.orderNo) + '</div>'
+    + '<div><strong>Date:</strong> ' + formatDate(o.date) + '</div>'
+    + '<div><strong>' + branchLabel + ':</strong> ' + escapeHtml(o.branch) + '</div>'
+    + (o.note ? '<div><strong>Note:</strong> ' + escapeHtml(o.note) + '</div>' : '')
+    + (artLinesText(o) ? '<div><strong>Art No.:</strong> ' + escapeHtml(artLinesText(o)) + '</div>' : '')
+    + '</div>'
+    + '<table><thead><tr><th>#</th><th>Stone Type</th><th>Color</th><th>Size</th><th>Qty</th></tr></thead><tbody>';
+  var total = 0;
+  o.items.forEach(function (it, i) {
+    total += toNumber(it.qty);
+    html += '<tr><td>' + (i + 1) + '</td><td>' + escapeHtml(it.stoneType) + '</td><td>' + escapeHtml(it.color) + '</td><td>' + escapeHtml(it.size) + '</td><td>' + toNumber(it.qty) + '</td></tr>';
+  });
+  html += '</tbody><tfoot><tr><td colspan="4" style="text-align:right">Total Qty</td><td>' + total + '</td></tr></tfoot></table>';
+  html += '</body></html>';
+  var w = window.open('', '_blank');
+  if (!w) { showToast('Please allow pop-ups to print.', 'error'); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function () { w.focus(); w.print(); }, 400);
+}
+
+function downloadSavedOrderExcel() {
+  if (!__savedOrderPayload) return;
+  var k = __savedOrderPayload.kind;
+  var o = __savedOrderPayload.order;
+  var isIssue = k === 'issue';
+  var title = isIssue ? 'Issue Order' : 'Return Order';
+  var rows = [];
+  rows.push(['GOLDPRINCE · ' + title]);
+  rows.push(['Order No.', o.orderNo, 'Date', o.date, 'Branch', o.branch]);
+  if (o.note) rows.push(['Note', o.note]);
+  rows.push([]);
+  rows.push(['#', 'Stone Type', 'Color', 'Size', 'Qty']);
+  var total = 0;
+  o.items.forEach(function (it, i) {
+    total += toNumber(it.qty);
+    rows.push([i + 1, it.stoneType, it.color, it.size, toNumber(it.qty)]);
+  });
+  rows.push(['', '', '', 'Total Qty', total]);
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, title.replace(/\s+/g, '_'));
+  XLSX.writeFile(wb, k + '_order_' + o.orderNo + '_' + todayISO() + '.xlsx');
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+/* ============================================================
+   LOW STOCK HELPERS (card, list modal, issue-time warning)
+   ============================================================ */
+function isLowEntry(e) { return e.minQty > 0 && e.closing <= e.minQty; }
+function lowDesc(e) { return e.stoneType + (e.color ? ' \u00b7 ' + e.color : '') + (e.size ? ' \u00b7 ' + e.size : ''); }
+function updateLowStockCard(n) {
+  var el = document.getElementById('lowStockCardCount');
+  if (!el) return;
+  el.textContent = n;
+  el.style.color = n > 0 ? 'var(--danger)' : 'var(--brand)';
+}
+function openLowStockModal() {
+  var low = computeClosing('', '', null).filter(isLowEntry);
+  low.sort(function (a, b) { return (a.closing - a.minQty) - (b.closing - b.minQty); });
+  var html;
+  if (!low.length) {
+    html = '<div class="empty-state"><i class="fas fa-circle-check"></i> All stones are above their minimum qty.</div>';
+  } else {
+    html = '<div class="table-wrap"><table style="min-width:640px"><thead><tr><th>Stone Type</th><th>Color</th><th>Size</th><th>Closing</th><th>Min Qty</th><th>Short By</th><th>Status</th></tr></thead><tbody>';
+    low.forEach(function (e) {
+      var short = e.minQty - e.closing;
+      var status = e.closing <= 0 ? '<span class="tag tag-issue">OUT OF STOCK</span>' : (short > 0 ? '<span class="tag tag-issue">LOW</span>' : '<span class="tag tag-purchase">AT MINIMUM</span>');
+      html += '<tr><td><strong>' + escapeHtml(e.stoneType) + '</strong></td><td>' + escapeHtml(e.color) + '</td><td>' + escapeHtml(e.size) + '</td>'
+        + '<td style="color:var(--danger);font-weight:800">' + e.closing + '</td><td>' + e.minQty + '</td><td>' + (short > 0 ? short : 0) + '</td><td>' + status + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  html += '<div class="form-actions"><button class="btn btn-primary" id="lowGoPurchaseBtn"><i class="fas fa-truck-arrow-right"></i> New Purchase</button>'
+    + '<button class="btn btn-outline" onclick="closeModal()"><i class="fas fa-times"></i> Close</button></div>';
+  openModal('Low Stock Items (' + low.length + ')', html);
+  document.getElementById('modalBox').style.maxWidth = '900px';
+  document.getElementById('lowGoPurchaseBtn').addEventListener('click', function () { closeModal(); switchTab('purchase'); });
+}
+/* stones of a just-saved issue order that are now at/below minimum */
+function lowStockAfterIssue(order) {
+  var closing = computeClosing('', '', null), map = {};
+  closing.forEach(function (e) { map[keyForStone(e.stoneType, e.color, e.size)] = e; });
+  var seen = {}, out = [];
+  order.items.forEach(function (it) {
+    var k = keyForStone(it.stoneType, it.color, it.size);
+    if (seen[k]) return;
+    seen[k] = 1;
+    var e = map[k];
+    if (e && isLowEntry(e)) out.push(e);
+  });
+  return out;
+}
+
+/* ============================================================
+   ART NO WISE STONE DETAILS
+   ============================================================ */
+var ART_KEY = 'gp_stone_art_details';
+function getArtDetails() { return readJSON(ART_KEY, []); }
+function saveArtDetails(list) { writeJSON(ART_KEY, list); }
+
+function renderArtStone() {
+  var list = getArtDetails();
+  document.getElementById('artCount').textContent = list.length;
+  var f = (document.getElementById('artFilter').value || '').trim().toLowerCase();
+  var filtered = list.filter(function (a) {
+    if (!f) return true;
+    if (String(a.artNo).toLowerCase().indexOf(f) !== -1) return true;
+    if (String(a.productName || '').toLowerCase().indexOf(f) !== -1) return true;
+    return (a.stones || []).some(function (s) {
+      return String(s.stoneType).toLowerCase().indexOf(f) !== -1
+        || String(s.color || '').toLowerCase().indexOf(f) !== -1
+        || String(s.size || '').toLowerCase().indexOf(f) !== -1
+        || String(s.shape || '').toLowerCase().indexOf(f) !== -1;
+    });
+  });
+  var body = document.getElementById('artBody');
+  if (!filtered.length) {
+    body.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="fas fa-inbox"></i> ' + (list.length ? 'No art details match the search.' : 'No art details yet. Click "Add Art Details" to begin.') + '</td></tr>';
+    return;
+  }
+  var html = '';
+  filtered.forEach(function (a) {
+    var stones = a.stones || [];
+    var totalQty = stones.reduce(function (t, s) { return t + toNumber(s.qty); }, 0);
+    html += '<tr class="master-row">'
+      + '<td colspan="5"><strong>Art ' + escapeHtml(a.artNo) + '</strong> · ' + escapeHtml(a.productName || '—') + ' · ' + stones.length + ' stone(s)</td>'
+      + '<td><div class="actions-cell">'
+      + '<button class="icon-btn edit" data-art-edit="' + escapeHtml(a.id) + '" title="Edit"><i class="fas fa-pen"></i></button>'
+      + '<button class="icon-btn del" data-art-del="' + escapeHtml(a.id) + '" title="Delete"><i class="fas fa-trash"></i></button>'
+      + '</div></td></tr>';
+    stones.forEach(function (s) {
+      html += '<tr class="line-row">'
+        + '<td style="padding-left:.9rem">' + escapeHtml(s.stoneType) + '</td>'
+        + '<td>' + escapeHtml(s.color) + '</td>'
+        + '<td>' + escapeHtml(s.size) + '</td>'
+        + '<td>' + escapeHtml(s.shape || '—') + '</td>'
+        + '<td>' + toNumber(s.qty) + '</td>'
+        + '<td></td></tr>';
+    });
+    html += '<tr style="background:var(--pink-mid)">'
+      + '<td colspan="4" style="text-align:right;font-weight:700;color:var(--brand)">Total</td>'
+      + '<td style="font-weight:700;color:var(--brand)">' + totalQty + '</td><td></td></tr>';
+  });
+  body.innerHTML = html;
+}
+
+function openArtModal(existing) {
+  var isEdit = !!existing;
+  var cat = getCatalogue();
+  var dl = '<datalist id="artStoneList">';
+  var seen = {};
+  cat.forEach(function (c) {
+    if (!seen[c.stoneType]) { seen[c.stoneType] = 1; dl += '<option value="' + escapeHtml(c.stoneType) + '">'; }
+  });
+  dl += '</datalist>';
+  var html = ''
+    + '<div class="form-grid">'
+    + '<div class="form-group"><label>Art No.</label><input type="text" id="mArtNo" value="' + escapeHtml(isEdit ? existing.artNo : '') + '" placeholder="e.g. A-101"></div>'
+    + '<div class="form-group"><label>Product Name</label><input type="text" id="mProduct" value="' + escapeHtml(isEdit ? (existing.productName || '') : '') + '" placeholder="e.g. Necklace Set"></div>'
+    + '</div>'
+    + dl
+    + '<h4 style="color:var(--brand);margin:1rem 0 .5rem">Stone Details</h4>'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr)) auto;gap:.5rem;align-items:end;padding:.8rem;background:var(--pink-soft);border-radius:.8rem;margin-bottom:.8rem;border:1px dashed var(--pink-border)">'
+    + '<div class="form-group"><label>Stone Type</label><input type="text" list="artStoneList" id="mStone" placeholder="Stone type" autocomplete="off"></div>'
+    + '<div class="form-group"><label>Color</label><input type="text" id="mColor" placeholder="Color"></div>'
+    + '<div class="form-group"><label>Size</label><input type="text" id="mSize" placeholder="Size"></div>'
+    + '<div class="form-group"><label>Shape</label><select id="mShape"><option value="">— Shape —</option>' + SHAPES.map(function (s) { return '<option value="' + s + '">' + s + '</option>'; }).join('') + '</select></div>'
+    + '<div class="form-group"><label>Qty (Enter to add)</label><input type="number" id="mQty" min="0" placeholder="0"></div>'
+    + '<div class="form-group"><label>&nbsp;</label><button class="btn btn-primary btn-sm" id="mAddLineBtn"><i class="fas fa-plus"></i> Add</button></div>'
+    + '</div>'
+    + '<div class="line-items-table"><table><thead><tr><th>Stone Type</th><th>Color</th><th>Size</th><th>Shape</th><th>Qty</th><th style="width:60px"></th></tr></thead><tbody id="mLinesBody"></tbody></table></div>'
+    + '<div class="form-actions" style="margin-top:1rem"><button class="btn btn-primary" id="modalSaveBtn"><i class="fas fa-save"></i> ' + (isEdit ? 'Update' : 'Save') + '</button>'
+    + '<button class="btn btn-outline" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button></div>';
+  openModal(isEdit ? 'Edit Art Details' : 'Add Art Details', html);
+  document.getElementById('modalBox').style.maxWidth = '900px';
+
+  var items = isEdit && existing.stones
+    ? existing.stones.map(function (x) { return Object.assign({}, x); })
+    : [];
+
+  function renderItems() {
+    var body = document.getElementById('mLinesBody');
+    if (!items.length) {
+      body.innerHTML = '<tr><td colspan="6" class="empty-state" style="padding:1rem;font-size:.82rem"><i class="fas fa-inbox"></i> No stones yet. Add stone details above.</td></tr>';
+      return;
+    }
+    var h = '', tot = 0;
+    items.forEach(function (it, i) {
+      tot += toNumber(it.qty);
+      h += '<tr><td>' + escapeHtml(it.stoneType) + '</td><td>' + escapeHtml(it.color) + '</td><td>' + escapeHtml(it.size) + '</td><td>' + escapeHtml(it.shape || '—') + '</td><td>' + toNumber(it.qty) + '</td>'
+        + '<td><button class="remove-line" data-m-remove="' + i + '"><i class="fas fa-trash"></i></button></td></tr>';
+    });
+    h += '<tr style="background:var(--pink-mid)"><td colspan="4" style="text-align:right;font-weight:700;color:var(--brand)">Total</td><td style="font-weight:700;color:var(--brand)">' + tot + '</td><td></td></tr>';
+    body.innerHTML = h;
+  }
+  renderItems();
+
+  function addLine() {
+    var st = document.getElementById('mStone').value.trim();
+    var qty = toNumber(document.getElementById('mQty').value);
+    if (!st) { showToast('Stone type required.', 'error'); return; }
+    if (qty <= 0) { showToast('Qty > 0.', 'error'); return; }
+    items.push({
+      stoneType: st,
+      color: document.getElementById('mColor').value.trim(),
+      size: document.getElementById('mSize').value.trim(),
+      shape: document.getElementById('mShape').value,
+      qty: qty
+    });
+    ['mStone', 'mColor', 'mSize', 'mQty'].forEach(function (id) { document.getElementById(id).value = ''; });
+    document.getElementById('mShape').value = '';
+    renderItems();
+    document.getElementById('mStone').focus();
+  }
+  document.getElementById('mAddLineBtn').addEventListener('click', addLine);
+  document.getElementById('mQty').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); addLine(); }
+  });
+  document.getElementById('mStone').addEventListener('change', function () {
+    var v = this.value.trim().toLowerCase();
+    var m = getCatalogue().find(function (c) { return c.stoneType.toLowerCase() === v; });
+    if (!m) return;
+    if (!document.getElementById('mColor').value) document.getElementById('mColor').value = m.color || '';
+    if (!document.getElementById('mSize').value) document.getElementById('mSize').value = m.size || '';
+    if (!document.getElementById('mShape').value && m.shape) document.getElementById('mShape').value = m.shape;
+    document.getElementById('mQty').focus();
+  });
+  document.getElementById('mLinesBody').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-m-remove]');
+    if (!btn) return;
+    items.splice(parseInt(btn.getAttribute('data-m-remove'), 10), 1);
+    renderItems();
+  });
+
+  document.getElementById('modalSaveBtn').addEventListener('click', function () {
+    var artNo = document.getElementById('mArtNo').value.trim();
+    var product = document.getElementById('mProduct').value.trim();
+    if (!artNo) { showToast('Art No. required.', 'error'); return; }
+    if (!product) { showToast('Product name required.', 'error'); return; }
+    var clean = items.filter(function (it) { return String(it.stoneType || '').trim() && toNumber(it.qty) > 0; })
+      .map(function (it) {
+        return { stoneType: it.stoneType.trim(), color: (it.color || '').trim(), size: (it.size || '').trim(), shape: it.shape || '', qty: toNumber(it.qty) };
+      });
+    if (!clean.length) { showToast('Add at least one stone with quantity.', 'error'); return; }
+    var list = getArtDetails();
+    var dup = list.some(function (a) {
+      return a.artNo.toLowerCase() === artNo.toLowerCase() && (!isEdit || a.id !== existing.id);
+    });
+    if (dup) { showToast('Art No. already exists. Use Edit on that record.', 'error'); return; }
+    if (isEdit) {
+      var idx = list.findIndex(function (a) { return a.id === existing.id; });
+      if (idx !== -1) list[idx] = { id: existing.id, artNo: artNo, productName: product, stones: clean };
+    } else {
+      list.push({ id: uid(), artNo: artNo, productName: product, stones: clean });
+    }
+    saveArtDetails(list);
+    renderArtStone();
+    closeModal();
+    showToast(isEdit ? 'Art details updated.' : 'Art details saved.', 'success');
+  });
+}
+
+function init() {
+  migrateLegacy();
+
+  try {
+    var s = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null');
+    if (s && s.username) document.getElementById('adminName').textContent = s.username;
+    if (s && s.role === 'stone_stock') {
+      var backBtn = document.getElementById('backToDashboardBtn');
+      if (backBtn) backBtn.style.display = 'none';
+    }
+    if (s && s.role === 'branch_incharge') {
+      var backBtn2 = document.getElementById('backToDashboardBtn');
+      if (backBtn2) backBtn2.setAttribute('href', 'branch_incharge.html');
+    }
+  } catch (e) {}
+
+  populateBranchSelects();
+
+  document.getElementById('openingDate').value = todayISO();
+  document.getElementById('purchaseDate').value = todayISO();
+  document.getElementById('issueDate').value = todayISO();
+  document.getElementById('returnDate').value = todayISO();
+  document.getElementById('issueOrderNo').value = getNextIssueOrderNo();
+  document.getElementById('returnOrderNo').value = getNextReturnOrderNo();
+
+  initStoneSearch('openingStoneInput', 'openingStoneDropdown', 'openingStoneWrap', function (sel) {
+    document.getElementById('openingColor').value = sel.color;
+    document.getElementById('openingSize').value = sel.size;
+  });
+  initStoneSearch('purchaseStoneInput', 'purchaseStoneDropdown', 'purchaseStoneWrap', function (sel) {
+    document.getElementById('purchaseColor').value = sel.color;
+    document.getElementById('purchaseSize').value = sel.size;
+    setTimeout(function () { document.getElementById('purchaseQty').focus(); }, 50);
+  });
+  initStoneSearch('issueStoneInput', 'issueStoneDropdown', 'issueStoneWrap', function (sel) {
+    document.getElementById('issueColor').value = sel.color;
+    document.getElementById('issueSize').value = sel.size;
+    setTimeout(function () { document.getElementById('issueQty').focus(); }, 50);
+  });
+  initStoneSearch('returnStoneInput', 'returnStoneDropdown', 'returnStoneWrap', function (sel) {
+    document.getElementById('returnColor').value = sel.color;
+    document.getElementById('returnSize').value = sel.size;
+    setTimeout(function () { document.getElementById('returnQty').focus(); }, 50);
+  });
+  initStoneSearch('trackStoneInput', 'trackStoneDropdown', 'trackStoneWrap', null);
+
+  document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () { switchTab(btn.getAttribute('data-tab')); });
+  });
+
+  document.getElementById('cardOpening').addEventListener('click', function () {
+    switchTab('opening');
+    document.getElementById('openingRecordsOverlay').classList.add('show');
+    renderOpening();
+  });
+  document.getElementById('cardPurchase').addEventListener('click', function () {
+    switchTab('purchase');
+    document.getElementById('purchaseRecordsOverlay').classList.add('show');
+    renderPurchase();
+  });
+  document.getElementById('cardIssue').addEventListener('click', function () {
+    switchTab('issue');
+    document.getElementById('issueRecordsOverlay').classList.add('show');
+    renderIssue();
+  });
+  document.getElementById('cardReturn').addEventListener('click', function () {
+    switchTab('return');
+    document.getElementById('returnRecordsOverlay').classList.add('show');
+    renderReturn();
+  });
+  document.getElementById('cardBranchReport').addEventListener('click', function () {
+    switchTab('reports');
+    document.getElementById('branchReportOverlay').classList.add('show');
+  });
+  document.getElementById('cardRecent').addEventListener('click', function () {
+    switchTab('reports');
+    document.getElementById('recentTxnsOverlay').classList.add('show');
+    renderRecentTransactions();
+  });
+
+  document.getElementById('cardLowStock').addEventListener('click', openLowStockModal);
+
+  document.getElementById('saveOpeningBtn').addEventListener('click', function () {
+    var st = document.getElementById('openingStoneInput').value.trim();
+    var co = document.getElementById('openingColor').value.trim();
+    var si = document.getElementById('openingSize').value.trim();
+    var qty = toNumber(document.getElementById('openingQty').value);
+    var dt = document.getElementById('openingDate').value || todayISO();
+    if (!st) { showToast('Stone type required.', 'error'); return; }
+    if (qty <= 0) { showToast('Qty > 0.', 'error'); return; }
+    var list = getOpening();
+    list.push({ id: uid(), stoneType: st, color: co, size: si, qty: qty, date: dt });
+    saveOpening(list);
+    renderOpening();
+    document.getElementById('openingStoneInput').value = '';
+    document.getElementById('openingColor').value = '';
+    document.getElementById('openingSize').value = '';
+    document.getElementById('openingQty').value = '';
+    renderLowStockBanner();
+    showToast('Opening stock saved.', 'success');
+  });
+  document.getElementById('resetOpeningBtn').addEventListener('click', function () {
+    document.getElementById('openingStoneInput').value = '';
+    document.getElementById('openingColor').value = '';
+    document.getElementById('openingSize').value = '';
+    document.getElementById('openingQty').value = '';
+    document.getElementById('openingDate').value = todayISO();
+  });
+  document.getElementById('openOpeningRecordsBtn').addEventListener('click', function () {
+    renderOpening();
+    document.getElementById('openingRecordsOverlay').classList.add('show');
+  });
+  ['openingFilterStone', 'openingFilterFrom', 'openingFilterTo'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', renderOpening);
+      el.addEventListener('change', renderOpening);
+    }
+  });
+  document.getElementById('clearOpeningFilter').addEventListener('click', function () {
+    document.getElementById('openingFilterStone').value = '';
+    document.getElementById('openingFilterFrom').value = '';
+    document.getElementById('openingFilterTo').value = '';
+    renderOpening();
+  });
+  document.getElementById('openingBody').addEventListener('click', function (e) {
+    var editBtn = e.target.closest('[data-opening-edit]');
+    var delBtn = e.target.closest('[data-opening-del]');
+    if (editBtn) {
+      var id = editBtn.getAttribute('data-opening-edit');
+      var item = getOpening().find(function (x) { return x.id === id; });
+      if (item) openOpeningModal(item);
+    }
+    if (delBtn) {
+      var did = delBtn.getAttribute('data-opening-del');
+      if (confirm('Delete this opening record?')) {
+        saveOpening(getOpening().filter(function (x) { return x.id !== did; }));
+        renderOpening();
+        renderLowStockBanner();
+        showToast('Deleted.', 'success');
+      }
+    }
+  });
+
+  document.getElementById('addPurchaseLineBtn').addEventListener('click', addPurchaseLineFromForm);
+  document.getElementById('purchaseQty').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); addPurchaseLineFromForm(); }
+  });
+  document.getElementById('purchaseLinesBody').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-remove-purchase]');
+    if (!btn) return;
+    purchaseDraft.items.splice(parseInt(btn.getAttribute('data-remove-purchase'), 10), 1);
+    renderPurchaseLines();
+  });
+  document.getElementById('savePurchaseBtn').addEventListener('click', function () {
+    var orderNo = document.getElementById('purchaseOrderNo').value.trim();
+    var date = document.getElementById('purchaseDate').value;
+    var party = document.getElementById('purchaseParty').value.trim();
+    if (!orderNo) { showToast('Order No. required.', 'error'); return; }
+    if (!date) { showToast('Date required.', 'error'); return; }
+    if (!purchaseDraft.items.length) { showToast('Add at least one item.', 'error'); return; }
+    var orders = getPurchaseOrders();
+    if (orders.some(function (o) { return o.orderNo.toLowerCase() === orderNo.toLowerCase(); })) {
+      showToast('Order No. already exists.', 'error'); return;
+    }
+    orders.push({ id: uid(), orderNo: orderNo, date: date, party: party, items: purchaseDraft.items.slice() });
+    savePurchaseOrders(orders);
+    renderPurchase();
+    resetPurchaseDraft();
+    renderLowStockBanner();
+    showToast('Purchase order saved.', 'success');
+  });
+  document.getElementById('cancelPurchaseBtn').addEventListener('click', resetPurchaseDraft);
+  document.getElementById('openPurchaseRecordsBtn').addEventListener('click', function () {
+    renderPurchase();
+    document.getElementById('purchaseRecordsOverlay').classList.add('show');
+  });
+  ['purchaseFilterOrder', 'purchaseFilterParty', 'purchaseFilterFrom', 'purchaseFilterTo', 'purchaseFilterStone'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', renderPurchase);
+      el.addEventListener('change', renderPurchase);
+    }
+  });
+  document.getElementById('clearPurchaseFilter').addEventListener('click', function () {
+    document.getElementById('purchaseFilterOrder').value = '';
+    document.getElementById('purchaseFilterParty').value = '';
+    document.getElementById('purchaseFilterFrom').value = '';
+    document.getElementById('purchaseFilterTo').value = '';
+    document.getElementById('purchaseFilterStone').value = '';
+    renderPurchase();
+  });
+  document.getElementById('purchaseBody').addEventListener('click', function (e) {
+    var editBtn = e.target.closest('[data-purchase-order-edit]');
+    var delBtn = e.target.closest('[data-purchase-order-del]');
+    if (editBtn) {
+      var id = editBtn.getAttribute('data-purchase-order-edit');
+      var order = getPurchaseOrders().find(function (o) { return o.id === id; });
+      if (order) openPurchaseOrderModal(order);
+    }
+    if (delBtn) {
+      var did = delBtn.getAttribute('data-purchase-order-del');
+      if (confirm('Delete this purchase order?')) {
+        savePurchaseOrders(getPurchaseOrders().filter(function (o) { return o.id !== did; }));
+        renderPurchase();
+        renderLowStockBanner();
+        showToast('Order deleted.', 'success');
+      }
+    }
+  });
+
+  document.getElementById('addBranchBtn').addEventListener('click', function () {
+    var name = prompt('Enter new branch name:');
+    if (!name) return;
+    if (addBranch(name)) {
+      populateBranchSelects();
+      document.getElementById('issueBranch').value = name;
+      showToast('Branch added: ' + name, 'success');
+    } else {
+      showToast('Branch already exists or invalid.', 'error');
+    }
+  });
+  document.getElementById('addIssueLineBtn').addEventListener('click', addIssueLineFromForm);
+  document.getElementById('addIssueArtBtn').addEventListener('click', addIssueArtFromForm);
+  document.getElementById('issueArtPcs').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); addIssueArtFromForm(); }
+  });
+  document.getElementById('issueArtInput').addEventListener('focus', populateIssueArtList);
+  document.getElementById('issueArtInput').addEventListener('input', updateIssueArtPreview);
+  document.getElementById('issueArtInput').addEventListener('change', function () {
+    updateIssueArtPreview();
+    if (findArtByNo(this.value)) document.getElementById('issueArtPcs').focus();
+  });
+  document.getElementById('issueArtPcs').addEventListener('input', updateIssueArtPreview);
+  document.getElementById('issueArtBody').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-remove-issue-art]');
+    if (!btn) return;
+    issueDraft.arts.splice(parseInt(btn.getAttribute('data-remove-issue-art'), 10), 1);
+    renderIssueLines();
+  });
+  populateIssueArtList();
+  document.getElementById('issueQty').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); addIssueLineFromForm(); }
+  });
+  document.getElementById('issueLinesBody').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-remove-issue]');
+    if (!btn) return;
+    issueDraft.items.splice(parseInt(btn.getAttribute('data-remove-issue'), 10), 1);
+    renderIssueLines();
+  });
+  document.getElementById('saveIssueBtn').addEventListener('click', function () {
+    var orderNo = document.getElementById('issueOrderNo').value.trim();
+    var date = document.getElementById('issueDate').value;
+    var branch = document.getElementById('issueBranch').value;
+    var note = document.getElementById('issueNote').value.trim();
+    if (!orderNo || !date || !branch) { showToast('Order No., Date, and Branch required.', 'error'); return; }
+    if (!allIssueDraftItems().length) { showToast('Add at least one item.', 'error'); return; }
+    var orders = getIssueOrders();
+    if (orders.some(function (o) { return String(o.orderNo).toLowerCase() === orderNo.toLowerCase(); })) {
+      showToast('Order No. already exists. Please refresh or change the auto number.', 'error'); return;
+    }
+    var newOrder = { id: uid(), orderNo: orderNo, date: date, branch: branch, note: note, items: allIssueDraftItems() };
+    if (issueDraft.arts.length) newOrder.artLines = issueDraft.arts.map(function (a) { return { artNo: a.artNo, productName: a.productName, pcs: a.pcs, perPc: artPerPc(a) }; });
+    orders.push(newOrder);
+    saveIssueOrders(orders);
+    renderIssue();
+    resetIssueDraft();
+    renderLowStockBanner();
+    var lowWarn = lowStockAfterIssue(newOrder);
+    if (lowWarn.length) {
+      showToast('Issue order saved. Low stock: ' + lowWarn.slice(0, 3).map(function (e) { return lowDesc(e) + ' (' + e.closing + '/min ' + e.minQty + ')'; }).join('; ') + (lowWarn.length > 3 ? ' …+' + (lowWarn.length - 3) + ' more' : ''), 'error', 8000);
+    } else {
+      showToast('Issue order saved.', 'success');
+    }
+    showSavedOrderModal('issue', newOrder, lowWarn);
+  });
+  document.getElementById('cancelIssueBtn').addEventListener('click', resetIssueDraft);
+  document.getElementById('openIssueRecordsBtn').addEventListener('click', function () {
+    renderIssue();
+    document.getElementById('issueRecordsOverlay').classList.add('show');
+  });
+  ['issueFilterOrder', 'issueFilterBranch', 'issueFilterFrom', 'issueFilterTo', 'issueFilterStone'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) { el.addEventListener('input', renderIssue); el.addEventListener('change', renderIssue); }
+  });
+  document.getElementById('clearIssueFilter').addEventListener('click', function () {
+    document.getElementById('issueFilterOrder').value = '';
+    document.getElementById('issueFilterBranch').value = '';
+    document.getElementById('issueFilterFrom').value = '';
+    document.getElementById('issueFilterTo').value = '';
+    document.getElementById('issueFilterStone').value = '';
+    renderIssue();
+  });
+  document.getElementById('issueBody').addEventListener('click', function (e) {
+    var editBtn = e.target.closest('[data-issue-order-edit]');
+    var delBtn = e.target.closest('[data-issue-order-del]');
+    if (editBtn) {
+      var id = editBtn.getAttribute('data-issue-order-edit');
+      var order = getIssueOrders().find(function (o) { return o.id === id; });
+      if (order) openIssueOrderModal(order);
+    }
+    if (delBtn) {
+      var did = delBtn.getAttribute('data-issue-order-del');
+      if (confirm('Delete this issue order?')) {
+        saveIssueOrders(getIssueOrders().filter(function (o) { return o.id !== did; }));
+        renderIssue();
+        renderLowStockBanner();
+        showToast('Order deleted.', 'success');
+      }
+    }
+  });
+
+  document.getElementById('addReturnLineBtn').addEventListener('click', addReturnLineFromForm);
+  document.getElementById('returnQty').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); addReturnLineFromForm(); }
+  });
+  document.getElementById('returnLinesBody').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-remove-return]');
+    if (!btn) return;
+    returnDraft.items.splice(parseInt(btn.getAttribute('data-remove-return'), 10), 1);
+    renderReturnLines();
+  });
+  document.getElementById('saveReturnBtn').addEventListener('click', function () {
+    var orderNo = document.getElementById('returnOrderNo').value.trim();
+    var date = document.getElementById('returnDate').value;
+    var branch = document.getElementById('returnBranch').value;
+    var note = document.getElementById('returnNote').value.trim();
+    if (!orderNo || !date || !branch) { showToast('Order No., Date, and Branch required.', 'error'); return; }
+    if (!returnDraft.items.length) { showToast('Add at least one item.', 'error'); return; }
+    var orders = getReturnOrders();
+    if (orders.some(function (o) { return String(o.orderNo).toLowerCase() === orderNo.toLowerCase(); })) {
+      showToast('Order No. already exists. Please refresh or change the auto number.', 'error'); return;
+    }
+    var newOrder = { id: uid(), orderNo: orderNo, date: date, branch: branch, note: note, items: returnDraft.items.slice() };
+    orders.push(newOrder);
+    saveReturnOrders(orders);
+    renderReturn();
+    resetReturnDraft();
+    renderLowStockBanner();
+    showToast('Return order saved.', 'success');
+    showSavedOrderModal('return', newOrder);
+  });
+  document.getElementById('cancelReturnBtn').addEventListener('click', resetReturnDraft);
+  document.getElementById('openReturnRecordsBtn').addEventListener('click', function () {
+    renderReturn();
+    document.getElementById('returnRecordsOverlay').classList.add('show');
+  });
+  ['returnFilterOrder', 'returnFilterBranch', 'returnFilterFrom', 'returnFilterTo', 'returnFilterStone'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) { el.addEventListener('input', renderReturn); el.addEventListener('change', renderReturn); }
+  });
+  document.getElementById('clearReturnFilter').addEventListener('click', function () {
+    document.getElementById('returnFilterOrder').value = '';
+    document.getElementById('returnFilterBranch').value = '';
+    document.getElementById('returnFilterFrom').value = '';
+    document.getElementById('returnFilterTo').value = '';
+    document.getElementById('returnFilterStone').value = '';
+    renderReturn();
+  });
+  document.getElementById('returnBody').addEventListener('click', function (e) {
+    var editBtn = e.target.closest('[data-return-order-edit]');
+    var delBtn = e.target.closest('[data-return-order-del]');
+    if (editBtn) {
+      var id = editBtn.getAttribute('data-return-order-edit');
+      var order = getReturnOrders().find(function (o) { return o.id === id; });
+      if (order) openReturnOrderModal(order);
+    }
+    if (delBtn) {
+      var did = delBtn.getAttribute('data-return-order-del');
+      if (confirm('Delete this return order?')) {
+        saveReturnOrders(getReturnOrders().filter(function (o) { return o.id !== did; }));
+        renderReturn();
+        renderLowStockBanner();
+        showToast('Order deleted.', 'success');
+      }
+    }
+  });
+
+  document.getElementById('closingFilterStone').addEventListener('input', renderClosing);
+  document.getElementById('closingFilterSize').addEventListener('input', renderClosing);
+  document.getElementById('clearClosingFilter').addEventListener('click', function () {
+    document.getElementById('closingFilterStone').value = '';
+    document.getElementById('closingFilterSize').value = '';
+    renderClosing();
+  });
+  document.getElementById('exportClosingExcel').addEventListener('click', exportClosingToExcel);
+  document.getElementById('exportClosingPdf').addEventListener('click', exportClosingToPdf);
+  document.getElementById('printClosingBtn').addEventListener('click', printClosingStock);
+
+  document.getElementById('openBranchReportBtn').addEventListener('click', function () {
+    document.getElementById('branchReportOverlay').classList.add('show');
+  });
+  document.getElementById('generateReportBtn').addEventListener('click', generateIssueReport);
+  document.getElementById('exportReportExcel').addEventListener('click', function () {
+    exportTableToExcel('reportTable', 'branch_issue_report_' + todayISO() + '.xlsx');
+  });
+  document.getElementById('exportReportPdf').addEventListener('click', function () {
+    exportTableToPdf('reportTable', 'branch_issue_report_' + todayISO() + '.pdf', 'Branch-wise Issued Report');
+  });
+
+  document.getElementById('openRecentTxnsBtn').addEventListener('click', function () {
+    renderRecentTransactions();
+    document.getElementById('recentTxnsOverlay').classList.add('show');
+  });
+  document.getElementById('recentTypeFilter').addEventListener('change', renderRecentTransactions);
+  document.getElementById('refreshRecentBtn').addEventListener('click', renderRecentTransactions);
+  document.getElementById('recentBody').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-recent-edit]');
+    if (!btn) return;
+    var type = btn.getAttribute('data-recent-type');
+    var orderId = btn.getAttribute('data-recent-order');
+    var itemIdx = parseInt(btn.getAttribute('data-recent-item'), 10);
+    if (type === 'purchase') {
+      var order = getPurchaseOrders().find(function (o) { return o.id === orderId; });
+      if (order && order.items[itemIdx]) openRecentItemEdit('purchase', order, itemIdx, order.items[itemIdx]);
+    } else if (type === 'issue') {
+      var io = getIssueOrders().find(function (o) { return o.id === orderId; });
+      if (io && io.items[itemIdx]) openRecentItemEdit('issue', io, itemIdx, io.items[itemIdx]);
+    } else if (type === 'return') {
+      var ro = getReturnOrders().find(function (o) { return o.id === orderId; });
+      if (ro && ro.items[itemIdx]) openRecentItemEdit('return', ro, itemIdx, ro.items[itemIdx]);
+    }
+  });
+
+  document.getElementById('addArtBtn').addEventListener('click', function () { openArtModal(null); });
+  document.getElementById('artFilter').addEventListener('input', renderArtStone);
+  document.getElementById('clearArtFilter').addEventListener('click', function () {
+    document.getElementById('artFilter').value = '';
+    renderArtStone();
+  });
+  document.getElementById('artBody').addEventListener('click', function (e) {
+    var editBtn = e.target.closest('[data-art-edit]');
+    var delBtn = e.target.closest('[data-art-del]');
+    if (editBtn) {
+      var id = editBtn.getAttribute('data-art-edit');
+      var item = getArtDetails().find(function (x) { return x.id === id; });
+      if (item) openArtModal(item);
+    }
+    if (delBtn) {
+      var did = delBtn.getAttribute('data-art-del');
+      if (confirm('Delete this art record?')) {
+        saveArtDetails(getArtDetails().filter(function (x) { return x.id !== did; }));
+        renderArtStone();
+        showToast('Deleted.', 'success');
+      }
+    }
+  });
+  renderArtStone();
+
+  document.getElementById('trackBtn').addEventListener('click', trackStone);
+  document.getElementById('trackBranchBtn').addEventListener('click', trackBranchTransactions);
+
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('modalOverlay').addEventListener('click', function (e) {
+    if (e.target === this) closeModal();
+  });
+
+  document.getElementById('orderSavedClose').addEventListener('click', function () {
+    document.getElementById('orderSavedOverlay').classList.remove('show');
+  });
+  document.getElementById('orderSavedDoneBtn').addEventListener('click', function () {
+    document.getElementById('orderSavedOverlay').classList.remove('show');
+  });
+  document.getElementById('orderSavedPrintBtn').addEventListener('click', printSavedOrder);
+  document.getElementById('orderSavedExcelBtn').addEventListener('click', downloadSavedOrderExcel);
+
+  document.getElementById('catalogueBody').addEventListener('click', function (e) {
+    var editBtn = e.target.closest('[data-cat-edit]');
+    var delBtn = e.target.closest('[data-cat-del]');
+    if (editBtn) {
+      var id = editBtn.getAttribute('data-cat-edit');
+      var item = getCatalogue().find(function (x) { return x.id === id; });
+      if (item) openCatalogueModal(item);
+    }
+    if (delBtn) {
+      var did = delBtn.getAttribute('data-cat-del');
+      if (confirm('Delete this stone type from catalogue?')) {
+        saveCatalogue(getCatalogue().filter(function (x) { return x.id !== did; }));
+        renderCatalogue();
+        renderLowStockBanner();
+        showToast('Deleted.', 'success');
+      }
+    }
+  });
+
+  document.getElementById('lsbCloseAll').addEventListener('click', dismissAllLowStock);
+
+  document.getElementById('logoutBtn').addEventListener('click', function () {
+    if (!confirm('Log out?')) return;
+    window.__GP_LOGGING_OUT__ = true;
+    try { sessionStorage.clear(); } catch (e) {}
+    try { localStorage.removeItem('gp_logged_user'); } catch (e) {}
+    window.location.href = 'index.html?t=' + Date.now() + '&logout=1';
+  });
+
+  renderDashboard();
+  renderCatalogue();
+  renderOpening();
+  renderPurchase();
+  renderIssue();
+  renderReturn();
+  renderClosing();
+
+  setInterval(function () {
+    renderLowStockBanner();
+    if (document.getElementById('tab-dashboard').style.display !== 'none') {
+      renderDashboard();
+    }
+  }, 5000);
+}
+
+/* Add Stone Type: bound by delegation so it works even if init() hits an error */
+document.addEventListener('click', function (e) {
+  var btn = e.target && e.target.closest ? e.target.closest('#addCatalogueBtn') : null;
+  if (!btn) return;
+  e.preventDefault();
+  try { openCatalogueModal(null); }
+  catch (err) { console.error('Add Stone Type failed', err); showToast('Could not open Add Stone Type: ' + err.message, 'error', 6000); }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  try { init(); }
+  catch (err) { console.error('init() failed', err); }
+});
+</script>
+<script src="gp-chat.js"></script>
+</body>
+</html>

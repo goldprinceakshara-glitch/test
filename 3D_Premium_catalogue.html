@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link href="https://db.onlinewebfonts.com/c/7182c0aa415f7a87f826dada6cd9980c?family=URW+Wood+Type+W01+D" rel="stylesheet">
+<title>3D PREMIUM IDOLS - CATALOGUE UPDATE</title>
+<link rel="stylesheet" href="catalogue-update.css">
+<!-- PWA & Web App Icon Setup -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+</head><body>
+<header class="menu_bar2">
+  <div class="brand">
+    <div class="logo-wrap">
+      <img src="images/gp-gold3.png" alt="logo" class="logo1-img">
+    </div>
+    <h3 class="logo1-heading">
+      GOLDPRINCE
+      <span>JEWEL INDUSTRY INDIA PVT LTD</span>
+    </h3>
+  </div>
+  <div class="header-actions">
+    <a href="gpmain.html"><button class="home_btn">Home</button></a>
+  </div>
+</header>
+<main class="wrap"><section class="card">
+<div class="titlebar"><h1>3D PREMIUM IDOLS — CATALOGUE UPDATE</h1></div>
+<div class="toolbar">
+<button id="addSheet">Add Sheet</button>
+<button id="deleteSheet" class="danger">Delete Sheet</button>
+</div>
+<div class="content">
+<div class="controls">
+<label>CATALOGUE SHEET<select id="sheet"></select></label>
+<div class="small">Upload one image per sheet — it will apply to all art numbers below.</div>
+<button id="addProduct" class="primary">Add Product</button>
+</div>
+<div class="sheet-image-panel">
+  <div class="sheet-image-box">
+    <img id="sheetPreview" class="sheet-preview" alt="Sheet image">
+    <div id="noSheetImg" class="no-sheet-img">No image<br>for this sheet</div>
+  </div>
+  <div class="sheet-image-info">
+    <div class="sheet-image-title">Sheet Image — <span id="sheetImageName">—</span></div>
+    <div class="small">This image is shared by all art numbers in this catalogue sheet.</div>
+    <div class="sheet-image-actions">
+      <button id="uploadSheetImage" class="primary" type="button">📷 Upload / Change Image</button>
+      <button id="removeSheetImage" class="danger" type="button">Remove Image</button>
+    </div>
+  </div>
+</div>
+<div class="table-scroll"><table><thead><tr>
+<th>SL NO</th><th>ART NO</th><th>PRODUCT NAME</th><th>HEIGHT / SIZE</th><th>SIZE MM</th>
+<th>APPROX WT (g)</th><th>IMAGE</th><th>ACTION</th>
+</tr></thead><tbody id="rows"></tbody></table></div>
+<div class="status"><b id="count">0 product(s)</b> — <span id="status">Local catalogue update page.</span></div>
+</div></section></main>
+<input type="file" id="imageFileInput" accept="image/*" style="display:none;">
+
+<script>
+/* ============================================================
+   3D PREMIUM IDOLS — catalogue seed
+   ============================================================ */
+const INITIAL_CATALOGUE = {
+  "3D PREMIUM IDOLS": {
+    "orderStart": 9000,
+    "sheets": {
+      "PADMAM GANESH": [
+        {
+          "artNo": "115131",
+          "name": "PADMAM GANESH",
+          "heightInch": "",
+          "sizeMm": "",
+          "weight": 0,
+          "image": ""
+        }
+      ]
+    }
+  }
+};
+const GROUP = "3D PREMIUM IDOLS";
+
+/* ============================================================
+   BOOTSTRAP — make sure the premium group exists in the
+   shared goldprince_catalogue object that order-form.js reads.
+   Runs BEFORE catalogue-update.js, so the editor sees seeded data.
+   ============================================================ */
+(function bootstrapPremiumCatalogue() {
+  const SHARED_KEY = 'goldprince_catalogue';
+  const PREMIUM_KEY = 'goldprince_catalogue_3D_PREMIUM_IDOLS';
+
+  let shared = {};
+  try { shared = JSON.parse(localStorage.getItem(SHARED_KEY) || '{}') || {}; } catch (e) { shared = {}; }
+
+  // If premium group missing in shared, seed it from INITIAL_CATALOGUE
+  if (!shared[GROUP] || !shared[GROUP].sheets || !Object.keys(shared[GROUP].sheets).length) {
+    shared[GROUP] = INITIAL_CATALOGUE[GROUP];
+    try { localStorage.setItem(SHARED_KEY, JSON.stringify(shared)); } catch (e) {}
+  }
+
+  // Mirror to group-specific key as a safety net
+  if (!localStorage.getItem(PREMIUM_KEY)) {
+    try {
+      const only = {};
+      only[GROUP] = shared[GROUP];
+      localStorage.setItem(PREMIUM_KEY, JSON.stringify(only));
+    } catch (e) {}
+  }
+
+  window.__premiumBootstrapDone = true;
+})();
+</script>
+<script src="catalogue-update.js"></script>
+</body></html>

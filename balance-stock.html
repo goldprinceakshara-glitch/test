@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance Stock - Stock Inventory</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- PWA & Web App Icon Setup -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+</head>
+<body>
+<div class="container">
+    <h1><i class="fas fa-calculator"></i> Balance Stock Report</h1>
+
+    <div class="card">
+        <div class="section-header">
+            <h2><i class="fas fa-chart-bar"></i> Current Balance Stock</h2>
+            <div class="actions">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search art no, name, group...">
+                </div>
+                <button class="outline" onclick="exportBalance()"><i class="fas fa-file-export"></i> Export</button>
+            </div>
+        </div>
+        <div class="summary-stats">
+            <div class="stat green"><span>Total Quantity</span><strong id="totalQty">0</strong></div>
+            <div class="stat orange"><span>Total Weight (g)</span><strong id="totalWeight">0</strong></div>
+            <div class="stat"><span>Total Art Numbers</span><strong id="totalArt">0</strong></div>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Art No</th>
+                        <th>Product Name</th>
+                        <th>Quantity</th>
+                        <th>Weight (g)</th>
+                        <th>Product Group</th>
+                        <th>Image</th>
+                        <th>Held</th>
+                        <th>Free</th>
+                    </tr>
+                </thead>
+                <tbody id="balanceBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="toast-msg" id="toastMsg"></div>
+
+<script src="data.js"></script>
+<script src="balanceStock.js"></script>
+</body>
+</html>

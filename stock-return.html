@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Return - Stock Inventory</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- PWA & Web App Icon Setup -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+    <meta name="theme-color" content="#900143">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="GOLDPRINCE">
+
+    <!-- Libraries for PDF & Excel export with images -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1><i class="fas fa-undo-alt"></i> Stock Return</h1>
+
+    <!-- ============ MODE TABS ============ -->
+    <div class="mode-tabs">
+        <button id="tabStockReturn" class="active" onclick="switchMode('stockreturn')">
+            <i class="fas fa-undo-alt"></i> Stock Return Entry
+        </button>
+        <button id="tabReturnDetails" class="outline" onclick="toggleReturnDetails()">
+            <i class="fas fa-eye"></i> Stock Return Details
+        </button>
+    </div>
+
+    <!-- ============================================================
+         PANEL 1 — STOCK RETURN ENTRY
+         ============================================================ -->
+    <div class="mode-panel active" id="panelStockReturn">
+        <div class="card">
+            <div class="section-header">
+                <h2><i class="fas fa-plus-circle"></i> Stock Return Entry</h2>
+                <div class="actions">
+                    <button class="outline" onclick="downloadTemplate()"><i class="fas fa-download"></i> Template</button>
+                    <button class="outline" onclick="document.getElementById('excelImportInput').click()"><i class="fas fa-file-excel"></i> Import Excel</button>
+                </div>
+            </div>
+            <input type="file" id="excelImportInput" accept=".csv,.xlsx,.xls" style="display:none;">
+
+            <!-- STEP 1: Party Details -->
+            <div style="background:#faf9f9; padding:15px; border-radius:12px; margin-bottom:15px;">
+                <div style="font-weight:700; color:#770836; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-user"></i> Step 1: Party Details
+                </div>
+                <div class="form-grid">
+                    <div class="form-group party-field">
+                        <label>Select Party *</label>
+                        <div class="searchable-select" id="partySearchWrap">
+                            <div class="searchable-select-input">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="fPartySearch"
+                                       placeholder="Type to search party by ID or name..."
+                                       autocomplete="off" spellcheck="false">
+                                <input type="hidden" id="fParty" value="">
+                                <button type="button" class="clear-btn" id="fPartyClearBtn" title="Clear">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="searchable-select-list" id="partyList" role="listbox"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Party Name</label>
+                        <input type="text" id="fPartyName" readonly style="background:#f7f0f4;">
+                    </div>
+                    <div class="form-group">
+                        <label>Cell No</label>
+                        <input type="text" id="fPartyCell" readonly style="background:#f7f0f4;">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Address</label>
+                        <input type="text" id="fPartyAddress" readonly style="background:#f7f0f4;">
+                    </div>
+                    <div class="form-group">
+                        <label>Return Reference No</label>
+                        <input type="text" id="fInvoiceNo" placeholder="RET-1001" style="background:#f5f0f2; font-weight:600; color:#5f0637;">
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="fDate">
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Add Products -->
+            <div style="background:#f5f1f3; padding:15px; border-radius:12px; margin-bottom:15px;">
+                <div style="font-weight:700; color:#5f0624; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-box"></i> Step 2: Add Products to this Return
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1; min-width:150px;">
+                        <label>Art Number *</label>
+                        <input type="text" id="pArt" list="artList" placeholder="e.g., A101" autocomplete="off">
+                        <datalist id="artList"></datalist>
+                    </div>
+                    <div class="form-group" style="flex:1; min-width:150px;">
+                        <label>Product Name</label>
+                        <input type="text" id="pName" readonly style="background:#f8f6f7;">
+                    </div>
+                    <div class="form-group" style="min-width:90px;">
+                        <label>Quantity *</label>
+                        <input type="number" id="pQty" value="1" min="1">
+                    </div>
+                    <div class="form-group" style="min-width:110px;">
+                        <label>Weight (g)</label>
+                        <input type="number" id="pWeight" value="0" step="0.01">
+                    </div>
+                    <div class="form-group" style="min-width:110px;">
+                        <label>Group</label>
+                        <input type="text" id="pGroup" readonly style="background:#f7f0f4;">
+                    </div>
+                    <button onclick="addProductToCart()" style="height:42px;"><i class="fas fa-cart-plus"></i> Add Item</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Cart Items -->
+            <div style="border:2px dashed #cbd5e1; border-radius:12px; padding:15px; margin-bottom:15px;">
+                <div style="font-weight:700; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="fas fa-shopping-cart"></i> Step 3: Items in this transaction</span>
+                    <span class="badge" id="cartCount">0 items</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Art No</th>
+                                <th>Product Name</th>
+                                <th>Quantity</th>
+                                <th>Weight (g)</th>
+                                <th>Group</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cartBody">
+                            <tr><td colspan="6" class="empty-message">No items added yet. Add products above.</td></tr>
+                        </tbody>
+                        <tfoot id="cartFooter" style="display:none;">
+                            <tr style="background:#f8fafc; font-weight:700;">
+                                <td colspan="2" style="text-align:right;">TOTALS:</td>
+                                <td id="cartTotalQty">0</td>
+                                <td id="cartTotalWeight">0.00</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="actions" style="justify-content:flex-end;">
+                <button class="outline" onclick="resetStockReturnForm()"><i class="fas fa-times"></i> Clear Form</button>
+                <button class="success" onclick="saveTransaction()"><i class="fas fa-save"></i> Save Stock Return</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     TRANSACTIONS DETAILS MODAL
+     ============================================================ -->
+<div class="modal-overlay" id="returnDetailsModal">
+    <div class="modal" style="max-width: 1200px; width: 95%;">
+        <div class="section-header" style="margin-bottom: 20px;">
+            <h2><i class="fas fa-list"></i> Stock Return Records</h2>
+            <div class="actions">
+                <button class="outline" onclick="closeReturnDetails()"><i class="fas fa-times"></i> Close</button>
+            </div>
+        </div>
+        
+        <!-- Filters + Export toolbar -->
+        <div class="form-row" style="margin-bottom:18px; align-items:flex-end;">
+            <div class="form-group" style="flex:1 1 160px; min-width:140px;">
+                <label>Return Ref / Est</label>
+                <input type="text" id="txnFilterEst" placeholder="RET-...">
+            </div>
+            <div class="form-group" style="flex:1 1 150px; min-width:140px;">
+                <label>Date</label>
+                <input type="date" id="txnFilterDate">
+            </div>
+            <div class="form-group" style="flex:1 1 150px; min-width:140px;">
+                <label>Party</label>
+                <input type="text" id="txnFilterParty" placeholder="Party name / ID">
+            </div>
+            <div class="form-group" style="flex:1 1 140px; min-width:130px;">
+                <label>Product Name</label>
+                <input type="text" id="txnFilterName" placeholder="Search product">
+            </div>
+            <div class="form-group" style="flex:1 1 130px; min-width:120px;">
+                <label>Category</label>
+                <select id="txnFilterCategory">
+                    <option value="">All Categories</option>
+                    <option value="3D Idols">3D Idols</option>
+                    <option value="3D Premium Idols">3D Premium Idols</option>
+                    <option value="2D Idols">2D Idols</option>
+                    <option value="Jewellery">Jewellery</option>
+                    <option value="God frames">God frames</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex:0 0 auto;">
+                <label>&nbsp;</label>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="outline" onclick="clearTxnFilters()"><i class="fas fa-times"></i> Clear</button>
+                    <button class="outline" onclick="downloadTxnsExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="transactionsList" style="max-height: 60vh; overflow-y: auto; padding-right: 5px;"></div>
+    </div>
+</div>
+
+<div class="toast-msg" id="toastMsg"></div>
+
+<script src="data.js"></script>
+<script src="stockReturn.js"></script>
+</body>
+</html>

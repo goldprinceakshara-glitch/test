@@ -1,0 +1,419 @@
+<!-- ORDERFORM.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOLDPRINCE - ORDER FORM</title>
+  <link rel="stylesheet" href="order-form.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="gp-chat.css">
+  <!-- PWA & Web App Icon Setup -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img src="images/gp-gold3.png" alt="GoldPrince" onerror="this.style.display='none'">
+    <div>
+      <h1><img src="images/gplogo1.png" alt="GoldPrince" onerror="this.style.display='none'"></h1>
+      <p>JEWEL INDUSTRY INDIA PVT LTD</p>
+    </div>
+  </div>
+    <div class="top-actions">
+    <button type="button" id="newEstimationTopBtn">Order Estimate</button>
+    <button type="button" id="estimationsTopBtn">Pending Estimations</button>
+    <button type="button" id="pendingTopBtn">Pending Orders</button>
+    <span class="stock-indicator-wrap">
+      <button type="button" id="receivedTopBtn">Received Orders</button>
+      <span class="stock-dot hidden" id="receivedStockDot">0</span>
+    </span>
+    <li><a href="gpmain.html" class="">Home</a></li>
+                     
+   
+  </div>
+</header>
+
+<!-- RECEIVED ORDERS (from branches) -->
+<div class="modal hidden" id="receivedModal">
+  <div class="modal-window">
+    <button type="button" class="modal-close" id="closeReceived">×</button>
+    <h2 class="preview-title">RECEIVED ORDERS — FROM BRANCHES</h2>
+    
+
+    <div class="pending-print-bar" id="receivedPrintBar">
+      <div class="ppb-label">
+        <i class="fas fa-inbox"></i>
+        <b id="receivedCountLabel">0</b> received order(s)
+      </div>
+      <div class="ppb-actions">
+        <button type="button" class="btn" id="receivedPrintBtn">
+          <i class="fas fa-print"></i> Print
+        </button>
+        <button type="button" class="btn" id="receivedExcelBtn">
+          <i class="fas fa-file-excel"></i> Export Excel
+        </button>
+      </div>
+    </div>
+
+    <div id="receivedList"></div>
+  </div>
+</div>
+
+<!-- RECEIVED ORDER DETAIL -->
+<div class="modal hidden" id="receivedDetailModal">
+  <div class="modal-window">
+    <button type="button" class="modal-close" id="closeReceivedDetail">×</button>
+    <div id="receivedDetailContent"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="receivedDetailPdfBtn">DOWNLOAD PDF</button>
+      <button type="button" class="btn" id="receivedDetailExcelBtn">DOWNLOAD EXCEL</button>
+      <button type="button" class="btn secondary" id="backToReceivedBtn">← BACK TO LIST</button>
+    </div>
+  </div>
+</div>
+
+<main class="order-app">
+  <!-- STEP 1 -->
+  <section class="step active" id="partyStep">
+    <div class="step-heading">
+      <div><span class="step-no">01</span><h2>PARTY DETAILS</h2></div>
+      <span class="step-label">PARTY MASTER</span>
+    </div>
+    <div class="card">
+      <div class="form-grid">
+                <label class="party-field">
+          <span class="field-title">Party Name <span class="required">*</span></span>
+          <div class="searchable-select" id="partySearchWrap">
+            <div class="searchable-select-input">
+              <i class="fas fa-search"></i>
+              <input type="text" id="partySearchInput" placeholder="Type to search party name..." autocomplete="off" spellcheck="false">
+              <input type="hidden" id="partyName" value="">
+              <button type="button" class="clear-btn" id="partyClearBtn" title="Clear"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="searchable-select-list" id="partyList" role="listbox"></div>
+          </div>
+          <small id="partyHelp">Start typing to filter party names.</small>
+        </label>
+
+        <label>Address<input id="address" placeholder="Auto-filled from party master" readonly></label>
+        <label>Cell No.<input id="cellNo" placeholder="Auto-filled from party master" readonly></label>
+        <label>Product Category
+          <select id="productGroup">
+            <option value="3D IDOLS">3D IDOLS</option>
+            <option value="3D PREMIUM IDOLS">3D PREMIUM IDOLS</option>
+            <option value="2D IDOLS">2D IDOLS</option>
+            <option value="JEWELLERY">JEWELLERY</option>
+            <option value="GOD FRAMES">GOD FRAMES</option>
+          </select>
+        </label>
+                <label>
+          <span class="field-title">Order Date <span class="required">*</span></span>
+          <input id="orderDate" type="date">
+        </label>
+        <label>Approx Delivery Date<input id="deliveryDate" type="date"></label>
+        <label>Touch<select id="touch"><option>92.5%</option><option>63%</option></select></label>
+        <label>Estimation No.<input id="estimateNo" value="E-1001" readonly></label>
+        <label class="wide">Note<textarea id="note" rows="4" placeholder="Write your note here..."></textarea></label>
+      </div>
+      <div class="step-actions right"><button type="button" class="btn primary" id="nextBtn">NEXT →</button></div>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step" id="orderStep">
+    <div class="step-heading">
+      <div><span class="step-no">02</span><h2>ORDER DETAILS</h2></div>
+      <span class="step-label">STOCK ENTRY FORM</span>
+    </div>
+    <div class="card">
+      <div class="entry-strip">
+        <div class="entry-title">ENTER ORDER ITEM</div>
+        <div class="entry-grid">
+          <label class="art-field">Art No. <span class="required">*</span>
+            <input id="artNo" list="artList" autocomplete="off" placeholder="Search / enter Art No." inputmode="numeric">
+            <datalist id="artList"></datalist>
+            <small>Type an Art No. or select from the list.</small>
+          </label>
+          <label class="qty-field">Order Quantity <span class="required">*</span>
+            <input id="orderQty" type="number" min="1" step="1" value="1" inputmode="numeric">
+            <small>Press Enter to add the item.</small>
+          </label>
+          <div class="entry-buttons">
+            <button type="button" class="btn primary" id="addItemBtn">ADD ITEM</button>
+            <button type="button" class="btn secondary" id="clearItemBtn">CLEAR</button>
+          </div>
+        </div>
+        <div id="productPreview" class="product-preview hidden">
+          <div class="preview-image-box">
+            <img id="itemImage" src="" alt="Product image">
+            <div id="imageMissing" class="image-missing">No image</div>
+          </div>
+          <div class="auto-fields">
+            <div><span>PRODUCT NAME</span><b id="itemName">—</b></div>
+            <div><span>PRODUCT CATEGORY</span><b id="itemGroup">—</b></div>
+            <div><span>SIZE (INCH)</span><b id="itemInch">—</b></div>
+            <div><span>SIZE (MM)</span><b id="itemMm">—</b></div>
+            <div><span>WEIGHT (g)</span><b id="itemWeight">—</b></div>
+            <div><span>TOTAL WEIGHT (g)</span><b id="itemTotalWeight">—</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="order-table">
+          <thead>
+            <tr>
+              <th>SL NO</th><th>ART NO.</th><th>PRODUCT NAME</th><th>SIZE (INCH)</th><th>WEIGHT (g)</th>
+              <th>ORDER QTY</th><th>TOTAL WEIGHT (g)</th><th>IMAGE</th><th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody id="orderBody"><tr id="emptyRow"><td colspan="9" class="empty">No items added. Enter Art No. and Quantity above.</td></tr></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5" class="total-label">TOTAL</td>
+              <td id="totalQty">0</td>
+              <td id="totalWeight">0.00</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="step-actions">
+        <button type="button" class="btn secondary" id="backBtn">← BACK</button>
+        <button type="button" class="btn primary" id="previewBtn">PREVIEW ORDER →</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- PREVIEW MODAL -->
+<div class="modal hidden" id="previewModal">
+  <div class="modal-window">
+    <button type="button" class="modal-close" id="closePreview">×</button>
+    <div id="previewContent"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn secondary" id="editPreviewBtn">EDIT</button>
+      <button type="button" class="btn" id="downloadPdfBtn">DOWNLOAD PDF</button>
+      <button type="button" class="btn" id="downloadExcelBtn">DOWNLOAD EXCEL</button>
+      <button type="button" class="btn primary" id="saveEstimationBtn">SAVE ESTIMATION</button>
+      <button type="button" class="btn secondary" id="newEstimationBtn">NEW ESTIMATION</button>
+    </div>
+    <div id="submitStatus" class="submit-status"></div>
+  </div>
+</div>
+
+<!-- PENDING ESTIMATIONS LIST -->
+<div class="modal hidden" id="estimationsModal">
+  <div class="modal-window">
+    <button type="button" class="modal-close" id="closeEstimations">×</button>
+    <h2 class="preview-title">PENDING ESTIMATIONS</h2>
+    <p style="color:#6c7480;margin-bottom:14px;font-size:13px">
+      Click an estimation to open it. From there you can <b>forward to a workshop</b> — which generates the order number and moves it to <b>Pending Orders</b>.
+    </p>
+    <div id="estimationsList"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     ESTIMATION DETAIL — opens immediately on SAVE ESTIMATION
+     ============================================================ -->
+<div class="modal hidden" id="estimationDetailModal">
+  <div class="modal-window">
+    <button type="button" class="modal-close" id="closeEstimationDetail">×</button>
+    <div id="estimationDetailContent"></div>
+
+    <!-- ==================== SPLIT / FORWARD BAR ==================== -->
+    <div class="forward-bar" id="estimationForwardBar">
+      <div class="forward-bar-title">
+        <i class="fas fa-share-square"></i>
+        Forward this estimation to a workshop (generates order number &amp; moves it to Pending Orders)
+      </div>
+
+      <div class="forward-bar-controls">
+        <label class="forward-bar-select" id="mainWorkshopWrap">
+          Workshop (default)
+          <select id="detailWorkshopSelect">
+            <option value="">-- SELECT WORKSHOP --</option>
+            <option>Kalimatha</option>
+            <option>Gomatha</option>
+            <option>Ambhaji</option>
+            <option>Vanisri</option>
+            <option>Vishal</option>
+            <option>GPWB</option>
+          </select>
+        </label>
+
+        <label class="forward-bar-select" style="min-width:200px;flex:0 1 200px;">
+          Split into
+          <select id="detailSplitCount">
+            <option value="1">No Split (1 part)</option>
+            <option value="2">2 parts</option>
+            <option value="3">3 parts</option>
+            <option value="4">4 parts</option>
+            <option value="5">5 parts</option>
+            <option value="6">6 parts</option>
+          </select>
+        </label>
+
+        <button type="button" class="btn primary" id="detailForwardBtn">
+          <i class="fas fa-paper-plane"></i> FORWARD ORDER
+        </button>
+      </div>
+
+      <!-- Split configuration panel (hidden when No Split) -->
+      <div id="splitConfigPanel" class="split-config hidden">
+        <div class="split-config-head">
+          <i class="fas fa-cut"></i>
+          <b>Split Configuration</b>
+          <span id="splitConfigHint" class="split-config-hint"></span>
+        </div>
+        <div id="splitPartsWrap" class="split-parts-wrap"></div>
+        <div class="split-actions">
+          <button type="button" class="btn secondary" id="splitAutoByQtyBtn" title="Divide total quantity evenly across parts">
+            <i class="fas fa-calculator"></i> AUTO-SPLIT QTY
+          </button>
+          <button type="button" class="btn secondary" id="splitAutoByArtBtn" title="Give each item to a round-robin part">
+            <i class="fas fa-shuffle"></i> AUTO-SPLIT BY ART
+          </button>
+          <button type="button" class="btn secondary" id="splitAutoByNameBtn" title="Group by product name; each name-group goes to a round-robin part">
+            <i class="fas fa-tags"></i> AUTO-SPLIT BY NAME
+          </button>
+          <button type="button" class="btn secondary" id="splitResetBtn">
+            <i class="fas fa-undo"></i> RESET
+          </button>
+        </div>
+        <div id="splitValidationMsg" class="split-validation-msg"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn" id="estimationPdfBtn">DOWNLOAD PDF</button>
+      <button type="button" class="btn" id="estimationExcelBtn">DOWNLOAD EXCEL</button>
+      <button type="button" class="btn secondary" id="backToEstListBtn">← BACK TO LIST</button>
+      <button type="button" class="btn secondary" id="newEstimationDetailBtn">NEW ESTIMATION</button>
+    </div>
+    <div id="estimationDetailStatus" class="submit-status"></div>
+  </div>
+</div>
+
+<!-- PENDING ORDERS -->
+<div class="modal hidden" id="pendingModal">
+  <div class="modal-window">
+    <button type="button" class="modal-close" id="closePending">×</button>
+    <h2 class="preview-title">PENDING ORDERS — BRANCH / WORKSHOP WISE</h2>
+
+        <div class="pending-filters">
+      <label class="pf-field">Party
+        <select id="pfParty"><option value="">All Parties</option></select>
+      </label>
+      <label class="pf-field">Workshop
+        <select id="pfWorkshop"><option value="">All Workshops</option></select>
+      </label>
+      <label class="pf-field">Group
+        <select id="pfGroup"><option value="">All Groups</option></select>
+      </label>
+      <label class="pf-field">From Date
+        <input type="date" id="pfFromDate">
+      </label>
+      <label class="pf-field">To Date
+        <input type="date" id="pfToDate">
+      </label>
+      <label class="pf-field">Priority
+        <select id="pfPriority">
+          <option value="">All Orders</option>
+          <option value="priority">Priority List</option>
+          <option value="normal">Normal Only</option>
+        </select>
+      </label>
+      <div class="pf-actions">
+        <button type="button" class="btn secondary" id="pfResetBtn">RESET</button>
+      </div>
+      <div class="pf-summary" id="pfSummary"></div>
+    </div>
+
+        <div class="pending-transfer-bar hidden" id="pendingTransferBar">
+      <div class="ptb-info">
+        <span>Selected:</span>
+        <b id="ptbOrderLabel">—</b>
+      </div>
+      <label class="ptb-field" id="ptbMainWorkshopWrap">
+        Transfer to workshop
+        <select id="ptbWorkshopSelect">
+          <option value="">-- SELECT WORKSHOP --</option>
+          <option>Kalimatha</option>
+          <option>Gomatha</option>
+          <option>Ambhaji</option>
+          <option>Vanisri</option>
+          <option>Vishal</option>
+          <option>GPWB</option>
+        </select>
+      </label>
+      <label class="ptb-field" style="min-width:180px;flex:0 1 180px;">
+        Split into
+        <select id="ptbSplitCount">
+          <option value="1">No Split (1 part)</option>
+          <option value="2">2 parts</option>
+          <option value="3">3 parts</option>
+          <option value="4">4 parts</option>
+          <option value="5">5 parts</option>
+          <option value="6">6 parts</option>
+        </select>
+      </label>
+      <button type="button" class="btn primary" id="ptbTransferBtn">
+        <i class="fas fa-exchange-alt"></i> TRANSFER
+      </button>
+      <button type="button" class="btn danger" id="ptbCancelBtn">
+        <i class="fas fa-ban"></i> CANCEL ORDER
+      </button>
+      <button type="button" class="btn secondary" id="ptbCloseBtn">✕</button>
+    </div>
+
+    <!-- Split configuration panel for pending-order transfer (hidden when No Split) -->
+    <div id="ptbSplitConfigPanel" class="split-config hidden">
+      <div class="split-config-head">
+        <i class="fas fa-cut"></i>
+        <b>Split Configuration (Pending Order)</b>
+        <span id="ptbSplitConfigHint" class="split-config-hint"></span>
+      </div>
+      <div id="ptbSplitPartsWrap" class="split-parts-wrap"></div>
+      <div class="split-actions">
+        <button type="button" class="btn secondary" id="ptbSplitAutoByQtyBtn" title="Divide total quantity evenly across parts">
+          <i class="fas fa-calculator"></i> AUTO-SPLIT QTY
+        </button>
+        <button type="button" class="btn secondary" id="ptbSplitAutoByArtBtn" title="Give each item to a round-robin part">
+          <i class="fas fa-shuffle"></i> AUTO-SPLIT BY ART
+        </button>
+        <button type="button" class="btn secondary" id="ptbSplitAutoByNameBtn" title="Group by product name; each name-group goes to a round-robin part">
+          <i class="fas fa-tags"></i> AUTO-SPLIT BY NAME
+        </button>
+        <button type="button" class="btn secondary" id="ptbSplitResetBtn">
+          <i class="fas fa-undo"></i> RESET
+        </button>
+      </div>
+      <div id="ptbSplitValidationMsg" class="split-validation-msg"></div>
+    </div>
+
+    <div id="pendingList"></div>
+    <div id="pendingStatus" class="submit-status"></div>
+  </div>
+</div>
+
+<script src="order-form.js"></script>
+<script src="gp-chat.js"></script>
+</body>
+</html>

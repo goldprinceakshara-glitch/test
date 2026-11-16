@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOLDPRINCE - DASHBOARD</title>
+<link rel="stylesheet" href="dashboard.css">
+<!-- PWA & Web App Icon Setup -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOLDPRINCE">
+<meta name="theme-color" content="#900143">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GOLDPRINCE">
+</head>
+<body data-page="dashboard">
+<header class="dash-header">
+  <div class="brand">
+    <img src="images/gp-gold3.png" alt="GoldPrince">
+    <div><h2>GOLDPRINCE</h2><span>JEWEL INDUSTRY INDIA PVT LTD</span></div>
+  </div>
+  <nav><a href="index.html">ORDER FORM</a><a class="active" href="dashboard.html">DASHBOARD</a><a href="work-shop.html">WORKSHOP</a></nav>
+  
+</header>
+
+<main class="dashboard">
+  <section class="hero">
+    <div><div class="eyebrow">ORDER CONTROL CENTER</div><h1>Orders & Workshop Dashboard</h1><p>Track estimations, workshop forwarding, stock received and pending orders.</p></div>
+    <button class="btn" id="refreshBtn">REFRESH</button>
+  </section>
+
+  <section class="stats" id="stats"></section>
+
+  <section class="card">
+    <div class="card-head"><div><h2>ALL ESTIMATIONS & ORDERS</h2><p>Click an order number to view complete details.</p></div><input id="orderSearch" class="search" type="search" placeholder="Search estimation, order no, party, group..."></div>
+    <div class="filters"><select id="statusFilter"><option value="ALL">ALL STATUS</option><option value="CONFIRMED">CONFIRMED</option><option value="SENT_TO_WORKSHOP">FORWARDED TO WORKSHOP</option><option value="STOCK_SENT_TO_HO">STOCK SENT TO HO</option><option value="STOCK_RECEIVED">STOCK RECEIVED</option><option value="FORWARDED_TO_HO">FORWARDED TO HO</option></select><select id="groupFilter"><option value="ALL">ALL PRODUCT GROUPS</option></select><select id="branchFilter"><option value="ALL">ALL BRANCHES</option></select></div>
+    <div class="table-scroll"><table><thead><tr><th>SL NO</th><th>ESTIMATION NO.</th><th>ORDER NO.</th><th>ORDER DATE</th><th>PARTY NAME</th><th>PRODUCT GROUP</th><th>WORKSHOP / BRANCH</th><th>STATUS</th></tr></thead><tbody id="ordersBody"></tbody></table></div>
+  </section>
+
+  <section class="grid-2">
+    <section class="card">
+      <div class="card-head"><div><h2>ORDERS FORWARDED TO WORKSHOP</h2><p>Currently pending with workshops.</p></div></div>
+      <div class="table-scroll"><table><thead><tr><th>ORDER NO.</th><th>PARTY</th><th>GROUP</th><th>BRANCH</th><th>DATE</th><th>ACTION</th></tr></thead><tbody id="forwardedBody"></tbody></table></div>
+    </section>
+    <section class="card">
+      <div class="card-head"><div><h2>STOCK RECEIVED FROM WORKSHOP</h2><p>Orders marked as received.</p></div></div>
+      <div class="table-scroll"><table><thead><tr><th>ORDER NO.</th><th>PARTY</th><th>GROUP</th><th>BRANCH</th><th>RECEIVED / SENT</th><th>ACTION</th></tr></thead><tbody id="receivedBody"></tbody></table></div>
+    </section>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><div><h2>PENDING ORDERS — BRANCH WISE & PRODUCT GROUP WISE</h2><p>Only orders currently pending at a workshop are included.</p></div></div>
+    <div class="branch-grid" id="branchGrid"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><div><h2>PARTY WISE PENDING ORDERS</h2><p>Party name is the heading; click an order number for complete details.</p></div></div>
+    <div id="partyPending"></div>
+  </section>
+</main>
+
+<div class="modal hidden" id="orderModal">
+  <div class="modal-window">
+    <button class="modal-close" id="closeModal">×</button>
+    <div id="orderDetails"></div>
+  </div>
+</div>
+
+<script src="dashboard.js"></script>
+</body>
+</html>
