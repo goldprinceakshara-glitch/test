@@ -298,9 +298,8 @@ td code{font-family:'Courier New',monospace;background:#f7f1f4;padding:.15rem .4
   /* API base: API_URL from /config.js (Railway). If empty: same origin, or localhost:4000 in local dev. */
   window.GP_API_BASE = window.GP_API_BASE || (
     (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-      && location.port !== '4000'
-        ? 'http://localhost:4000'
-        : ''
+      ? 'http://localhost:4000'
+      : (location.hostname.endsWith('.github.io') ? 'https://test-production-313c31af.up.railway.app' : '')
   );
 </script>
 
@@ -376,7 +375,9 @@ var GP_API = {
           loginAt: (cached.loginAt || Date.now())
         }));
       } catch (e) {}
-    }).catch(function () { logoutRedirect(); });
+    }).catch(function (err) {
+      if (err && (err.status === 401 || err.status === 403)) logoutRedirect();
+    });
   }
 
   if (!GP_API.getToken()) { logoutRedirect(); return; }
