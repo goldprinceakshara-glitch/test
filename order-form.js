@@ -1041,9 +1041,8 @@
       Object.keys(grp.sheetImages).forEach(function (sheetName) {
         var img = grp.sheetImages[sheetName];
         if (!img) return;
-        (grp.sheets[sheetName] || []).forEach(function (p) {
-          if (!p.image) p.image = img;
-        });
+        /* the uploaded sheet image always wins over a stale file path */
+        (grp.sheets[sheetName] || []).forEach(function (p) { p.image = img; });
       });
     }
     return grp;
@@ -1063,7 +1062,7 @@
     // --- 1. Shared snapshot ---
     var stored = _readJSON(CATALOGUE_KEY, null);
     if (stored && typeof stored === 'object' && Object.keys(stored).length) {
-      Object.keys(stored).forEach(function (g) { raw[g] = stored[g]; });
+      Object.keys(stored).forEach(function (g) { raw[g] = normaliseEditorGroup(stored[g]); });
       sources.push('localStorage:' + CATALOGUE_KEY);
     }
 
@@ -1090,11 +1089,11 @@
       });
       if (wrapped) {
         keys.forEach(function (g) {
-          if (!raw[g]) raw[g] = extra[g];
+          if (!raw[g]) raw[g] = normaliseEditorGroup(extra[g]);
         });
       } else if (extra.sheets) {
         var derived = k.toUpperCase().replace('GOLDPRINCE_CATALOGUE_', '').replace(/_/g, ' ');
-        if (!raw[derived]) raw[derived] = extra;
+        if (!raw[derived]) raw[derived] = normaliseEditorGroup(extra);
       }
       sources.push('localStorage:' + k);
     });
