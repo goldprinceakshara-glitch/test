@@ -45,6 +45,47 @@
   function safeFilePart(v) { return String(v || 'FILE').replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, ''); }
 
   /* ============================================================
+     IMAGE FALLBACK HELPER
+     ============================================================ */
+  function getImageFallbackList(originalPath) {
+    if (!originalPath) return [];
+    var path = String(originalPath).trim();
+    
+    // If it's a full URL or data URI, just return it
+    if (path.startsWith('http') || path.startsWith('data:')) return [path];
+    
+    var parts = path.split('/');
+    var filename = parts.pop();
+    var dir = parts.length ? parts.join('/') + '/' : '';
+    
+    // Generate variants (underscores instead of spaces, lowercase, etc.)
+    var variants = [
+      dir + filename,
+      dir + filename.replace(/ /g, '_'),
+      dir + filename.replace(/ /g, '-'),
+      dir + filename.toLowerCase(),
+      dir + filename.toLowerCase().replace(/ /g, '_')
+    ];
+    
+    // Remove duplicates
+    return variants.filter(function (v, i, self) { return self.indexOf(v) === i; });
+  }
+
+  function handleImageError(imgEl, fallbackList, idx) {
+    if (!imgEl) return;
+    idx = idx || 0;
+    if (idx < fallbackList.length) {
+      imgEl.src = fallbackList[idx];
+      imgEl.onerror = function () { handleImageError(imgEl, fallbackList, idx + 1); };
+    } else {
+      // All fallbacks failed, show missing placeholder
+      imgEl.style.display = 'none';
+      var missingEl = imgEl.parentElement.querySelector('.image-missing-placeholder');
+      if (missingEl) missingEl.style.display = 'flex';
+    }
+  }
+
+  /* ============================================================
      STORAGE KEYS
      ============================================================ */
   var PARTIES_KEY        = 'goldprince_parties';
@@ -452,47 +493,6 @@
   var activeReceived        = null;
 
   /* ============================================================
-     IMAGE FALLBACK HELPER
-     ============================================================ */
-  function getImageFallbackList(originalPath) {
-    if (!originalPath) return [];
-    var path = String(originalPath).trim();
-    
-    // If it's a full URL or data URI, just return it
-    if (path.startsWith('http') || path.startsWith('data:')) return [path];
-    
-    var parts = path.split('/');
-    var filename = parts.pop();
-    var dir = parts.length ? parts.join('/') + '/' : '';
-    
-    // Generate variants (underscores instead of spaces, lowercase, etc.)
-    var variants = [
-      dir + filename,
-      dir + filename.replace(/ /g, '_'),
-      dir + filename.replace(/ /g, '-'),
-      dir + filename.toLowerCase(),
-      dir + filename.toLowerCase().replace(/ /g, '_')
-    ];
-    
-    // Remove duplicates
-    return variants.filter(function (v, i, self) { return self.indexOf(v) === i; });
-  }
-
-  function handleImageError(imgEl, fallbackList, idx) {
-    if (!imgEl) return;
-    idx = idx || 0;
-    if (idx < fallbackList.length) {
-      imgEl.src = fallbackList[idx];
-      imgEl.onerror = function () { handleImageError(imgEl, fallbackList, idx + 1); };
-    } else {
-      // All fallbacks failed, show missing placeholder
-      imgEl.style.display = 'none';
-      var missingEl = imgEl.parentElement.querySelector('.image-missing-placeholder');
-      if (missingEl) missingEl.style.display = 'flex';
-    }
-  }
-
-  /* ============================================================
      RECEIVED ORDERS — indicator / render / detail
      ============================================================ */
   function refreshReceivedIndicator() {
@@ -682,9 +682,15 @@
          +  '</tr></thead><tbody>';
 
     rec.merged.forEach(function (x, i) {
-      var img = x.image
-        ? '<img src="' + escapeAttr(x.image) + '" class="preview-product-image" onerror="this.style.display=\'none\'">'
-        : '—';
+      var imgHtml = '—';
+      if (x.image) {
+        var fallbacks = getImageFallbackList(x.image);
+        imgHtml = '<img src="' + escapeAttr(fallbacks[0]) + '" class="preview-product-image" '
+                + 'onerror="if(!this.dataset.fbIdx){this.dataset.fbIdx=1;} '
+                + 'var list=' + escapeAttr(JSON.stringify(fallbacks)) + '; '
+                + 'if(this.dataset.fbIdx<list.length){this.src=list[this.dataset.fbIdx++];} '
+                + 'else{this.style.display=\'none\';}">';
+      }
       var qtyDiff = Number(x.sentQty) - Number(x.orderQty);
       var qtyCls  = qtyDiff === 0 ? 'diff-same' : (qtyDiff > 0 ? 'diff-up' : 'diff-down');
       html += '<tr>'
@@ -696,7 +702,7 @@
            +    '<td class="' + qtyCls + '"><b>' + formatNumber(x.sentQty) + '</b></td>'
            +    '<td>' + formatNumber2(x.weight) + '</td>'
            +    '<td><b>' + formatNumber2(x.sentTotal) + '</b></td>'
-           +    '<td>' + img + '</td>'
+           +    '<td>' + imgHtml + '</td>'
            +  '</tr>';
     });
 
@@ -946,11 +952,21 @@
       city:    p.city || ''
     };
   }
+
   function renderPartyList(filter) {
     if (!partyList) return;
     var q = String(filter || '').trim().toLowerCase();
     parties = loadParties();
+    
     var names = Object.keys(parties).filter(Boolean).sort(function (a, b) { return a.localeCompare(b); });
+    
+    // If no parties exist in storage at all
+    if (names.length === 0) {
+       partyList.innerHTML = '<div class="searchable-empty"><i class="fas fa-exclamation-triangle"></i> No parties found in Master. Please add parties in the Party Master screen.</div>';
+       partyList.classList.add('show');
+       return;
+    }
+
     var filtered = q
       ? names.filter(function (n) {
           var p = normParty(parties[n]);
@@ -961,10 +977,11 @@
       : names;
 
     if (!filtered.length) {
-      partyList.innerHTML = '<div class="searchable-empty"><i class="fas fa-search"></i> No matching parties. Add one in PARTY MASTER.</div>';
+      partyList.innerHTML = '<div class="searchable-empty"><i class="fas fa-search"></i> No matching parties. Try a different name.</div>';
       partyList.classList.add('show');
       return;
     }
+
     partyList.innerHTML = filtered.map(function (n, i) {
       var p = normParty(parties[n]);
       var meta = [p.cell, p.city].filter(Boolean).join(' · ');
@@ -974,12 +991,19 @@
            +   (meta ? '<span class="opt-meta">' + escapeHtml(meta) + '</span>' : '')
            + '</div>';
     }).join('');
+    
     partyList.classList.add('show');
     activePartyIndex = -1;
+    
+    // Use mousedown to prevent the input from blurring and hiding the list before the click registers
     partyList.querySelectorAll('.searchable-option').forEach(function (opt) {
-      opt.addEventListener('mousedown', function (e) { e.preventDefault(); selectParty(opt.dataset.name); });
+      opt.addEventListener('mousedown', function (e) { 
+        e.preventDefault(); 
+        selectParty(opt.dataset.name); 
+      });
     });
   }
+
   function selectParty(name) {
     if (!name) return;
     var p = normParty(parties[name] || {});
@@ -990,6 +1014,7 @@
     partyList.classList.remove('show');
     if (partyHelp) partyHelp.textContent = 'Selected: ' + name;
   }
+
   function clearParty() {
     partyInput.value = '';
     partyHidden.value = '';
@@ -999,24 +1024,62 @@
     if (partyHelp) partyHelp.textContent = 'Start typing to filter party names.';
     partyInput.focus();
   }
+
   function highlightPartyOption(opts) {
     opts.forEach(function (o, i) { o.classList.toggle('highlight', i === activePartyIndex); });
   }
+
+  // Wiring up the inputs
   if (partyInput) {
+    // Show on focus
     partyInput.addEventListener('focus', function () { renderPartyList(partyInput.value); });
+    // Filter on type
     partyInput.addEventListener('input', function () { renderPartyList(partyInput.value); });
+    
+    // Keyboard navigation
     partyInput.addEventListener('keydown', function (e) {
       var opts = partyList.querySelectorAll('.searchable-option');
-      if (e.key === 'ArrowDown') { e.preventDefault(); activePartyIndex = Math.min(activePartyIndex + 1, opts.length - 1); highlightPartyOption(opts); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); activePartyIndex = Math.max(activePartyIndex - 1, 0); highlightPartyOption(opts); }
-      else if (e.key === 'Enter') { if (activePartyIndex >= 0 && opts[activePartyIndex]) { e.preventDefault(); selectParty(opts[activePartyIndex].dataset.name); } }
-      else if (e.key === 'Escape') { partyList.classList.remove('show'); }
+      if (!opts.length) return;
+
+      if (e.key === 'ArrowDown') { 
+        e.preventDefault(); 
+        activePartyIndex = Math.min(activePartyIndex + 1, opts.length - 1); 
+        highlightPartyOption(opts); 
+      }
+      else if (e.key === 'ArrowUp') { 
+        e.preventDefault(); 
+        activePartyIndex = Math.max(activePartyIndex - 1, 0); 
+        highlightPartyOption(opts); 
+      }
+      else if (e.key === 'Enter') { 
+        if (activePartyIndex >= 0 && opts[activePartyIndex]) { 
+          e.preventDefault(); 
+          selectParty(opts[activePartyIndex].dataset.name); 
+        } 
+      }
+      else if (e.key === 'Escape') { 
+        partyList.classList.remove('show'); 
+      }
     });
-    partyInput.addEventListener('blur', function () { setTimeout(function () { partyList.classList.remove('show'); }, 150); });
+
+    // Hide when clicking outside
+    partyInput.addEventListener('blur', function () { 
+      setTimeout(function () { partyList.classList.remove('show'); }, 150); 
+    });
   }
-  if (partyClearBtn) partyClearBtn.addEventListener('click', clearParty);
+
+  if (partyClearBtn) {
+    partyClearBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      clearParty();
+    });
+  }
+
+  // Hide when clicking anywhere else on the document
   document.addEventListener('click', function (e) {
-    if (partySearchWrap && !partySearchWrap.contains(e.target)) partyList.classList.remove('show');
+    if (partySearchWrap && !partySearchWrap.contains(e.target)) {
+      partyList.classList.remove('show');
+    }
   });
 
   /* ============================================================
@@ -2612,6 +2675,9 @@
       if (partTotal <= 0) {
         return { ok: false, msg: 'Part ' + (p + 1) + ' is empty. Give it at least 1 piece.' };
       }
+      if (!pendingSplitPartWorkshops[p]) {
+        return { ok: false, msg: 'Part ' + (p + 1) + ': please select a workshop.' };
+      }
     }
 
     for (var j = 0; j < arts.length; j++) {
@@ -2627,4 +2693,171 @@
     return { ok: true, msg: '✓ Quantities match the order total.' };
   }
 
-  // ... [rest of the file remains the same, the image fix is applied above] ...
+  function resetPendingSplitState() {
+    var count = getPendingSplitCount();
+    pendingSplitParts = [];
+    pendingSplitPartWorkshops = [];
+
+    if (count <= 1) {
+      renderPendingSplitUI();
+      return;
+    }
+
+    var order = getPendingOrderById(pendingSelectedId);
+    if (!order) { renderPendingSplitUI(); return; }
+
+    for (var p = 0; p < count; p++) {
+      var part = { quantities: {} };
+      (order.items || []).forEach(function (it) {
+        part.quantities[String(it.artNo)] = 0;
+      });
+      pendingSplitParts.push(part);
+      pendingSplitPartWorkshops.push('');
+    }
+    autoSplitPendingByQty();
+  }
+
+  function renderPendingSplitUI() {
+    var panel = $id('ptbSplitConfigPanel');
+    var wrap  = $id('ptbSplitPartsWrap');
+    var hint  = $id('ptbSplitConfigHint');
+    var msgEl = $id('ptbSplitValidationMsg');
+    if (!panel || !wrap) return;
+
+    var count = pendingSplitParts.length;
+    if (count <= 1) {
+      panel.classList.add('hidden');
+      if (msgEl) { msgEl.textContent = ''; msgEl.className = 'split-validation-msg'; }
+      return;
+    }
+    panel.classList.remove('hidden');
+    if (hint) hint.textContent = 'Assign quantities per art number to ' + count + ' parts. Set a workshop for each part.';
+
+    var order = getPendingOrderById(pendingSelectedId);
+    if (!order) { wrap.innerHTML = '<div class="empty-list">No order loaded.</div>'; return; }
+    var items = order.items || [];
+    var seen = {};
+    var arts = [];
+    items.forEach(function (it) {
+      var k = String(it.artNo);
+      if (!seen[k]) { seen[k] = true; arts.push({ artNo: k, name: it.name, totalQty: 0 }); }
+      arts[arts.length - 1].totalQty += Number(it.quantity || 0);
+    });
+    var totals = eachPendingItemTotalQty(order);
+    arts.forEach(function (a) { a.totalQty = totals[a.artNo] || 0; });
+
+    var workshopOptions = ['', 'Kalimatha', 'Gomatha', 'Ambhaji', 'Vanisri', 'Vishal', 'GPWB'];
+
+    var html = '';
+    for (var p = 0; p < count; p++) {
+      var part = pendingSplitParts[p];
+      var partTotalQty = 0;
+      var rowsHtml = '';
+
+      arts.forEach(function (a) {
+        var q = Number(part.quantities[a.artNo] || 0);
+        partTotalQty += q;
+        var inputValue = (q > 0) ? String(q) : '';
+        var inputCls   = (q > 0) ? ' has-qty' : '';
+        rowsHtml += '<div class="split-part-row">'
+                 +    '<span class="sp-name" title="' + escapeAttr(a.name) + '">'
+                 +      escapeHtml(a.artNo) + ' — ' + escapeHtml(a.name)
+                 +      ' <small>(' + a.totalQty + ' total)</small>'
+                 +    '</span>'
+                 +    '<input type="number" min="0" step="1" placeholder="0" class="' + inputCls.trim() + '" '
+                 +           'data-part="' + p + '" data-art="' + escapeAttr(a.artNo) + '" value="' + inputValue + '">'
+                 +  '</div>';
+      });
+
+      var currentWs = pendingSplitPartWorkshops[p] || '';
+      var wsOpts = workshopOptions.map(function (w) {
+        var label = w ? w : '-- select workshop --';
+        return '<option value="' + escapeAttr(w) + '"'
+             + (w === currentWs ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+      }).join('');
+
+      html += '<div class="split-part">'
+           +    '<div class="split-part-head">'
+           +      '<span class="split-part-title"><i class="fas fa-cube"></i> Part ' + (p + 1) + '</span>'
+           +      '<span class="split-part-total">Qty: <b>' + partTotalQty + '</b></span>'
+           +    '</div>'
+           +    '<label class="split-part-workshop">Workshop'
+           +      '<select data-part-ws="' + p + '">' + wsOpts + '</select>'
+           +    '</label>'
+           +    '<div class="split-part-rows">' + rowsHtml + '</div>'
+           +  '</div>';
+    }
+
+    wrap.innerHTML = html;
+
+    wrap.querySelectorAll('input[data-part][data-art]').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        var p = Number(inp.dataset.part);
+        var art = inp.dataset.art;
+        var raw = inp.value.trim();
+        var v = raw === '' ? 0 : Math.max(0, Math.floor(Number(raw) || 0));
+        pendingSplitParts[p].quantities[art] = v;
+        inp.classList.toggle('has-qty', v > 0);
+
+        var partBox = inp.closest('.split-part');
+        if (partBox) {
+          var tot = 0;
+          Object.keys(pendingSplitParts[p].quantities).forEach(function (k) {
+            tot += Number(pendingSplitParts[p].quantities[k] || 0);
+          });
+          var totEl = partBox.querySelector('.split-part-total b');
+          if (totEl) totEl.textContent = tot;
+        }
+        var val = validatePendingSplit();
+        if (msgEl) {
+          msgEl.textContent = val.msg;
+          msgEl.className = 'split-validation-msg ' + (val.ok ? 'ok' : 'err');
+        }
+        renderPendingSplitValidationHighlights();
+      });
+      inp.addEventListener('blur', function () {
+        var v = Number(inp.value || 0);
+        if (v === 0) inp.value = '';
+      });
+    });
+
+    wrap.querySelectorAll('select[data-part-ws]').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        var p = Number(sel.dataset.partWs);
+        pendingSplitPartWorkshops[p] = sel.value || '';
+        var val = validatePendingSplit();
+        if (msgEl) {
+          msgEl.textContent = val.msg;
+          msgEl.className = 'split-validation-msg ' + (val.ok ? 'ok' : 'err');
+        }
+      });
+    });
+
+    var v0 = validatePendingSplit();
+    if (msgEl) {
+      msgEl.textContent = v0.msg;
+      msgEl.className = 'split-validation-msg ' + (v0.ok ? 'ok' : 'err');
+    }
+    renderPendingSplitValidationHighlights();
+  }
+
+  function renderPendingSplitValidationHighlights() {
+    var wrap = $id('ptbSplitPartsWrap');
+    var order = getPendingOrderById(pendingSelectedId);
+    if (!wrap || !order || pendingSplitParts.length <= 1) return;
+    var totals = eachPendingItemTotalQty(order);
+    var sumPerArt = {};
+    Object.keys(totals).forEach(function (a) { sumPerArt[a] = 0; });
+    pendingSplitParts.forEach(function (part) {
+      Object.keys(part.quantities).forEach(function (a) {
+        sumPerArt[a] = (sumPerArt[a] || 0) + Number(part.quantities[a] || 0);
+      });
+    });
+    wrap.querySelectorAll('input[data-part][data-art]').forEach(function (inp) {
+      var a = inp.dataset.art;
+      var over = sumPerArt[a] > (totals[a] || 0);
+      inp.classList.toggle('invalid', over);
+    });
+  }
+
+  /* (Pending split count + transfer helpers, pending render...) */
