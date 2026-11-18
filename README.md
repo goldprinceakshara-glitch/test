@@ -14,15 +14,6 @@ Pages logins need the Railway service reachable; CORS defaults to `*`, or set `C
 
 The two-service layout below (separate `api` and `ui`) still works too.
 
-## Shared data (v2.2)
-
-Orders, parties, catalogue, designs, stock in/out/return and stone stock used to live only in each browser's `localStorage`.
-`ui/public/gp-sync.js` (loaded in every page after `config.js`) now mirrors those keys to the `app_data` table via
-`GET /api/data`, `PUT /api/data/:key`, `DELETE /api/data/:key` (login required), so every browser sees the same data.
-- First time a browser syncs, data that exists only in that browser is uploaded.
-- Last write wins per key. Login/session keys, device approvals, chat and `gp_telegram_config` stay per-browser.
-- If the login expires, a red banner asks the user to log in again; unsent changes are kept and re-sent.
-
 ---
 
 Three pieces, all deployed on Railway from this one GitHub repo:

@@ -47,7 +47,7 @@ function proxyApi(req, res, pathAndQuery) {
   const json = (code, obj) => send(res, code, JSON.stringify(obj), { 'Content-Type':'application/json; charset=utf-8', 'Cache-Control':'no-store' });
   if (!API_URL) return json(502, { error:'API_URL is not set on the ui service. Set it to the API address (https://<api-domain>) and redeploy.' });
   const chunks = []; let size = 0, tooBig = false;
-  req.on('data', c => { size += c.length; if (size > 30 * 1024 * 1024) { tooBig = true; req.destroy(); } else chunks.push(c); });
+  req.on('data', c => { size += c.length; if (size > 2 * 1024 * 1024) { tooBig = true; req.destroy(); } else chunks.push(c); });
   req.on('error', () => {});
   req.on('end', async () => {
     if (tooBig) return json(413, { error:'Request too large' });

@@ -367,8 +367,6 @@ header h1 i{color:var(--brand)}
   .admin-phone-row button{flex:1}
 }
 </style>
-<script src="config.js"></script>
-<script src="gp-sync.js"></script>
 </head>
 <body>
 <div class="container">
@@ -477,32 +475,6 @@ header h1 i{color:var(--brand)}
   </div>
 </div>
 
-<!-- ============ API ============ -->
-<script src="config.js"></script>
-<script>
-window.GP_API_BASE = window.GP_API_BASE || (
-  (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-    ? 'http://localhost:4000'
-    : (location.hostname.endsWith('.github.io') ? 'https://test-production-c614995e.up.railway.app' : '')
-);
-var GP_API = {
-  base: window.GP_API_BASE,
-  token: function () { try { return localStorage.getItem('gp_jwt') || ''; } catch (e) { return ''; } },
-  req: function (path, opts) {
-    opts = opts || {};
-    var h = { 'Content-Type': 'application/json' };
-    if (this.token()) h.Authorization = 'Bearer ' + this.token();
-    return fetch(this.base + path, { method: opts.method || 'GET', headers: h,
-      body: opts.body ? JSON.stringify(opts.body) : undefined }).then(function (r) {
-      return r.json().catch(function () { return {}; }).then(function (d) {
-        if (!r.ok) { var e = new Error((d && d.error) || r.statusText); e.status = r.status; throw e; }
-        return d;
-      });
-    });
-  }
-};
-</script>
-
 <!-- ============ PROTECTION SCRIPT ============ -->
 <script>
 (function () {
@@ -590,19 +562,30 @@ function approveDeviceLocally(username, fingerprint) {
 })();
 
 function refreshStats() {
-  GP_API.req('/api/accounts').then(function (d) {
-    var all = d.accounts || [];
-    function n(f) { return all.filter(f).length; }
-    var ppRoles = ['stock_jama_incharge','plating_polish','packing','qc_section','dispatch_section'];
-    document.getElementById('totalCount').textContent          = all.length;
-    document.getElementById('adminCount').textContent          = n(function (u) { return u.role === 'admin'; });
-    document.getElementById('userCount').textContent           = n(function (u) { return u.role === 'user'; });
-    document.getElementById('workshopCount').textContent       = n(function (u) { return u.role === 'workshop'; });
-    document.getElementById('developerCount').textContent      = n(function (u) { return u.role === 'developer'; });
-    document.getElementById('branchInchargeCount').textContent = n(function (u) { return u.role === 'branch_incharge'; });
-    document.getElementById('designerCount').textContent       = n(function (u) { return u.role === 'designer' || u.role === 'cad_designer'; });
-    document.getElementById('postProdCount').textContent       = n(function (u) { return ppRoles.indexOf(u.role) !== -1; });
-  }).catch(function () {});
+  var core      = getCoreUsers();
+  var designers = getDesignerUsers();
+  var cad       = getCadDesigners();
+  var pp        = getPostProdUsers();
+
+  var adminCount     = core.filter(function (u) { return u && u.role === 'admin'; }).length;
+  var userCount      = core.filter(function (u) { return u && u.role === 'user'; }).length;
+  var workshopCount  = core.filter(function (u) { return u && u.role === 'workshop'; }).length;
+  var developerCount = core.filter(function (u) { return u && u.role === 'developer'; }).length;
+  var branchCount    = core.filter(function (u) { return u && u.role === 'branch_incharge'; }).length;
+
+  var designerCount  = designers.length + cad.length;
+  var postProdCount  = pp.length;
+
+  var totalCount = core.length + designers.length + cad.length + pp.length;
+
+  document.getElementById('totalCount').textContent          = totalCount;
+  document.getElementById('adminCount').textContent          = adminCount;
+  document.getElementById('userCount').textContent           = userCount;
+  document.getElementById('workshopCount').textContent       = workshopCount;
+  document.getElementById('developerCount').textContent      = developerCount;
+  document.getElementById('branchInchargeCount').textContent = branchCount;
+  document.getElementById('designerCount').textContent       = designerCount;
+  document.getElementById('postProdCount').textContent       = postProdCount;
 }
 
 /* ============================================================
@@ -764,64 +747,71 @@ function formatTime(ts) {
 }
 
 function renderPendingRequests() {
+  var list = getPendingRequests().filter(function(r){ return r.status === 'pending'; });
   var container = document.getElementById('pendingList');
   var countEl = document.getElementById('pendingCount');
-  GP_API.req('/api/device-requests').then(function (d) {
-    var list = (d.requests || []).filter(function (r) { return r.status === 'pending'; });
-    countEl.textContent = list.length ? ('(' + list.length + ' pending)') : '';
-    if (!list.length) {
-      container.innerHTML = '<div class="pending-empty"><i class="fas fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:.4rem;"></i> No pending device login requests.</div>';
-      return;
-    }
-    var html = '';
-    list.forEach(function (r) {
-      var roleTag = (r.role === 'admin')
-        ? ' <span style="background:#fcefe0;color:#b8901c;padding:.1rem .45rem;border-radius:.4rem;font-size:.7rem;font-weight:700;letter-spacing:.4px;">ADMIN</span>' : '';
-      html += ''
-        + '<div class="pending-item" data-id="' + escapeHtml(r.id) + '">'
-        +   '<div class="info">'
-        +     '<h4><i class="fas fa-user-clock"></i> ' + escapeHtml(r.username) + roleTag + ' <span style="color:var(--muted);font-weight:400;font-size:.8rem">(' + escapeHtml(r.role) + (r.branch ? ' \u00b7 ' + escapeHtml(r.branch) : '') + ')</span></h4>'
-        +     '<p>First-time device login needs approval.</p>'
-        +     '<div class="otp-box">OTP: ' + escapeHtml(r.otp) + '</div>'
-        +     '<div class="meta"><i class="fas fa-desktop"></i> ' + escapeHtml(r.deviceId) + ' \u00b7 <i class="fas fa-clock"></i> ' + escapeHtml(formatTime(r.requestedAt)) + '</div>'
-        +   '</div>'
-        +   '<div class="actions">'
-        +     '<button class="btn-approve" data-action="approve" data-id="' + escapeHtml(r.id) + '"><i class="fas fa-check"></i> Approve</button>'
-        +     '<button class="btn-reject"  data-action="reject"  data-id="' + escapeHtml(r.id) + '"><i class="fas fa-times"></i> Reject</button>'
-        +   '</div>'
-        + '</div>';
+  countEl.textContent = list.length ? ('(' + list.length + ' pending)') : '';
+
+  if (!list.length) {
+    container.innerHTML = '<div class="pending-empty"><i class="fas fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:.4rem;"></i> No pending device login requests.</div>';
+    return;
+  }
+
+  var html = '';
+  list.forEach(function (r) {
+    var roleTag = (r.role === 'admin')
+      ? ' <span style="background:#fcefe0;color:#b8901c;padding:.1rem .45rem;border-radius:.4rem;font-size:.7rem;font-weight:700;letter-spacing:.4px;">ADMIN</span>'
+      : '';
+    html += ''
+      + '<div class="pending-item" data-id="' + escapeHtml(r.id) + '">'
+      +   '<div class="info">'
+      +     '<h4><i class="fas fa-user-clock"></i> ' + escapeHtml(r.username) + roleTag + ' <span style="color:var(--muted);font-weight:400;font-size:.8rem">(' + escapeHtml(r.role) + (r.branch ? ' · ' + escapeHtml(r.branch) : '') + ')</span></h4>'
+      +     '<p>First-time device login request. OTP was sent to admin mobile <strong>' + escapeHtml(r.adminMobile || '') + '</strong>.</p>'
+      +     '<div class="otp-box">OTP: ' + escapeHtml(r.otp) + '</div>'
+      +     '<div class="meta"><i class="fas fa-desktop"></i> ' + escapeHtml(r.deviceId) + ' · <i class="fas fa-clock"></i> ' + escapeHtml(formatTime(r.requestedAt)) + '</div>'
+      +   '</div>'
+      +   '<div class="actions">'
+      +     '<button class="btn-approve" data-action="approve" data-id="' + escapeHtml(r.id) + '"><i class="fas fa-check"></i> Approve</button>'
+      +     '<button class="btn-reject"  data-action="reject"  data-id="' + escapeHtml(r.id) + '"><i class="fas fa-times"></i> Reject</button>'
+      +   '</div>'
+      + '</div>';
+  });
+  container.innerHTML = html;
+
+  container.querySelectorAll('button[data-action]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-id');
+      var action = btn.getAttribute('data-action');
+      var all = getPendingRequests();
+      var found = null;
+      for (var i = 0; i < all.length; i++) { if (all[i].id === id) { found = all[i]; break; } }
+      if (!found) return;
+
+      if (action === 'approve') {
+        if (!confirm('Approve device login for "' + found.username + '"?')) return;
+        found.status = 'approved';
+        found.approvedAt = Date.now();
+        approveDeviceLocally(found.username, found.deviceId);
+      } else if (action === 'reject') {
+        if (!confirm('Reject device login for "' + found.username + '"?')) return;
+        found.status = 'rejected';
+        found.rejectedAt = Date.now();
+      }
+      savePendingRequests(all);
+      renderPendingRequests();
     });
-    container.innerHTML = html;
-    container.querySelectorAll('button[data-action]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var id = btn.getAttribute('data-id'), action = btn.getAttribute('data-action');
-        var who = btn.closest('.pending-item').querySelector('h4').textContent.trim();
-        if (!confirm((action === 'approve' ? 'Approve' : 'Reject') + ' device login for "' + who + '"?')) return;
-        btn.disabled = true;
-        GP_API.req('/api/device-requests/' + encodeURIComponent(id) + '/' + action, { method: 'POST' })
-          .then(renderPendingRequests)
-          .catch(function (e) { alert('Could not ' + action + ': ' + e.message); btn.disabled = false; });
-      });
-    });
-  }).catch(function (e) {
-    if (e.status === 401 || e.status === 403) {
-      container.innerHTML = '<div class="pending-empty">Session expired. Please <a href="index.html">log in again</a>.</div>';
-    } else {
-      container.innerHTML = '<div class="pending-empty">Cannot reach the server (' + escapeHtml(e.message) + ').</div>';
-    }
   });
 }
 
 (function loadAdminPhone(){
   var inp = document.getElementById('adminPhoneInput');
-  GP_API.req('/api/settings/admin-mobile').then(function (d) { inp.value = d.adminMobile || ''; }).catch(function () {});
+  inp.value = localStorage.getItem(ADMIN_PHONE_KEY) || '+91 99299 92299';
 })();
 document.getElementById('saveAdminPhoneBtn').addEventListener('click', function () {
   var v = document.getElementById('adminPhoneInput').value.trim();
   if (!v) { alert('Please enter a valid mobile number.'); return; }
-  GP_API.req('/api/settings/admin-mobile', { method: 'PUT', body: { adminMobile: v } })
-    .then(function () { alert('Admin OTP mobile saved: ' + v); })
-    .catch(function (e) { alert('Could not save: ' + e.message); });
+  localStorage.setItem(ADMIN_PHONE_KEY, v);
+  alert('Admin OTP mobile saved: ' + v);
 });
 
 document.getElementById('logoutBtn').addEventListener('click', function () {
@@ -845,8 +835,7 @@ renderPendingRequests();
 renderStoneAlert();
 window.addEventListener('focus', function () { refreshStats(); renderPendingRequests(); renderStoneAlert(); });
 window.addEventListener('storage', function () { refreshStats(); renderPendingRequests(); renderStoneAlert(); });
-setInterval(function () { renderPendingRequests(); renderStoneAlert(); }, 4000);
-setInterval(refreshStats, 15000);
+setInterval(function () { refreshStats(); renderPendingRequests(); renderStoneAlert(); }, 3000);
 </script>
 
 <script>
