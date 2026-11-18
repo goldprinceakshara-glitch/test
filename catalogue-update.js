@@ -6,58 +6,47 @@ function load() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
   catch (e) { return {}; }
 }
-function isDataUrl(v) { return typeof v === "string" && v.indexOf("data:") === 0; }
-
-/* Copy of `data` that is safe to persist: the (large) sheet image lives ONCE in
-   sheetImages; rows only keep plain file paths. Duplicating a base64 image into
-   every row x 3 storage keys blew the localStorage quota, so the image silently
-   never reached the ORDER FORM. */
-function slimCopy() {
-  const c = clone(data);
-  Object.keys(c.sheets || {}).forEach(sn => {
-    (c.sheets[sn] || []).forEach(p => { if (isDataUrl(p.image)) p.image = ""; });
-  });
-  return c;
-}
-
 function save() {
   if (!data.sheetImages) data.sheetImages = {};
-  // keep in-memory rows free of base64 copies
-  Object.keys(data.sheets || {}).forEach(sn => {
-    (data.sheets[sn] || []).forEach(p => { if (isDataUrl(p.image)) p.image = ""; });
+  Object.entries(data.sheetImages).forEach(([sheetName, img]) => {
+    if (!img) return;
+    (data.sheets[sheetName] || []).forEach(p => { p.image = img; });
   });
-  const slim = slimCopy();
 
-  // 1. Editor's canonical copy
+  // 1. Save the editor's canonical copy (this is what ORDER FORM reads as overlay)
   const all = load();
-  all[GROUP] = slim;
+  all[GROUP] = data;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
   } catch (e) {
-    showToast("❌ Storage full or blocked (image too big?). Try a smaller image, or serve over http://", true);
-    return false;
+    showToast("❌ Storage full or blocked. Serve this page over http:// not file://", true);
+    return;
   }
 
-  // 2. Mirror into shared 'goldprince_catalogue'
+  // 2. Mirror this group into the shared 'goldprince_catalogue' key so
+  //    anything that reads only that key (older ORDER FORM builds, exports,
+  //    other tools) sees the latest data.
   try {
     var SHARED_KEY = 'goldprince_catalogue';
     var shared = {};
     try { shared = JSON.parse(localStorage.getItem(SHARED_KEY) || '{}') || {}; } catch (e2) { shared = {}; }
-    shared[GROUP] = slim;
+    shared[GROUP] = data;
     localStorage.setItem(SHARED_KEY, JSON.stringify(shared));
-  } catch (e3) { console.warn('[catalogue-update.js] mirror to goldprince_catalogue failed:', e3); }
+  } catch (e3) {
+    // non-fatal — overlay save already succeeded
+    console.warn('[catalogue-update.js] mirror to goldprince_catalogue failed:', e3);
+  }
 
-  // 3. Group-specific key
+  // 3. Also mirror to the group-specific key (belt & suspenders)
   try {
     var GRP_KEY = 'goldprince_catalogue_' + GROUP.replace(/\s+/g, '_');
     var only = {};
-    only[GROUP] = slim;
+    only[GROUP] = data;
     localStorage.setItem(GRP_KEY, JSON.stringify(only));
   } catch (e4) { /* non-fatal */ }
 
   const s = $("status");
   if (s) s.textContent = "Saved locally. ORDER FORM will read this data.";
-  return true;
 }
 let all = load();
 let data = all[GROUP] ? clone(all[GROUP]) : clone(INITIAL_CATALOGUE[GROUP]);
@@ -74,7 +63,7 @@ function getSheetImage(sheetName) {
 function setSheetImage(sheetName, dataUrl) {
   if (!data.sheetImages) data.sheetImages = {};
   data.sheetImages[sheetName] = dataUrl;
-  (data.sheets[sheetName] || []).forEach(p => { p.image = ""; });
+  (data.sheets[sheetName] || []).forEach(p => { p.image = dataUrl; });
 }
 function clearSheetImage(sheetName) {
   if (data.sheetImages) delete data.sheetImages[sheetName];
@@ -178,34 +167,11 @@ function handleSheetImageFile(file) {
   const sheet = $("sheet").value;
   const reader = new FileReader();
   reader.onload = e => {
-    // shrink to max 600px JPEG so it fits in localStorage
-    const img = new Image();
-    img.onload = () => {
-      let out = e.target.result;
-      try {
-        const max = 600;
-        const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
-        const w = Math.max(1, Math.round(img.naturalWidth * k));
-        const h = Math.max(1, Math.round(img.naturalHeight * k));
-        const c = document.createElement("canvas");
-        c.width = w; c.height = h;
-        const ctx = c.getContext("2d");
-        ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h);
-        ctx.drawImage(img, 0, 0, w, h);
-        out = c.toDataURL("image/jpeg", 0.8);
-      } catch (err) { /* keep original */ }
-      const prev = data.sheetImages[sheet];
-      setSheetImage(sheet, out);
-      if (save() === false) {
-        if (prev) data.sheetImages[sheet] = prev; else delete data.sheetImages[sheet];
-        return;
-      }
-      renderProducts();
-      renderSheetImagePanel();
-      showToast(`✅ Image successfully uploaded for sheet "${sheet}"`);
-    };
-    img.onerror = () => showToast("❌ Could not read that image", true);
-    img.src = e.target.result;
+    setSheetImage(sheet, e.target.result);
+    save();
+    renderProducts();
+    renderSheetImagePanel();
+    showToast(`✅ Image successfully uploaded for sheet "${sheet}"`);
   };
   reader.onerror = () => showToast("❌ Error reading image", true);
   reader.readAsDataURL(file);
@@ -233,7 +199,7 @@ function addProduct() {
     heightInch: "",
     sizeMm: "",
     weight: 0,
-    image: isDataUrl(sheetImg) ? "" : (sheetImg || "")
+    image: sheetImg || ""
   });
   save();
   renderProducts();

@@ -367,6 +367,8 @@ header h1 i{color:var(--brand)}
   .admin-phone-row button{flex:1}
 }
 </style>
+<script src="config.js"></script>
+<script src="gp-sync.js"></script>
 </head>
 <body>
 <div class="container">
@@ -481,7 +483,7 @@ header h1 i{color:var(--brand)}
 window.GP_API_BASE = window.GP_API_BASE || (
   (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
     ? 'http://localhost:4000'
-    : (location.hostname.endsWith('.github.io') ? 'https://test-production-313c31af.up.railway.app' : '')
+    : (location.hostname.endsWith('.github.io') ? 'https://test-production-c614995e.up.railway.app' : '')
 );
 var GP_API = {
   base: window.GP_API_BASE,
