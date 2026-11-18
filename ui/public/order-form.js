@@ -110,47 +110,6 @@
   }
 
   /* ============================================================
-     IMAGE FALLBACK HELPER
-     ============================================================ */
-  function getImageFallbackList(originalPath) {
-    if (!originalPath) return [];
-    var path = String(originalPath).trim();
-    
-    // If it's a full URL or data URI, just return it
-    if (path.startsWith('http') || path.startsWith('data:')) return [path];
-    
-    var parts = path.split('/');
-    var filename = parts.pop();
-    var dir = parts.length ? parts.join('/') + '/' : '';
-    
-    // Generate variants (underscores instead of spaces, lowercase, etc.)
-    var variants = [
-      dir + filename,
-      dir + filename.replace(/ /g, '_'),
-      dir + filename.replace(/ /g, '-'),
-      dir + filename.toLowerCase(),
-      dir + filename.toLowerCase().replace(/ /g, '_')
-    ];
-    
-    // Remove duplicates
-    return variants.filter(function (v, i, self) { return self.indexOf(v) === i; });
-  }
-
-  function handleImageError(imgEl, fallbackList, idx) {
-    if (!imgEl) return;
-    idx = idx || 0;
-    if (idx < fallbackList.length) {
-      imgEl.src = fallbackList[idx];
-      imgEl.onerror = function () { handleImageError(imgEl, fallbackList, idx + 1); };
-    } else {
-      // All fallbacks failed, show missing placeholder
-      imgEl.style.display = 'none';
-      var missingEl = imgEl.parentElement.querySelector('.image-missing-placeholder');
-      if (missingEl) missingEl.style.display = 'flex';
-    }
-  }
-
-  /* ============================================================
      RECEIVED ORDERS — data assembly
      ============================================================ */
   function mergeReceivedItems(order, info) {
@@ -493,6 +452,47 @@
   var activeReceived        = null;
 
   /* ============================================================
+     IMAGE FALLBACK HELPER
+     ============================================================ */
+  function getImageFallbackList(originalPath) {
+    if (!originalPath) return [];
+    var path = String(originalPath).trim();
+    
+    // If it's a full URL or data URI, just return it
+    if (path.startsWith('http') || path.startsWith('data:')) return [path];
+    
+    var parts = path.split('/');
+    var filename = parts.pop();
+    var dir = parts.length ? parts.join('/') + '/' : '';
+    
+    // Generate variants (underscores instead of spaces, lowercase, etc.)
+    var variants = [
+      dir + filename,
+      dir + filename.replace(/ /g, '_'),
+      dir + filename.replace(/ /g, '-'),
+      dir + filename.toLowerCase(),
+      dir + filename.toLowerCase().replace(/ /g, '_')
+    ];
+    
+    // Remove duplicates
+    return variants.filter(function (v, i, self) { return self.indexOf(v) === i; });
+  }
+
+  function handleImageError(imgEl, fallbackList, idx) {
+    if (!imgEl) return;
+    idx = idx || 0;
+    if (idx < fallbackList.length) {
+      imgEl.src = fallbackList[idx];
+      imgEl.onerror = function () { handleImageError(imgEl, fallbackList, idx + 1); };
+    } else {
+      // All fallbacks failed, show missing placeholder
+      imgEl.style.display = 'none';
+      var missingEl = imgEl.parentElement.querySelector('.image-missing-placeholder');
+      if (missingEl) missingEl.style.display = 'flex';
+    }
+  }
+
+  /* ============================================================
      RECEIVED ORDERS — indicator / render / detail
      ============================================================ */
   function refreshReceivedIndicator() {
@@ -682,15 +682,9 @@
          +  '</tr></thead><tbody>';
 
     rec.merged.forEach(function (x, i) {
-      var imgHtml = '—';
-      if (x.image) {
-        var fallbacks = getImageFallbackList(x.image);
-        imgHtml = '<img src="' + escapeAttr(fallbacks[0]) + '" class="preview-product-image" '
-                + 'onerror="if(!this.dataset.fbIdx){this.dataset.fbIdx=1;} '
-                + 'var list=' + escapeAttr(JSON.stringify(fallbacks)) + '; '
-                + 'if(this.dataset.fbIdx<list.length){this.src=list[this.dataset.fbIdx++];} '
-                + 'else{this.style.display=\'none\';}">';
-      }
+      var img = x.image
+        ? '<img src="' + escapeAttr(x.image) + '" class="preview-product-image" onerror="this.style.display=\'none\'">'
+        : '—';
       var qtyDiff = Number(x.sentQty) - Number(x.orderQty);
       var qtyCls  = qtyDiff === 0 ? 'diff-same' : (qtyDiff > 0 ? 'diff-up' : 'diff-down');
       html += '<tr>'
@@ -702,7 +696,7 @@
            +    '<td class="' + qtyCls + '"><b>' + formatNumber(x.sentQty) + '</b></td>'
            +    '<td>' + formatNumber2(x.weight) + '</td>'
            +    '<td><b>' + formatNumber2(x.sentTotal) + '</b></td>'
-           +    '<td>' + imgHtml + '</td>'
+           +    '<td>' + img + '</td>'
            +  '</tr>';
     });
 
