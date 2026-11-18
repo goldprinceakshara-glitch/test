@@ -205,6 +205,8 @@ td code{font-family:'Courier New',monospace;background:#f7f1f4;padding:.15rem .4
   .tab-btn{padding:.55rem .8rem;font-size:.76rem}
 }
 </style>
+<script src="config.js"></script>
+<script src="gp-sync.js"></script>
 </head>
 <body>
 <div class="container">
@@ -298,8 +300,9 @@ td code{font-family:'Courier New',monospace;background:#f7f1f4;padding:.15rem .4
   /* API base: API_URL from /config.js (Railway). If empty: same origin, or localhost:4000 in local dev. */
   window.GP_API_BASE = window.GP_API_BASE || (
     (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-      ? 'http://localhost:4000'
-      : (location.hostname.endsWith('.github.io') ? 'https://test-production-313c31af.up.railway.app' : '')
+      && location.port !== '4000'
+        ? 'http://localhost:4000'
+        : ''
   );
 </script>
 
@@ -346,8 +349,7 @@ var GP_API = {
 (function () {
   if (window.__GP_LOGGING_OUT__) return;
 
-  function logoutRedirect(reason) {
-    if (reason) { try { alert('Sent back to login. Reason: ' + reason); } catch (e) {} }
+  function logoutRedirect() {
     GP_API.setToken('');
     try { sessionStorage.clear(); } catch (e) {}
     window.location.replace('index.html?t=' + Date.now());
@@ -356,12 +358,12 @@ var GP_API = {
   function check() {
     var cached = null;
     try { cached = JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null'); } catch (e) {}
-    if (!cached || !cached.username) { logoutRedirect('no saved session (log in again)'); return; }
+    if (!cached || !cached.username) { logoutRedirect(); return; }
 
     GP_API.me().then(function (data) {
-      if (!data || !data.user) { logoutRedirect('server returned no user'); return; }
+      if (!data || !data.user) { logoutRedirect(); return; }
       if (data.user.role !== 'admin' && data.user.role !== 'developer') {
-        logoutRedirect('role is ' + data.user.role + ', admin/developer required'); return;
+        logoutRedirect(); return;
       }
       // keep the cache fresh
       try {
@@ -376,13 +378,10 @@ var GP_API = {
           loginAt: (cached.loginAt || Date.now())
         }));
       } catch (e) {}
-    }).catch(function (err) {
-      if (err && (err.status === 401 || err.status === 403)) logoutRedirect('server said ' + err.status + ': ' + (err.message || 'invalid login'));
-      else showToast('Cannot reach server: ' + ((err && err.message) || 'error'), 'error');
-    });
+    }).catch(function () { logoutRedirect(); });
   }
 
-  if (!GP_API.getToken()) { logoutRedirect('no login token saved in this browser (log in again from the login page)'); return; }
+  if (!GP_API.getToken()) { logoutRedirect(); return; }
   check();
   window.addEventListener('pageshow', check);
   document.addEventListener('visibilitychange', function () {
@@ -837,6 +836,3 @@ logoutBtn.addEventListener('click', function () {
 addBtnText.textContent = addLabelForTab(state.activeTab);
 loadAll();
 window.addEventListener('focus', loadAll);
-</script>
-</body>
-</html>

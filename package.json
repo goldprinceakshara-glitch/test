@@ -1,13 +1,20 @@
 {
-  "name": "gp-portal-ui",
-  "version": "2.0.0",
-  "description": "GP Portal UI — zero-dependency static server",
-  "main": "server.js",
+  "name": "gp-portal",
+  "version": "2.1.0",
+  "description": "GP Portal — API + UI served together from the repo root (single Railway service)",
+  "main": "api/server.js",
   "scripts": {
-    "start": "node server.js",
-    "check": "node --check server.js"
+    "start": "node api/server.js",
+    "check": "node --check api/server.js && node --check api/db.js"
   },
-  "engines": {
-    "node": ">=20"
-  }
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "pg": "^8.13.0"
+  },
+  "engines": { "node": ">=20" }
 }

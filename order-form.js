@@ -889,26 +889,11 @@
      PARTY SELECT
      ============================================================ */
   function loadParties() {
-    function toMap(v) {
-      var out = {};
-      if (!v) return out;
-      if (Array.isArray(v)) {
-        v.forEach(function (p) {
-          if (!p) return;
-          if (typeof p === 'string') { out[p] = {}; return; }
-          var n = p.name || p.partyName || p.party || p.Name || '';
-          if (n) out[String(n)] = p;
-        });
-      } else if (typeof v === 'object') {
-        Object.keys(v).forEach(function (k) { if (k) out[k] = v[k] || {}; });
-      }
-      return out;
-    }
-    var a = toMap(_readJSON(PARTIES_KEY, {}));
-    var b = toMap(_readJSON(PARTIES_LEGACY_KEY, {}));
+    var a = _readJSON(PARTIES_KEY, {}) || {};
+    var b = _readJSON(PARTIES_LEGACY_KEY, {}) || {};
     var merged = {};
-    Object.keys(b).forEach(function (k) { merged[k] = b[k]; });
-    Object.keys(a).forEach(function (k) { merged[k] = a[k]; });
+    Object.keys(b).forEach(function (k) { if (k) merged[k] = b[k]; });
+    Object.keys(a).forEach(function (k) { if (k) merged[k] = a[k]; });
     return merged;
   }
   function normParty(p) {
@@ -935,7 +920,7 @@
       : names;
 
     if (!filtered.length) {
-      partyList.innerHTML = '<div class="searchable-empty"><i class="fas fa-search"></i> ' + (names.length ? 'No matching parties.' : 'No parties saved yet.') + ' Add one in <a href="PARTYMASTER.html">PARTY MASTER</a>.</div>';
+      partyList.innerHTML = '<div class="searchable-empty"><i class="fas fa-search"></i> No matching parties. Add one in PARTY MASTER.</div>';
       partyList.classList.add('show');
       return;
     }
@@ -978,7 +963,6 @@
   }
   if (partyInput) {
     partyInput.addEventListener('focus', function () { renderPartyList(partyInput.value); });
-    partyInput.addEventListener('click', function () { renderPartyList(partyInput.value); });
     partyInput.addEventListener('input', function () { renderPartyList(partyInput.value); });
     partyInput.addEventListener('keydown', function (e) {
       var opts = partyList.querySelectorAll('.searchable-option');
@@ -1041,8 +1025,9 @@
       Object.keys(grp.sheetImages).forEach(function (sheetName) {
         var img = grp.sheetImages[sheetName];
         if (!img) return;
-        /* the uploaded sheet image always wins over a stale file path */
-        (grp.sheets[sheetName] || []).forEach(function (p) { p.image = img; });
+        (grp.sheets[sheetName] || []).forEach(function (p) {
+          if (!p.image) p.image = img;
+        });
       });
     }
     return grp;
@@ -1062,7 +1047,7 @@
     // --- 1. Shared snapshot ---
     var stored = _readJSON(CATALOGUE_KEY, null);
     if (stored && typeof stored === 'object' && Object.keys(stored).length) {
-      Object.keys(stored).forEach(function (g) { raw[g] = normaliseEditorGroup(stored[g]); });
+      Object.keys(stored).forEach(function (g) { raw[g] = stored[g]; });
       sources.push('localStorage:' + CATALOGUE_KEY);
     }
 
@@ -1089,11 +1074,11 @@
       });
       if (wrapped) {
         keys.forEach(function (g) {
-          if (!raw[g]) raw[g] = normaliseEditorGroup(extra[g]);
+          if (!raw[g]) raw[g] = extra[g];
         });
       } else if (extra.sheets) {
         var derived = k.toUpperCase().replace('GOLDPRINCE_CATALOGUE_', '').replace(/_/g, ' ');
-        if (!raw[derived]) raw[derived] = normaliseEditorGroup(extra);
+        if (!raw[derived]) raw[derived] = extra;
       }
       sources.push('localStorage:' + k);
     });

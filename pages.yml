@@ -1,7 +1,7 @@
 # Publishes ui/public to GitHub Pages (https://<user>.github.io/<repo>/).
 # Pages is static hosting, so the pages talk to the Railway app for login/accounts.
-# Optional: set the repo variable RAILWAY_URL (Settings -> Secrets and variables -> Actions -> Variables).
-# If it is not set, the default below is used.
+# Set the repo variable RAILWAY_URL (Settings -> Secrets and variables -> Actions -> Variables),
+# e.g. https://test-production-84f6ff68.up.railway.app   (a default is used if it is not set)
 name: Deploy to GitHub Pages
 on:
   push:
@@ -25,7 +25,7 @@ jobs:
       - name: Write config.js
         run: |
           URL="${{ vars.RAILWAY_URL }}"
-          URL="${URL:-https://test-production-c614995e.up.railway.app}"
+          URL="${URL:-https://test-production-84f6ff68.up.railway.app}"
           printf 'window.GP_API_BASE = "%s";\n' "${URL%/}" > ui/public/config.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

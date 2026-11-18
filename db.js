@@ -85,6 +85,14 @@ CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
   value TEXT
 );
+
+-- Shared app data (orders, parties, catalogue, stock, stone stock ...). One row per browser-storage key.
+CREATE TABLE IF NOT EXISTS app_data (
+  key        TEXT PRIMARY KEY,
+  value      TEXT NOT NULL,
+  updated_at BIGINT NOT NULL,
+  updated_by TEXT DEFAULT ''
+);
 `;
 
 async function initSchema() {
