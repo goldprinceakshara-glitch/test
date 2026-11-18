@@ -8,7 +8,6 @@
 <meta http-equiv="Expires" content="0">
 <title>Account Management · GP Portal</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<!-- PWA & Web App Icon Setup -->
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
@@ -40,7 +39,7 @@ body{
   background:
     radial-gradient(900px 500px at 100% 0%, #f5e6ed 0%, transparent 55%),
     radial-gradient(900px 600px at 0% 100%, #faf7f8 0%, transparent 55%),
-    linear-gradient(135deg, #fcf8f9 0%, #f8f6f7 50%, #f3eff1 550%);
+    linear-gradient(135deg, #fcf8f9 0%, #f8f6f7 50%, #f3eff1 100%);
   padding:2rem 1.5rem;
   color:var(--ink);
   position:relative;
@@ -82,14 +81,19 @@ header h1 i{color:var(--brand)}
 .panel h2{font-size:1.15rem;font-weight:600;margin-bottom:1.2rem;display:flex;align-items:center;gap:.6rem;color:var(--brand);letter-spacing:-.2px}
 .panel h2 i{color:var(--gold)}
 
-.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;flex-wrap:wrap;gap:.8rem}
+.toolbar{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:1.2rem;flex-wrap:wrap;gap:.8rem;
+}
+.toolbar .toolbar-right{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;min-width:0}
 
 .count-badge{
   background:rgba(212,175,55,.15);color:#8a6d0f;padding:.45rem 1rem;border-radius:2rem;
   font-size:.8rem;border:1px solid rgba(212,175,55,.45);font-weight:600;letter-spacing:.3px;
+  white-space:nowrap;
 }
 
-/* ---------- TABS ---------- */
+/* Tabs */
 .tabs{
   display:flex;gap:.4rem;flex-wrap:wrap;
   padding:.4rem;border-radius:1rem;
@@ -107,7 +111,6 @@ header h1 i{color:var(--brand)}
   background:linear-gradient(135deg,var(--brand),var(--brand-light));
   color:#fff;box-shadow:0 8px 18px -10px rgba(144,1,67,.65);
 }
-.tab-btn i{font-size:.9em}
 .tab-btn .tab-count{
   background:rgba(255,255,255,.6);color:var(--brand);
   font-size:.68rem;font-weight:800;padding:.05rem .45rem;border-radius:.5rem;
@@ -156,6 +159,17 @@ td code{font-family:'Courier New',monospace;background:#f7f1f4;padding:.15rem .4
 .empty-state{text-align:center;padding:3rem 1rem;color:var(--muted)}
 .empty-state i{font-size:3rem;margin-bottom:1rem;opacity:.35;color:var(--brand)}
 
+/* Error banner shown when API fails */
+.error-banner{
+  display:none;margin-bottom:1rem;padding:.9rem 1.1rem;border-radius:.9rem;
+  background:#fff1f4;border:1px solid #f7a0b2;color:#7a122c;font-size:.85rem;
+  line-height:1.5;
+}
+.error-banner.show{display:block}
+.error-banner strong{color:var(--danger)}
+.error-banner code{background:#fff;padding:.1rem .35rem;border-radius:.3rem;font-size:.78rem}
+
+/* ========== MODAL ========== */
 .modal-overlay{
   display:none;position:fixed;inset:0;background:rgba(43,10,28,.55);
   backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:1000;padding:1rem;
@@ -164,38 +178,66 @@ td code{font-family:'Courier New',monospace;background:#f7f1f4;padding:.15rem .4
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .modal{
   background:#fff;border:1px solid var(--card-border);border-radius:1.5rem;
-  padding:2rem;max-width:480px;width:100%;
+  max-width:480px;width:100%;
   box-shadow:0 30px 60px -20px rgba(144,1,67,.5);
   animation:popIn .25s ease;
   position:relative;
-  max-height:92vh;overflow-y:auto;
+  max-height:92vh;
+  display:flex;flex-direction:column;
+  overflow:hidden;
 }
 .modal::before{content:"";position:absolute;top:0;left:2rem;right:2rem;height:3px;border-radius:0 0 6px 6px;background:linear-gradient(90deg, var(--gold), var(--brand), var(--gold))}
 @keyframes popIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-scroll{
+  padding:2rem 2rem 1rem 2rem;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  flex:1 1 auto;
+  min-height:0;
+}
 .modal h3{font-size:1.15rem;font-weight:600;margin-bottom:1.5rem;display:flex;align-items:center;gap:.6rem;color:var(--brand)}
 .modal h3 i{color:var(--gold)}
 .modal .form-group{margin-bottom:1.1rem}
 .modal label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:.5rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.modal label .req{color:var(--danger);margin-left:.15rem}
 .modal input, .modal select{
   width:100%;padding:.9rem 1.1rem;background:#fdf5f8;
   border:1.5px solid rgba(144,1,67,.18);border-radius:.9rem;color:var(--ink);font-size:1rem;outline:none;
   transition:all .2s;
 }
 .modal input:focus, .modal select:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 4px rgba(144,1,67,.13)}
-.modal input:disabled{background:#f0e5eb;color:var(--muted);cursor:not-allowed}
-.modal-actions{display:flex;gap:.7rem;margin-top:1.5rem}
-.modal-actions .btn{flex:1;justify-content:center;padding:.85rem}
+.modal input:disabled, .modal select:disabled{background:#f0e5eb;color:var(--muted);cursor:not-allowed}
+.modal .field-error{color:var(--danger);font-size:.75rem;margin-top:.35rem;display:none}
+.modal .field-error.show{display:block}
+.modal input.invalid{border-color:var(--danger);background:#fff5f7}
 .modal .note{font-size:.74rem;color:var(--muted);line-height:1.5;margin-top:-.3rem;margin-bottom:.8rem}
+.modal-actions{
+  display:flex;gap:.7rem;padding:1rem 2rem 1.6rem 2rem;
+  background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,1) 30%);
+  position:sticky;bottom:0;
+}
+.modal-actions .btn{flex:1;justify-content:center;padding:.85rem}
 
+/* Toast */
 .toast{
   position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(120px);
   background:var(--brand);color:#fff;padding:1rem 1.5rem;border-radius:1rem;font-size:.9rem;font-weight:600;
   border-left:4px solid var(--gold);opacity:0;transition:all .3s cubic-bezier(.3,1.2,.5,1);
   z-index:2000;box-shadow:0 18px 36px -14px rgba(144,1,67,.7);
+  max-width:calc(100vw - 2rem);
 }
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.error{background:var(--danger);border-left-color:#fff}
 .toast.success{background:var(--brand);border-left-color:var(--gold)}
+
+/* Debug overlay */
+#debugBox{
+  position:fixed;top:8px;right:8px;z-index:3000;
+  background:rgba(0,0,0,.85);color:#fff;font-family:monospace;font-size:11px;
+  padding:8px 10px;border-radius:8px;max-width:340px;line-height:1.4;
+  display:none;word-break:break-all;
+}
+#debugBox.show{display:block}
 
 @media(max-width:600px){
   body{padding:1.2rem .9rem}
@@ -203,6 +245,8 @@ td code{font-family:'Courier New',monospace;background:#f7f1f4;padding:.15rem .4
   header h1{font-size:1.15rem}
   .panel{padding:1.4rem;border-radius:1.2rem}
   .tab-btn{padding:.55rem .8rem;font-size:.76rem}
+  .modal-scroll{padding:1.5rem 1.4rem .8rem 1.4rem}
+  .modal-actions{padding:.8rem 1.4rem 1.2rem 1.4rem}
 }
 </style>
 </head>
@@ -219,35 +263,23 @@ td code{font-family:'Courier New',monospace;background:#f7f1f4;padding:.15rem .4
   <div class="panel">
     <div class="toolbar">
       <h2><i class="fas fa-users-cog"></i> <span id="sectionTitle">Account Management</span></h2>
-      <div style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap">
+      <div class="toolbar-right">
         <span class="count-badge" id="countBadge">0 accounts</span>
         <button class="btn btn-primary" id="addBtn" type="button"><i class="fas fa-plus-circle"></i> <span id="addBtnText">Add Account</span></button>
       </div>
     </div>
 
     <div class="tabs" id="tabs">
-      <button class="tab-btn active" data-tab="core" type="button">
-        <i class="fas fa-shield-halved"></i> Admins / Developers / Branch <span class="tab-count" id="tabCountCore">0</span>
-      </button>
-      <button class="tab-btn" data-tab="user" type="button">
-        <i class="fas fa-user"></i> Users <span class="tab-count" id="tabCountUser">0</span>
-      </button>
-      <button class="tab-btn" data-tab="workshop" type="button">
-        <i class="fas fa-tools"></i> Workshops <span class="tab-count" id="tabCountWorkshop">0</span>
-      </button>
-      <button class="tab-btn" data-tab="designer" type="button">
-        <i class="fas fa-palette"></i> Designers <span class="tab-count" id="tabCountDesigner">0</span>
-      </button>
-      <button class="tab-btn" data-tab="cad_designer" type="button">
-        <i class="fas fa-drafting-compass"></i> CAD Designers <span class="tab-count" id="tabCountCad">0</span>
-      </button>
-      <button class="tab-btn" data-tab="pp" type="button">
-        <i class="fas fa-industry"></i> Post-Production <span class="tab-count" id="tabCountPP">0</span>
-      </button>
-      <button class="tab-btn" data-tab="stone" type="button">
-        <i class="fas fa-gem"></i> Stone Stock <span class="tab-count" id="tabCountStone">0</span>
-      </button>
+      <button class="tab-btn active" data-tab="core" type="button"><i class="fas fa-shield-halved"></i> Admins / Developers / Branch <span class="tab-count" id="tabCountCore">0</span></button>
+      <button class="tab-btn" data-tab="user" type="button"><i class="fas fa-user"></i> Users <span class="tab-count" id="tabCountUser">0</span></button>
+      <button class="tab-btn" data-tab="workshop" type="button"><i class="fas fa-tools"></i> Workshops <span class="tab-count" id="tabCountWorkshop">0</span></button>
+      <button class="tab-btn" data-tab="designer" type="button"><i class="fas fa-palette"></i> Designers <span class="tab-count" id="tabCountDesigner">0</span></button>
+      <button class="tab-btn" data-tab="cad_designer" type="button"><i class="fas fa-drafting-compass"></i> CAD Designers <span class="tab-count" id="tabCountCad">0</span></button>
+      <button class="tab-btn" data-tab="pp" type="button"><i class="fas fa-industry"></i> Post-Production <span class="tab-count" id="tabCountPP">0</span></button>
+      <button class="tab-btn" data-tab="stone" type="button"><i class="fas fa-gem"></i> Stone Stock <span class="tab-count" id="tabCountStone">0</span></button>
     </div>
+
+    <div class="error-banner" id="errorBanner"></div>
 
     <div class="table-wrap">
       <table>
@@ -261,27 +293,40 @@ td code{font-family:'Courier New',monospace;background:#f7f1f4;padding:.15rem .4
 
 <!-- ============ MODAL ============ -->
 <div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <h3 id="modalTitle"><i class="fas fa-plus-circle"></i> Add Account</h3>
-    <div class="form-group" id="roleGroup">
-      <label>Role</label>
-      <select id="modalRole"></select>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-scroll">
+      <h3 id="modalTitle"><i class="fas fa-plus-circle"></i> Add Account</h3>
+      <div class="form-group" id="roleGroup">
+        <label for="modalRole">Role</label>
+        <select id="modalRole"></select>
+      </div>
+      <div class="form-group" id="sectionGroup">
+        <label for="modalSection">Designer Section</label>
+        <select id="modalSection">
+          <option value="Designs Bank">Designs Bank</option>
+          <option value="cad-charge">CAD — Charge (Allot Designs)</option>
+          <option value="CAM">CAM Section</option>
+          <option value="Casting">Casting Section</option>
+          <option value="Samples">Samples Section</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="modalUsername">Username <span class="req" id="uReq">*</span></label>
+        <input type="text" id="modalUsername" autocomplete="off" placeholder="e.g. john123">
+        <div class="field-error" id="errUsername">Username is required (min 3 chars).</div>
+      </div>
+      <div class="form-group">
+        <label for="modalPassword">Password <span class="req" id="pReq">*</span></label>
+        <input type="text" id="modalPassword" autocomplete="off" placeholder="min 4 characters">
+        <div class="field-error" id="errPassword">Password is required (min 4 chars).</div>
+      </div>
+      <div class="form-group">
+        <label for="modalPhone">Mobile Number</label>
+        <input type="text" id="modalPhone" autocomplete="off" placeholder="+91 ...">
+      </div>
+      <div class="note" id="modalNote"></div>
     </div>
-    <div class="form-group" id="sectionGroup">
-      <label>Designer Section</label>
-      <select id="modalSection">
-        <option value="Designs Bank">Designs Bank</option>
-        <option value="cad-charge">CAD — Charge (Allot Designs)</option>
-        <option value="CAM">CAM Section</option>
-        <option value="Casting">Casting Section</option>
-        <option value="Samples">Samples Section</option>
-        <option value="Admin">Admin</option>
-      </select>
-    </div>
-    <div class="form-group"><label>Username</label><input type="text" id="modalUsername" autocomplete="off"></div>
-    <div class="form-group"><label>Password</label><input type="text" id="modalPassword" autocomplete="off"></div>
-    <div class="form-group"><label>Mobile Number</label><input type="text" id="modalPhone" autocomplete="off"></div>
-    <div class="note" id="modalNote"></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="cancelBtn" type="button">Cancel</button>
       <button class="btn btn-primary" id="saveBtn" type="button">Save</button>
@@ -290,23 +335,52 @@ td code{font-family:'Courier New',monospace;background:#f7f1f4;padding:.15rem .4
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="debugBox"></div>
 
-<!-- API base -->
-<!-- /config.js is generated by the UI server from the API_URL environment variable -->
-<script src="config.js"></script>
+<!-- API base resolution (robust) -->
+<script src="config.js" onerror="window.__CONFIG_MISSING__=true;"></script>
 <script>
-  /* API base: API_URL from /config.js (Railway). If empty: same origin, or localhost:4000 in local dev. */
-  window.GP_API_BASE = window.GP_API_BASE || (
-    (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-      && location.port !== '4000'
-        ? 'http://localhost:4000'
-        : ''
-  );
+/* Robust API base resolution.
+   Priority:
+   1) window.GP_API_BASE from config.js, if it's a non-empty, valid absolute URL
+   2) localhost dev → http://localhost:4000
+   3) same origin ('')
+*/
+(function () {
+  var raw = window.GP_API_BASE;
+  var base = '';
+  if (typeof raw === 'string') {
+    raw = raw.trim();
+    if (raw && raw !== 'undefined' && raw !== 'null') {
+      // ensure it parses as a URL; strip trailing slash
+      try {
+        var u = new URL(raw, location.href);
+        base = u.origin + (u.pathname.replace(/\/+$/, ''));
+      } catch (e) { base = raw.replace(/\/+$/, ''); }
+    }
+  }
+  if (!base) {
+    var isLocal = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+    var isFile  = (location.protocol === 'file:');
+    if (isLocal && location.port !== '4000') base = 'http://localhost:4000';
+    if (isFile) base = 'http://localhost:4000';
+  }
+  window.GP_API_BASE = base;
+
+  var wantDebug = /[?&]debug=1\b/.test(location.search);
+  if (wantDebug) {
+    var dbg = document.getElementById('debugBox');
+    dbg.classList.add('show');
+    dbg.innerHTML =
+      'API_BASE = <b>' + (window.GP_API_BASE || '(same origin)') + '</b><br>' +
+      'host     = ' + location.host + '<br>' +
+      'config.js = ' + (window.__CONFIG_MISSING__ ? '<span style="color:#ff8">MISSING</span>' : 'loaded');
+  }
+})();
 </script>
 
-<!-- ============ PROTECTION + API CLIENT ============ -->
 <script>
-/* ---------- API client ---------- */
+/* ========== API CLIENT ========== */
 var GP_API = {
   base: window.GP_API_BASE,
   tokenKey: 'gp_jwt',
@@ -320,11 +394,14 @@ var GP_API = {
     return fetch(this.base + path, {
       method: opts.method || 'GET',
       headers: headers,
-      body: opts.body ? JSON.stringify(opts.body) : undefined
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+      credentials: 'omit'
     }).then(function (r) {
-      return r.json().catch(function(){ return {}; }).then(function (data) {
+      return r.text().then(function (txt) {
+        var data = {};
+        try { data = txt ? JSON.parse(txt) : {}; } catch (e) { data = { raw: txt }; }
         if (!r.ok) {
-          var err = new Error((data && data.error) || r.statusText);
+          var err = new Error((data && data.error) || (r.status + ' ' + r.statusText));
           err.status = r.status; err.data = data; throw err;
         }
         return data;
@@ -337,13 +414,15 @@ var GP_API = {
     var q = new URLSearchParams(params || {}).toString();
     return this.req('/api/accounts' + (q ? '?' + q : ''));
   },
-  counts: function () { return this.req('/api/accounts/counts'); },
   createAccount: function (payload) { return this.req('/api/accounts', { method: 'POST', body: payload }); },
   updateAccount: function (id, payload) { return this.req('/api/accounts/' + id, { method: 'PUT', body: payload }); },
   deleteAccount: function (id) { return this.req('/api/accounts/' + id, { method: 'DELETE' }); }
 };
 
-/* ---------- Session guard (server-verified) ---------- */
+/* ========== SESSION GUARD ==========
+   Only redirect on a real auth failure (401 / 403 / no token).
+   Network errors do NOT redirect — they surface as an error banner.
+*/
 (function () {
   if (window.__GP_LOGGING_OUT__) return;
 
@@ -360,10 +439,7 @@ var GP_API = {
 
     GP_API.me().then(function (data) {
       if (!data || !data.user) { logoutRedirect(); return; }
-      if (data.user.role !== 'admin' && data.user.role !== 'developer') {
-        logoutRedirect(); return;
-      }
-      // keep the cache fresh
+      if (data.user.role !== 'admin' && data.user.role !== 'developer') { logoutRedirect(); return; }
       try {
         sessionStorage.setItem('gp_logged_user', JSON.stringify({
           username: data.user.username,
@@ -376,7 +452,11 @@ var GP_API = {
           loginAt: (cached.loginAt || Date.now())
         }));
       } catch (e) {}
-    }).catch(function () { logoutRedirect(); });
+    }).catch(function (err) {
+      // Only redirect if the server explicitly rejected us.
+      if (err && (err.status === 401 || err.status === 403)) logoutRedirect();
+      // Network errors: let the page render; loadAll() will show the banner.
+    });
   }
 
   if (!GP_API.getToken()) { logoutRedirect(); return; }
@@ -390,56 +470,35 @@ var GP_API = {
 </script>
 
 <script>
-/* ============================================================
-   LOGGED-IN USER
-   ============================================================ */
+/* ========== LOGGED-IN USER ========== */
 var CURRENT_USER = (function () {
   try { return JSON.parse(sessionStorage.getItem('gp_logged_user') || 'null') || {}; }
   catch (e) { return {}; }
 })();
 var IS_ADMIN = (CURRENT_USER.role === 'admin');
 
-/* ============================================================
-   ROLE METADATA (mirrors backend)
-   ============================================================ */
+/* ========== ROLE METADATA ========== */
 var ROLE_LABEL = {
-  admin:               'Admin',
-  developer:           'Developer',
-  branch_incharge:     'Branch Incharge',
-  user:                'User',
-  workshop:            'Workshop',
-  designer:            'Designer',
-  cad_designer:        'CAD Designer',
-  stock_jama_incharge: 'Stock Jama In-charge',
-  plating_polish:      'Plating / Polish',
-  packing:             'Packing',
-  qc_section:          'QC Section',
-  dispatch_section:    'Dispatch Section',
-  stone_stock:         'Stone Stock'
+  admin:'Admin', developer:'Developer', branch_incharge:'Branch Incharge',
+  user:'User', workshop:'Workshop', designer:'Designer', cad_designer:'CAD Designer',
+  stock_jama_incharge:'Stock Jama In-charge', plating_polish:'Plating / Polish',
+  packing:'Packing', qc_section:'QC Section', dispatch_section:'Dispatch Section',
+  stone_stock:'Stone Stock'
 };
 var ROLE_BADGE_CLASS = {
   admin:'badge-admin', developer:'badge-developer', branch_incharge:'badge-branch',
   user:'badge-user', workshop:'badge-workshop',
-  designer:'badge-designer', cad_designer:'badge-cad',
-  stone_stock:'badge-stone'
+  designer:'badge-designer', cad_designer:'badge-cad', stone_stock:'badge-stone'
 };
 var ROLE_ICON = {
   admin:'fa-crown', developer:'fa-code', branch_incharge:'fa-user-tie',
   user:'fa-user', workshop:'fa-tools',
-  designer:'fa-palette', cad_designer:'fa-drafting-compass',
-  stone_stock:'fa-gem'
+  designer:'fa-palette', cad_designer:'fa-drafting-compass', stone_stock:'fa-gem'
 };
+var DEVELOPER_FORBIDDEN_ROLES = ['admin','developer','branch_incharge','stone_stock'];
 
-var DEVELOPER_FORBIDDEN_ROLES = ['admin', 'developer', 'branch_incharge', 'stone_stock'];
-
-/* ============================================================
-   STATE
-   ============================================================ */
-var state = {
-  activeTab: 'core',
-  editing: null,     // { id, role }
-  accounts: []       // all accounts from server
-};
+/* ========== STATE ========== */
+var state = { activeTab:'core', editing:null, accounts:[] };
 
 var tableHead    = document.getElementById('tableHead');
 var tableBody    = document.getElementById('tableBody');
@@ -449,6 +508,7 @@ var addBtn       = document.getElementById('addBtn');
 var addBtnText   = document.getElementById('addBtnText');
 var sectionTitle = document.getElementById('sectionTitle');
 var tabsEl       = document.getElementById('tabs');
+var errorBanner  = document.getElementById('errorBanner');
 
 var tabCountEls = {
   core:         document.getElementById('tabCountCore'),
@@ -460,31 +520,25 @@ var tabCountEls = {
   stone:        document.getElementById('tabCountStone')
 };
 
-/* ============================================================
-   HELPERS
-   ============================================================ */
+/* ========== HELPERS ========== */
 function canSeeRole(role) {
   if (IS_ADMIN) return true;
   return DEVELOPER_FORBIDDEN_ROLES.indexOf(role) === -1;
 }
-
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
     return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
   });
 }
-
 function roleBadgeHtml(role) {
-  var cls  = ROLE_BADGE_CLASS[role] || ('badge-pp ' + role);
-  var icon = ROLE_ICON[role] || 'fa-circle';
+  var cls   = ROLE_BADGE_CLASS[role] || ('badge-pp ' + role);
+  var icon  = ROLE_ICON[role] || 'fa-circle';
   var label = ROLE_LABEL[role] || role;
   return '<span class="badge ' + cls + '"><i class="fas ' + icon + '"></i> ' + escapeHtml(label) + '</span>';
 }
-
 function isPPRole(role) {
   return ['stock_jama_incharge','plating_polish','packing','qc_section','dispatch_section'].indexOf(role) !== -1;
 }
-
 function addLabelForTab(tab) {
   if (tab === 'core')         return 'Add Account';
   if (tab === 'user')         return 'Add User';
@@ -495,7 +549,6 @@ function addLabelForTab(tab) {
   if (tab === 'stone')        return 'Add Stone Stock User';
   return 'Add';
 }
-
 function rowsForActiveTab() {
   var tab = state.activeTab;
   var out = state.accounts.filter(function (a) {
@@ -511,7 +564,6 @@ function rowsForActiveTab() {
   if (!IS_ADMIN) out = out.filter(function (a) { return canSeeRole(a.role); });
   return out;
 }
-
 function updateTabCounts() {
   var counts = { core:0, user:0, workshop:0, designer:0, cad_designer:0, pp:0, stone:0 };
   state.accounts.forEach(function (a) {
@@ -528,22 +580,19 @@ function updateTabCounts() {
   });
 }
 
-/* ============================================================
-   RENDER
-   ============================================================ */
+/* ========== RENDER ========== */
 function render() {
   updateTabCounts();
-
   var rows = rowsForActiveTab();
   countBadge.textContent = rows.length + ' account' + (rows.length !== 1 ? 's' : '');
 
-  if (state.activeTab === 'core')         sectionTitle.textContent = 'Admins / Developers / Branch Incharges';
-  else if (state.activeTab === 'user')    sectionTitle.textContent = 'User Accounts';
-  else if (state.activeTab === 'workshop')sectionTitle.textContent = 'Workshop Accounts';
-  else if (state.activeTab === 'designer')sectionTitle.textContent = 'Designer Accounts';
+  if (state.activeTab === 'core')              sectionTitle.textContent = 'Admins / Developers / Branch Incharges';
+  else if (state.activeTab === 'user')         sectionTitle.textContent = 'User Accounts';
+  else if (state.activeTab === 'workshop')     sectionTitle.textContent = 'Workshop Accounts';
+  else if (state.activeTab === 'designer')     sectionTitle.textContent = 'Designer Accounts';
   else if (state.activeTab === 'cad_designer') sectionTitle.textContent = 'CAD Designer Accounts';
-  else if (state.activeTab === 'pp')      sectionTitle.textContent = 'Post-Production Users';
-  else if (state.activeTab === 'stone')   sectionTitle.textContent = 'Stone Stock Users';
+  else if (state.activeTab === 'pp')           sectionTitle.textContent = 'Post-Production Users';
+  else if (state.activeTab === 'stone')        sectionTitle.textContent = 'Stone Stock Users';
 
   if (state.activeTab === 'designer') {
     tableHead.innerHTML = '<tr><th>Username</th><th>Password</th><th>Mobile Number</th><th>Section</th><th style="width:110px">Actions</th></tr>';
@@ -552,15 +601,11 @@ function render() {
   }
 
   tableBody.innerHTML = '';
-  if (rows.length === 0) {
-    emptyState.style.display = 'block';
-    return;
-  }
+  if (rows.length === 0) { emptyState.style.display = 'block'; return; }
   emptyState.style.display = 'none';
 
   rows.forEach(function (a) {
     var tr = document.createElement('tr');
-
     if (state.activeTab === 'designer') {
       tr.innerHTML =
         '<td><strong>' + escapeHtml(a.username) + '</strong></td>' +
@@ -586,10 +631,17 @@ function render() {
   });
 }
 
-/* ============================================================
-   LOAD / REFRESH
-   ============================================================ */
+/* ========== LOAD ========== */
+function showError(html) {
+  errorBanner.innerHTML = html;
+  errorBanner.classList.add('show');
+}
+function hideError() {
+  errorBanner.classList.remove('show');
+  errorBanner.innerHTML = '';
+}
 function loadAll() {
+  hideError();
   return GP_API.listAccounts({}).then(function (data) {
     state.accounts = (data.accounts || []);
     render();
@@ -598,15 +650,24 @@ function loadAll() {
       GP_API.setToken('');
       try { sessionStorage.clear(); } catch (e) {}
       window.location.replace('index.html');
-    } else {
-      showToast((err.data && err.data.error) || err.message || 'Could not load accounts.', 'error');
+      return;
     }
+    state.accounts = [];
+    render();
+    var apiHint = window.GP_API_BASE || '(same origin)';
+    showError(
+      '<strong>Could not load accounts.</strong> ' +
+      escapeHtml(err.message || 'Unknown error') +
+      '<br>API base: <code>' + escapeHtml(apiHint) + '</code>' +
+      '<br>Check that the backend is reachable and that <code>config.js</code> sets <code>window.GP_API_BASE</code>.' +
+      '<br><button id="retryBtn" class="btn btn-secondary" style="margin-top:.6rem;padding:.5rem 1rem" type="button"><i class="fas fa-rotate"></i> Retry</button>'
+    );
+    var rb = document.getElementById('retryBtn');
+    if (rb) rb.addEventListener('click', loadAll);
   });
 }
 
-/* ============================================================
-   ROW ACTIONS
-   ============================================================ */
+/* ========== ROW ACTIONS ========== */
 tableBody.addEventListener('click', function (e) {
   var btn = e.target.closest('button[data-action]');
   if (!btn) return;
@@ -614,14 +675,11 @@ tableBody.addEventListener('click', function (e) {
   var role = btn.dataset.role;
   if (isNaN(id) || !role) return;
   if (!canSeeRole(role)) { showToast('You cannot modify this account.', 'error'); return; }
-
   if (btn.dataset.action === 'edit')   openEditModal(id, role);
   if (btn.dataset.action === 'remove') removeAccount(id, role);
 });
 
-/* ============================================================
-   TABS
-   ============================================================ */
+/* ========== TABS ========== */
 tabsEl.addEventListener('click', function (e) {
   var b = e.target.closest('.tab-btn');
   if (!b) return;
@@ -634,9 +692,7 @@ tabsEl.addEventListener('click', function (e) {
   render();
 });
 
-/* ============================================================
-   MODAL
-   ============================================================ */
+/* ========== MODAL ========== */
 var modalOverlay = document.getElementById('modalOverlay');
 var modalTitle   = document.getElementById('modalTitle');
 var modalRole    = document.getElementById('modalRole');
@@ -652,6 +708,10 @@ var saveBtn      = document.getElementById('saveBtn');
 var toast        = document.getElementById('toast');
 var logoutBtn    = document.getElementById('logoutBtn');
 var backBtn      = document.getElementById('backBtn');
+var uReq         = document.getElementById('uReq');
+var pReq         = document.getElementById('pReq');
+var errUsername  = document.getElementById('errUsername');
+var errPassword  = document.getElementById('errPassword');
 
 var toastTimer;
 function showToast(msg, type) {
@@ -672,7 +732,6 @@ function allowedRolesForAdd(tab) {
     if (tab === 'stone')        return ['stone_stock'];
     return [];
   }
-  /* Developer */
   if (tab === 'user')         return ['user'];
   if (tab === 'workshop')     return ['workshop'];
   if (tab === 'designer')     return ['designer'];
@@ -692,6 +751,13 @@ function fillRoleSelect(roles, selected) {
   });
 }
 
+function clearFieldErrors() {
+  modalUsername.classList.remove('invalid');
+  modalPassword.classList.remove('invalid');
+  errUsername.classList.remove('show');
+  errPassword.classList.remove('show');
+}
+
 function openAddModal() {
   state.editing = null;
   var tab = state.activeTab;
@@ -703,11 +769,23 @@ function openAddModal() {
   modalPassword.value = '';
   modalPhone.value = '';
   modalUsername.disabled = false;
-  roleGroup.style.display = roles.length > 1 ? 'block' : 'none';
+  modalPassword.disabled = false;
+  modalPassword.placeholder = 'min 4 characters';
+  modalUsername.placeholder = 'e.g. john123';
+
+  // Always show role group; disable when only one choice.
+  roleGroup.style.display = 'block';
   fillRoleSelect(roles, roles[0]);
+  modalRole.disabled = (roles.length <= 1);
+
+  // Required markers
+  uReq.style.display = '';
+  pReq.style.display = '';
+
   sectionGroup.style.display = (tab === 'designer') ? 'block' : 'none';
   if (tab === 'designer') modalSection.value = 'Designs Bank';
   modalNote.textContent = '';
+  clearFieldErrors();
 
   modalOverlay.classList.add('show');
   setTimeout(function () { modalUsername.focus(); }, 100);
@@ -722,15 +800,23 @@ function openEditModal(id, role) {
   modalTitle.innerHTML = '<i class="fas fa-pen"></i> Edit ' + (ROLE_LABEL[role] || role);
   modalUsername.value = acct.username || '';
   modalUsername.disabled = true;
-  modalPassword.value = '';  // never preload password
+  modalPassword.value = '';
+  modalPassword.disabled = false;
   modalPassword.placeholder = 'Leave blank to keep current password';
   modalPhone.value = acct.phone || acct.mobile || '';
 
-  roleGroup.style.display = 'none';
+  roleGroup.style.display = 'block';
   fillRoleSelect([role], role);
+  modalRole.disabled = true;
+
+  // Username not required on edit; password optional.
+  uReq.style.display = 'none';
+  pReq.style.display = 'none';
+
   sectionGroup.style.display = (role === 'designer') ? 'block' : 'none';
   if (role === 'designer') modalSection.value = acct.section || 'Designs Bank';
   modalNote.textContent = 'Username cannot be changed. Leave password blank to keep the current one.';
+  clearFieldErrors();
 
   modalOverlay.classList.add('show');
   setTimeout(function () { modalPassword.focus(); }, 100);
@@ -740,6 +826,7 @@ function closeModal() {
   modalOverlay.classList.remove('show');
   state.editing = null;
   modalPassword.placeholder = '';
+  clearFieldErrors();
 }
 
 function saveUser() {
@@ -749,22 +836,28 @@ function saveUser() {
   var phone = (modalPhone.value || '').trim();
   var section = (modalSection.value || '').trim();
 
-  if (!state.editing && (!username || !password)) {
-    showToast('Username and password required.', 'error'); return;
+  clearFieldErrors();
+  var bad = false;
+  if (!state.editing) {
+    if (!username || username.length < 3) {
+      modalUsername.classList.add('invalid');
+      errUsername.classList.add('show');
+      bad = true;
+    }
+    if (!password || password.length < 4) {
+      modalPassword.classList.add('invalid');
+      errPassword.classList.add('show');
+      bad = true;
+    }
   }
-  if (!state.editing && username.length < 3) {
-    showToast('Username must be at least 3 characters.', 'error'); return;
-  }
-  if (!state.editing && password.length < 4) {
-    showToast('Password must be at least 4 characters.', 'error'); return;
-  }
+  if (bad) { showToast('Please fix the highlighted fields.', 'error'); return; }
 
   saveBtn.disabled = true;
 
   if (!state.editing) {
     var payload = { username: username, password: password, role: role, phone: phone };
     if (role === 'designer' || role === 'cad_designer') payload.section = section;
-    if (role === 'workshop') payload.branch = 'HQ';
+    if (role === 'workshop')    payload.branch = 'HQ';
     if (role === 'stone_stock') payload.branch = 'HO';
 
     GP_API.createAccount(payload).then(function () {
@@ -793,7 +886,6 @@ function saveUser() {
 function removeAccount(id, role) {
   var acct = state.accounts.filter(function (a) { return a.id === id; })[0];
   if (!acct) { showToast('Not found.', 'error'); loadAll(); return; }
-
   if (!confirm('Remove "' + acct.username + '" (' + (ROLE_LABEL[role] || role) + ')?')) return;
 
   GP_API.deleteAccount(id).then(function () {
@@ -804,21 +896,22 @@ function removeAccount(id, role) {
   });
 }
 
-/* ============================================================
-   WIRING
-   ============================================================ */
+/* ========== WIRING ========== */
 addBtn.addEventListener('click', openAddModal);
 cancelBtn.addEventListener('click', closeModal);
 saveBtn.addEventListener('click', saveUser);
+
 [modalUsername, modalPassword, modalPhone].forEach(function (inp) {
-  inp.addEventListener('keypress', function (e) { if (e.key === 'Enter') { e.preventDefault(); saveUser(); } });
+  inp.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); saveUser(); }
+  });
 });
 modalOverlay.addEventListener('click', function (e) { if (e.target === modalOverlay) closeModal(); });
-document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && modalOverlay.classList.contains('show')) closeModal(); });
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && modalOverlay.classList.contains('show')) closeModal();
+});
 
-if (!IS_ADMIN) {
-  backBtn.href = 'developer.html';
-}
+if (!IS_ADMIN) backBtn.href = 'developer.html';
 
 logoutBtn.addEventListener('click', function () {
   if (!confirm('Log out of GP Portal?')) return;
@@ -828,9 +921,10 @@ logoutBtn.addEventListener('click', function () {
   window.location.href = 'index.html?t=' + Date.now() + '&logout=1';
 });
 
-/* ============================================================
-   INITIAL RENDER
-   ============================================================ */
+/* ========== INIT ========== */
 addBtnText.textContent = addLabelForTab(state.activeTab);
 loadAll();
 window.addEventListener('focus', loadAll);
+</script>
+</body>
+</html>
