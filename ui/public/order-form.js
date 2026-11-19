@@ -23,7 +23,10 @@
     try { var v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? fb : v; }
     catch (e) { return fb; }
   }
-  function saveJSON(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+  function saveJSON(k, v) {
+    localStorage.setItem(k, JSON.stringify(v));
+    if (typeof gpQueueOrderShared === 'function') gpQueueOrderShared(k, v);
+  }
   function escapeHtml(v) {
     return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -109,7 +112,201 @@
   var STAGES_KEY         = 'goldprince_stage_history_v1';
   var SENDS_KEY          = 'goldprince_stock_sends_v1';
   var RECEIVED_SEEN_KEY  = 'gp_received_seen_ho';
+
   var STAGE2_ORDERS_KEY  = 'goldprince_stage2_orders_v1';
+
+  /* ============================================================
+     RAILWAY SHARED ORDER DATA — one source of truth across browsers
+     ============================================================ */
+  var GP_ORDER_SHARED_KEYS = [
+    ESTIMATIONS_KEY, ORDERS_KEY, COMPLETED_KEY, STAGES_KEY, SENDS_KEY,
+    STAGE2_ORDERS_KEY, CATALOGUE_KEY, CATALOGUE_UPDATES_KEY,
+    'goldprince_catalogue_3D_PREMIUM_IDOLS', 'goldprince_premium_catalogue',
+    'goldprince_catalogue_3D_IDOLS', 'goldprince_catalogue_2D_IDOLS',
+    'goldprince_catalogue_JEWELLERY', 'goldprince_catalogue_GOD_FRAMES',
+    PARTIES_KEY, PARTIES_LEGACY_KEY, 'gp_internal_notifications',
+    'goldprince_stage2_history_v1'
+  ];
+  var GP_ORDER_SHARED = { versions:{}, base:{}, pending:{}, queues:{}, ready:false, pollBusy:false };
+  var GP_ORDER_API = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\\/+$/, '');
+
+  function gpOrderClone(value) {
+    return value == null ? value : JSON.parse(JSON.stringify(value));
+  }
+  function gpOrderStableId(item) {
+    if (!item || typeof item !== 'object') return null;
+    var keys = ['id','orderId','estimateId','estimationId','estimateNo','estimationNo','orderNo','orderNumber'];
+    for (var i = 0; i < keys.length; i++) {
+      if (item[keys[i]] != null && String(item[keys[i]]) !== '') return String(item[keys[i]]);
+    }
+    return null;
+  }
+  function gpOrderMerge(base, local, remote) {
+    if (remote == null) return gpOrderClone(local);
+    if (local == null) return gpOrderClone(remote);
+    if (Array.isArray(local) && Array.isArray(remote)) {
+      var all = local.concat(remote, Array.isArray(base) ? base : []);
+      var keyed = all.length > 0 && all.every(function (x) { return !!gpOrderStableId(x); });
+      if (!keyed) return gpOrderClone(local);
+      var bm = {}, lm = {}, rm = {};
+      (base || []).forEach(function (x) { bm[gpOrderStableId(x)] = x; });
+      local.forEach(function (x) { lm[gpOrderStableId(x)] = x; });
+      remote.forEach(function (x) { rm[gpOrderStableId(x)] = x; });
+      var out = gpOrderClone(rm);
+      Object.keys(bm).forEach(function (id) {
+        if (!Object.prototype.hasOwnProperty.call(lm, id)) delete out[id];
+        else if (JSON.stringify(lm[id]) !== JSON.stringify(bm[id])) out[id] = gpOrderClone(lm[id]);
+      });
+      Object.keys(lm).forEach(function (id) {
+        if (!Object.prototype.hasOwnProperty.call(bm, id)) out[id] = gpOrderClone(lm[id]);
+      });
+      return Object.keys(out).map(function (id) { return out[id]; });
+    }
+    if (typeof local === 'object' && typeof remote === 'object' && !Array.isArray(local) && !Array.isArray(remote)) {
+      var result = gpOrderClone(remote) || {}, b = base && typeof base === 'object' ? base : {};
+      Object.keys(b).forEach(function (key) {
+        if (!Object.prototype.hasOwnProperty.call(local, key)) delete result[key];
+        else if (JSON.stringify(local[key]) !== JSON.stringify(b[key])) result[key] = gpOrderClone(local[key]);
+      });
+      Object.keys(local).forEach(function (key) {
+        if (!Object.prototype.hasOwnProperty.call(b, key)) result[key] = gpOrderClone(local[key]);
+      });
+      return result;
+    }
+    return gpOrderClone(local);
+  }
+  function gpOrderToken() { return localStorage.getItem('gp_jwt') || ''; }
+  function gpOrderShowSyncNotice(message) {
+    var n = document.getElementById('gpOrderSyncNotice');
+    if (!n) {
+      n = document.createElement('div');
+      n.id = 'gpOrderSyncNotice';
+      n.style.cssText = 'position:fixed;z-index:99999;left:12px;right:12px;bottom:12px;padding:12px 16px;border-radius:10px;background:#8b1738;color:#fff;font:600 13px Segoe UI, sans-serif;box-shadow:0 4px 18px #0003';
+      document.body.appendChild(n);
+    }
+    n.textContent = message;
+    n.style.display = 'block';
+  }
+  function gpOrderHideSyncNotice() {
+    var n = document.getElementById('gpOrderSyncNotice');
+    if (n) n.style.display = 'none';
+  }
+  async function gpOrderGetSnapshot() {
+    var token = gpOrderToken();
+    if (!token) throw new Error('Login token is missing. Please sign in again to enable cross-browser sync.');
+    var response = await fetch(GP_ORDER_API + '/api/inventory', {
+      headers:{ 'Authorization':'Bearer ' + token, 'Cache-Control':'no-cache' },
+      cache:'no-store'
+    });
+    var payload = await response.json().catch(function () { return {}; });
+    if (!response.ok) throw new Error(payload.error || ('Shared data load failed (' + response.status + ')'));
+    return payload;
+  }
+  async function gpOrderPut(key, value) {
+    var next = gpOrderClone(value);
+    for (var attempt = 0; attempt < 6; attempt++) {
+      var response = await fetch(GP_ORDER_API + '/api/inventory/' + encodeURIComponent(key), {
+        method:'PUT',
+        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + gpOrderToken() },
+        body:JSON.stringify({ value:next, expectedVersion:Number(GP_ORDER_SHARED.versions[key] || 0) })
+      });
+      var data = await response.json().catch(function () { return {}; });
+      if (response.status === 409) {
+        GP_ORDER_SHARED.versions[key] = Number(data.version || 0);
+        next = gpOrderMerge(GP_ORDER_SHARED.base[key], next, data.value);
+        continue;
+      }
+      if (!response.ok) throw new Error(data.error || ('Shared save failed for ' + key + ' (' + response.status + ')'));
+      GP_ORDER_SHARED.versions[key] = Number(data.version || 0);
+      GP_ORDER_SHARED.base[key] = gpOrderClone(data.value);
+      localStorage.setItem(key, JSON.stringify(data.value));
+      return data;
+    }
+    throw new Error('Shared data kept changing. Please retry the save.');
+  }
+  async function gpDrainOrderShared(key) {
+    if (GP_ORDER_SHARED.queues[key] || !GP_ORDER_SHARED.ready) return GP_ORDER_SHARED.queues[key];
+    GP_ORDER_SHARED.queues[key] = (async function () {
+      while (Object.prototype.hasOwnProperty.call(GP_ORDER_SHARED.pending, key)) {
+        var next = GP_ORDER_SHARED.pending[key];
+        delete GP_ORDER_SHARED.pending[key];
+        await gpOrderPut(key, next);
+      }
+    })().catch(function (error) {
+      console.error('[GP Order Form] shared save failed for ' + key, error);
+      gpOrderShowSyncNotice('SYNC ERROR: ' + error.message + ' — your change is still on this browser; retry after connection is restored.');
+    }).finally(function () {
+      delete GP_ORDER_SHARED.queues[key];
+      if (Object.prototype.hasOwnProperty.call(GP_ORDER_SHARED.pending, key)) gpDrainOrderShared(key);
+    });
+    return GP_ORDER_SHARED.queues[key];
+  }
+  function gpQueueOrderShared(key, value) {
+    if (GP_ORDER_SHARED_KEYS.indexOf(key) === -1) return;
+    GP_ORDER_SHARED.pending[key] = gpOrderClone(value);
+    if (GP_ORDER_SHARED.ready) gpDrainOrderShared(key);
+  }
+  async function gpLoadOrderShared() {
+    var payload = await gpOrderGetSnapshot();
+    var remote = payload.data || {};
+    GP_ORDER_SHARED.versions = payload.versions || {};
+    for (var i = 0; i < GP_ORDER_SHARED_KEYS.length; i++) {
+      var key = GP_ORDER_SHARED_KEYS[i];
+      if (Object.prototype.hasOwnProperty.call(remote, key)) {
+        GP_ORDER_SHARED.base[key] = gpOrderClone(remote[key]);
+        localStorage.setItem(key, JSON.stringify(remote[key]));
+      } else {
+        var raw = localStorage.getItem(key);
+        if (raw !== null) {
+          try {
+            var legacy = JSON.parse(raw);
+            GP_ORDER_SHARED.base[key] = null;
+            await gpOrderPut(key, legacy);
+          } catch (e) {
+            console.warn('[GP Order Form] legacy data migration failed for ' + key, e);
+          }
+        }
+      }
+    }
+    GP_ORDER_SHARED.ready = true;
+    var pendingKeys = Object.keys(GP_ORDER_SHARED.pending);
+    for (var j = 0; j < pendingKeys.length; j++) gpDrainOrderShared(pendingKeys[j]);
+    gpOrderHideSyncNotice();
+    return true;
+  }
+  async function gpRefreshOrderShared() {
+    if (!GP_ORDER_SHARED.ready || GP_ORDER_SHARED.pollBusy || document.visibilityState === 'hidden') return;
+    GP_ORDER_SHARED.pollBusy = true;
+    try {
+      var payload = await gpOrderGetSnapshot();
+      var remote = payload.data || {}, versions = payload.versions || {};
+      for (var i = 0; i < GP_ORDER_SHARED_KEYS.length; i++) {
+        var key = GP_ORDER_SHARED_KEYS[i];
+        if (!Object.prototype.hasOwnProperty.call(remote, key)) continue;
+        if (GP_ORDER_SHARED.queues[key] || Object.prototype.hasOwnProperty.call(GP_ORDER_SHARED.pending, key)) continue;
+        var version = Number(versions[key] || 0);
+        if (version <= Number(GP_ORDER_SHARED.versions[key] || 0)) continue;
+        GP_ORDER_SHARED.versions[key] = version;
+        GP_ORDER_SHARED.base[key] = gpOrderClone(remote[key]);
+        localStorage.setItem(key, JSON.stringify(remote[key]));
+        window.dispatchEvent(new CustomEvent('gp:shared-data-changed', { detail:{ key:key, version:version } }));
+      }
+      gpOrderHideSyncNotice();
+    } catch (error) {
+      console.warn('[GP Order Form] shared refresh failed', error);
+    } finally {
+      GP_ORDER_SHARED.pollBusy = false;
+    }
+  }
+  var gpOrderSharedReady = gpLoadOrderShared().catch(function (error) {
+    GP_ORDER_SHARED.ready = true;
+    console.error('[GP Order Form] shared initialization failed', error);
+    gpOrderShowSyncNotice('CROSS-BROWSER SYNC NOT READY: ' + error.message);
+    return false;
+  });
+  setInterval(gpRefreshOrderShared, 4000);
+  window.addEventListener('focus', gpRefreshOrderShared);
+
 
   function getCompletedMap() {
     var m = _readJSON(COMPLETED_KEY, {});
@@ -882,9 +1079,9 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
   }
 
-  /* Initial indicator refresh + live updates */
-  refreshReceivedIndicator();
-  setInterval(refreshReceivedIndicator, 5000);
+  /* Initial indicator refresh + live updates (after shared data has loaded) */
+  gpOrderSharedReady.then(function () { refreshReceivedIndicator(); });
+  setInterval(function () { if (GP_ORDER_SHARED.ready) refreshReceivedIndicator(); }, 5000);
   window.addEventListener('storage', function (e) {
     if (!e.key) return;
     if (e.key === COMPLETED_KEY ||
@@ -912,6 +1109,23 @@
     refreshReceivedIndicator();
     if (receivedModal && !receivedModal.classList.contains('hidden')) {
       renderReceivedOrders();
+    }
+  });
+
+  window.addEventListener('gp:shared-data-changed', function (event) {
+    var key = event && event.detail ? event.detail.key : '';
+    if (key === ORDERS_KEY || key === ESTIMATIONS_KEY || key === COMPLETED_KEY ||
+        key === STAGES_KEY || key === STAGE2_ORDERS_KEY || key === SENDS_KEY) {
+      refreshReceivedIndicator();
+      if (receivedModal && !receivedModal.classList.contains('hidden')) renderReceivedOrders();
+      if (pendingModal && !pendingModal.classList.contains('hidden')) renderPendingOrders();
+      if (estimationsModal && !estimationsModal.classList.contains('hidden')) renderEstimations();
+    }
+    if (key === CATALOGUE_KEY || key === CATALOGUE_UPDATES_KEY || CATALOGUE_EXTRA_KEYS.indexOf(key) !== -1) {
+      try { loadProductCatalog(); } catch (err) { console.warn('[order-form.js] shared catalogue reload failed', err); }
+    }
+    if (key === PARTIES_KEY || key === PARTIES_LEGACY_KEY) {
+      try { renderPartyList(''); } catch (err) { console.warn('[order-form.js] shared party reload failed', err); }
     }
   });
 
@@ -3368,20 +3582,17 @@
   })();
 
   /* ============================================================
-     INIT
+     INIT — wait until Railway is the current shared data source
      ============================================================ */
-  if (groupSelect) {
-    currentGroupFilter = String(groupSelect.value || '3D IDOLS').toUpperCase();
-  }
-  loadProductCatalog();
-  renderItems();
-  renderPartyList('');
-
-  console.log('[order-form.js] Ready.');
-  console.log('[order-form.js] Existing estimations:',
-              (_readJSON(ESTIMATIONS_KEY, []) || []).length);
-  console.log('[order-form.js] Existing orders:',
-              (_readJSON(ORDERS_KEY, []) || []).length);
+  gpOrderSharedReady.then(function () {
+    if (groupSelect) currentGroupFilter = String(groupSelect.value || '3D IDOLS').toUpperCase();
+    loadProductCatalog();
+    renderItems();
+    renderPartyList('');
+    console.log('[order-form.js] Ready; shared data loaded:', GP_ORDER_SHARED.ready);
+    console.log('[order-form.js] Existing estimations:', (_readJSON(ESTIMATIONS_KEY, []) || []).length);
+    console.log('[order-form.js] Existing orders:', (_readJSON(ORDERS_KEY, []) || []).length);
+  });
 
 })();
 
