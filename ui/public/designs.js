@@ -94,6 +94,49 @@ function saveJSON(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
 function getCadDesigners(){
   try { return JSON.parse(localStorage.getItem(CAD_DESIGNERS_KEY) || '[]') || []; } catch(e){ return []; }
 }
+
+/* Load active CAD Designer accounts from the central account directory.
+   The allotment UI historically read only gp_cad_designer_users in localStorage,
+   while Manage Accounts creates users in the API database. */
+var CAD_DIRECTORY_SYNC_PROMISE = null;
+function syncCadDesignerDirectory(){
+  if (CAD_DIRECTORY_SYNC_PROMISE) return CAD_DIRECTORY_SYNC_PROMISE;
+  var token = '';
+  try { token = localStorage.getItem('gp_jwt') || ''; } catch(e){}
+  if (!token) return Promise.resolve(getCadDesigners());
+  var apiBase = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\\/+$/, '');
+  CAD_DIRECTORY_SYNC_PROMISE = fetch(apiBase + '/api/chat/users', {
+    method: 'GET',
+    headers: { 'Authorization': 'Bearer ' + token, 'Cache-Control': 'no-cache' }
+  }).then(function(response){
+    if (!response.ok) throw new Error('Could not load CAD designer accounts (' + response.status + ').');
+    return response.json();
+  }).then(function(data){
+    var existing = getCadDesigners();
+    var byName = {};
+    existing.forEach(function(rec){
+      var key = String((rec && rec.username) || '').trim().toLowerCase();
+      if (key) byName[key] = rec;
+    });
+    var active = (data.users || []).filter(function(user){
+      return user && String(user.role || '').toLowerCase() === 'cad_designer' && String(user.username || '').trim();
+    });
+    var designers = active.map(function(user){
+      var name = String(user.username).trim();
+      var old = byName[name.toLowerCase()] || {};
+      return Object.assign({}, old, { username: name });
+    });
+    localStorage.setItem(CAD_DESIGNERS_KEY, JSON.stringify(designers));
+    return designers;
+  }).catch(function(error){
+    console.warn('[GP Portal] CAD designer directory sync failed:', error);
+    return getCadDesigners();
+  }).then(function(result){
+    CAD_DIRECTORY_SYNC_PROMISE = null;
+    return result;
+  });
+  return CAD_DIRECTORY_SYNC_PROMISE;
+}
 function getCadDesignerDisplayList(){
   var list = getCadDesigners();
   var out = []; var seen = {};
@@ -1110,6 +1153,10 @@ function openAllotCadModal(id){
   if (cadDesignerSelect){ cadDesignerSelect.reset(); if (cad.assignee) cadDesignerSelect.setValue(cad.assignee); }
   document.getElementById('allotCadMessage').classList.remove('show','error');
   document.getElementById('allotCadModal').classList.remove('hidden');
+  if (hint) hint.classList.add('hidden');
+  syncCadDesignerDirectory().then(function(list){
+    if (hint) hint.classList.toggle('hidden', list.length > 0);
+  });
 }
 document.getElementById('closeAllotCadModal').addEventListener('click', function(){ document.getElementById('allotCadModal').classList.add('hidden'); pendingAllotCadId = null; });
 document.getElementById('cancelAllotCadBtn').addEventListener('click', function(){ document.getElementById('allotCadModal').classList.add('hidden'); pendingAllotCadId = null; });
@@ -2133,4 +2180,5 @@ function hideTelegramResult(){ document.getElementById('telegramResultModal').cl
 if (trClose) trClose.addEventListener('click', hideTelegramResult);
 if (trOk) trOk.addEventListener('click', hideTelegramResult);
 
+syncCadDesignerDirectory();
 try { bootApp(); } catch(err){ console.error('BOOT ERROR:', err); var b = document.getElementById('globalErrorBanner'); if (b){ b.style.display = 'block'; b.textContent = 'BOOT ERROR: ' + (err && err.stack ? err.stack : String(err)); } else alert('BOOT ERROR: ' + err.message); }
