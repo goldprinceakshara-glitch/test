@@ -456,7 +456,7 @@ document.getElementById('logoutBtn').addEventListener('click', function () {
 async function refreshStatsFromServer() {
   var token = localStorage.getItem('gp_jwt') || '';
   if (!token) { refreshStats(); return; }
-  var api = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\\/+$/, '');
+  var api = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\/+$/, '');
   try {
     var response = await fetch(api + '/api/accounts/counts', {
       headers: { 'Authorization': 'Bearer ' + token, 'Cache-Control': 'no-cache' },
