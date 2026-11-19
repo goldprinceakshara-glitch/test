@@ -43,7 +43,7 @@ const corsOrigin = !corsList ? '*' : (origin, cb) => {
 const app = express();
 app.set('trust proxy', 1);                       // Railway sits behind a proxy → real client IP in req.ip
 app.use(cors({ origin: corsOrigin, credentials: false }));
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '20mb' }));
 app.use(morgan('tiny'));
 
 const wrap = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -320,6 +320,52 @@ app.delete('/api/devices/:id', requireAuth, requireRole('admin','developer'), wr
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).json({ error:'Invalid id' });
   await query('DELETE FROM device_access WHERE id=$1', [id]);
+  res.json({ ok:true });
+}));
+
+/* ------------------------------------------------------------------
+   SHARED APPLICATION DATA
+   ------------------------------------------------------------------ */
+// App records are shared between browsers through PostgreSQL. Authentication/session
+// keys are deliberately excluded: a browser must keep its own login session.
+const PRIVATE_APP_KEYS = new Set(['gp_jwt','gp_logged_user','gp_orig_role','gp_cloud_migration_v1']);
+function validAppKey(key) {
+  return typeof key === 'string' && /^gp_[a-z0-9_-]{1,120}$/i.test(key) && !PRIVATE_APP_KEYS.has(key);
+}
+app.get('/api/app-data', requireAuth, wrap(async (req, res) => {
+  const rows = await many('SELECT key, value, updated_at FROM app_data ORDER BY key');
+  const items = {};
+  for (const row of rows) items[row.key] = { value: row.value, updatedAt: row.updated_at };
+  res.set('Cache-Control', 'no-store').json({ items });
+}));
+app.put('/api/app-data', requireAuth, wrap(async (req, res) => {
+  const items = (req.body || {}).items;
+  if (!items || typeof items !== 'object' || Array.isArray(items)) return res.status(400).json({ error:'items object required' });
+  const entries = Object.entries(items);
+  if (entries.length > 500) return res.status(413).json({ error:'Too many data keys' });
+  for (const [key, value] of entries) {
+    if (!validAppKey(key)) return res.status(400).json({ error:'Invalid shared data key: ' + key });
+    const json = JSON.stringify(value);
+    if (json === undefined || Buffer.byteLength(json, 'utf8') > 5 * 1024 * 1024)
+      return res.status(413).json({ error:'Shared data value is too large: ' + key });
+  }
+  const client = await require('./db').pool.connect();
+  try {
+    await client.query('BEGIN');
+    const now = Date.now();
+    for (const [key, value] of entries) {
+      await client.query(
+        'INSERT INTO app_data(key,value,updated_at,updated_by) VALUES($1,$2::jsonb,$3,$4) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value, updated_at=EXCLUDED.updated_at, updated_by=EXCLUDED.updated_by',
+        [key, JSON.stringify(value), now, req.auth.username || String(req.auth.sub)]);
+    }
+    await client.query('COMMIT');
+  } catch (e) { await client.query('ROLLBACK'); throw e; }
+  finally { client.release(); }
+  res.json({ ok:true, saved:entries.length, updatedAt:Date.now() });
+}));
+app.delete('/api/app-data/:key', requireAuth, wrap(async (req, res) => {
+  if (!validAppKey(req.params.key)) return res.status(400).json({ error:'Invalid shared data key' });
+  await query('DELETE FROM app_data WHERE key=$1', [req.params.key]);
   res.json({ ok:true });
 }));
 
