@@ -57,9 +57,9 @@
     } catch (_) {}
   }
   function initialSync() {
-    if (!token()) return;
+    if (!token()) return false;
     var result = request('GET', undefined, true);
-    if (!result || !result.items) return;
+    if (!result || !result.items) return false;
     var local = readLocal(), remote = result.items, upload = {};
     Object.keys(local).forEach(function (k) {
       var lv = local[k];
@@ -82,6 +82,7 @@
     }
     Object.keys(readLocal()).forEach(function (k) { lastLocal[k] = localStorage.getItem(k); });
     try { localStorage.setItem('gp_cloud_migration_v1', '1'); } catch (_) {}
+    return true;
   }
   function flush() {
     if (busy || !token()) return;
@@ -112,8 +113,7 @@
   function ensureInitialSync() {
     var current = token();
     if (current && current !== syncedToken) {
-      initialSync();
-      syncedToken = current;
+      if (initialSync()) syncedToken = current;
     }
   }
   // Hydrate synchronously when already signed in, before page scripts read localStorage.
@@ -158,7 +158,7 @@
       Object.keys(data).forEach(function (k) {
         var remote = JSON.stringify(data[k].value);
         var localNow = localStorage.getItem(k);
-        if (remote !== knownRemote[k] && localNow === lastLocal[k]) {
+        if (remote !== knownRemote[k] && (localNow === lastLocal[k] || (localNow === null && lastLocal[k] === undefined))) {
           try { nativeSet.call(localStorage, k, remote); } catch (_) {}
           lastLocal[k] = remote;
         } else if (remote !== knownRemote[k] && localNow !== lastLocal[k]) {
