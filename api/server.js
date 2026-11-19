@@ -335,6 +335,18 @@ app.put('/api/settings/admin-mobile', requireAuth, requireRole('admin'), wrap(as
 
 
 /* ------------------------------------------------------------------
+   INTERNAL CHAT DIRECTORY
+   ------------------------------------------------------------------ */
+app.get('/api/chat/users', requireAuth, wrap(async (req, res) => {
+  const users = await many(
+    'SELECT username, role, branch FROM accounts WHERE active=1 ORDER BY role, username'
+  );
+  res.set('Cache-Control', 'no-store').json({
+    users: users.map(u => ({ username:u.username, role:u.role, branch:u.branch || '' }))
+  });
+}));
+
+/* ------------------------------------------------------------------
    SHARED INVENTORY DATA
    ------------------------------------------------------------------ */
 const INVENTORY_KEYS = new Set([
@@ -348,7 +360,7 @@ const INVENTORY_KEYS = new Set([
   'goldprince_catalogue_3D_PREMIUM_IDOLS', 'goldprince_premium_catalogue',
   'goldprince_catalogue_3D_IDOLS', 'goldprince_catalogue_2D_IDOLS',
   'goldprince_catalogue_JEWELLERY', 'goldprince_catalogue_GOD_FRAMES',
-  'goldprince_parties', 'gp_party_master', 'gp_internal_notifications'
+  'goldprince_parties', 'gp_party_master', 'gp_internal_notifications', 'gp_chat_messages'
 ]);
 
 app.get('/api/inventory', requireAuth, wrap(async (req, res) => {
