@@ -202,6 +202,7 @@ header h1 i{color:var(--brand)}
   .stat-card .value{font-size:1.7rem}
 }
 </style>
+ <script src="config.js"></script>
 </head>
 <body>
 <div class="container">
@@ -452,10 +453,37 @@ document.getElementById('logoutBtn').addEventListener('click', function () {
   }, 50);
 });
 
-refreshStats();
-window.addEventListener('focus', refreshStats);
-window.addEventListener('storage', refreshStats);
-setInterval(refreshStats, 3000);
+async function refreshStatsFromServer() {
+  var token = localStorage.getItem('gp_jwt') || '';
+  if (!token) { refreshStats(); return; }
+  var api = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\\/+$/, '');
+  try {
+    var response = await fetch(api + '/api/accounts/counts', {
+      headers: { 'Authorization': 'Bearer ' + token, 'Cache-Control': 'no-cache' },
+      cache: 'no-store'
+    });
+    if (!response.ok) throw new Error('Account count request failed (' + response.status + ')');
+    var payload = await response.json();
+    var byRole = payload.byRole || {};
+    var total = Object.keys(byRole).reduce(function (sum, role) { return sum + Number(byRole[role] || 0); }, 0);
+    document.getElementById('totalCount').textContent = total;
+    document.getElementById('adminCount').textContent = Number(byRole.admin || 0);
+    document.getElementById('userCount').textContent = Number(byRole.user || 0);
+    document.getElementById('workshopCount').textContent = Number(byRole.workshop || 0);
+    document.getElementById('developerCount').textContent = Number(byRole.developer || 0);
+    document.getElementById('branchInchargeCount').textContent = Number(byRole.branch_incharge || 0);
+    document.getElementById('designerCount').textContent = Number(byRole.designer || 0) + Number(byRole.cad_designer || 0);
+    document.getElementById('postProdCount').textContent = ['stock_jama_incharge','plating_polish','packing','qc_section','dispatch_section']
+      .reduce(function (sum, role) { return sum + Number(byRole[role] || 0); }, 0);
+  } catch (error) {
+    console.warn('[Developer Dashboard] server stats refresh failed; showing cached counts', error);
+    refreshStats();
+  }
+}
+refreshStatsFromServer();
+window.addEventListener('focus', refreshStatsFromServer);
+window.addEventListener('storage', refreshStatsFromServer);
+setInterval(refreshStatsFromServer, 5000);
 </script>
 
 <script>
