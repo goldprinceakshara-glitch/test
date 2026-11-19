@@ -40,6 +40,28 @@ jobs:
           mkdir -p _site
           cp -a ui/public/. _site/
           touch _site/.nojekyll
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          for page in Path("_site").glob("*.html"):
+              html = page.read_text(encoding="utf-8")
+              if "cloud-sync.js" not in html:
+                  html, count = re.subn(
+                      r"</head>",
+                      '<script src="cloud-sync.js"></script>\n</head>',
+                      html,
+                      count=1,
+                      flags=re.IGNORECASE,
+                  )
+                  if count != 1:
+                      raise SystemExit(f"Could not add shared-data bridge to {page}")
+                  page.write_text(html, encoding="utf-8")
+          PY
+
+      - name: Validate application JavaScript
+        run: |
+          node --check api/server.js
+          node --check ui/public/cloud-sync.js
 
       - name: Configure Railway API
         env:
