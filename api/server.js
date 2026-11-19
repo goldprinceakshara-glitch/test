@@ -365,20 +365,77 @@ const INVENTORY_KEYS = new Set([
   'goldprince_parties', 'gp_party_master', 'gp_internal_notifications', 'gp_chat_messages'
 ]);
 
+// Legacy app collections use gp_* keys. Keep authentication and privileged records
+// out of the cross-browser store, while preserving the existing versioned portal_data table.
+const PRIVATE_APP_KEYS = new Set([
+  'gp_jwt','gp_logged_user','gp_orig_role','gp_pending_user','gp_user','gp_current_user',
+  'gp_cloud_migration_v1'
+]);
+const APP_DIRECTORY_KEYS = new Set([
+  'gp_portal_users','gp_designer_users','gp_cad_designer_users',
+  'gp_post_production_users','gp_stone_stock_users'
+]);
+const APP_ADMIN_ONLY_KEYS = new Set([
+  'gp_pending_logins','gp_admin_mobile','gp_device_access','gp_telegram_config'
+]);
+const APP_STONE_KEYS = new Set([
+  'gp_stone_catalogue','gp_stone_opening','gp_stone_purchase_orders',
+  'gp_stone_issue_orders','gp_stone_return_orders','gp_stone_damage',
+  'gp_stone_purchase_return'
+]);
+const DIRECTORY_PUBLIC_FIELDS = new Set([
+  'id','username','name','role','branch','section','active'
+]);
+function isSharedAppKey(key) {
+  return typeof key === 'string' && (/^gp_[a-z0-9_-]{1,120}$/i.test(key) || key === 'goldprince_parties' || /^orderCounter_[a-z0-9 _-]{1,80}$/i.test(key)) && !PRIVATE_APP_KEYS.has(key);
+}
+function canReadPortalKey(role, key) {
+  if (APP_ADMIN_ONLY_KEYS.has(key)) return role === 'admin' || role === 'developer';
+  if (APP_STONE_KEYS.has(key)) return role === 'admin' || role === 'developer' || role === 'stone_stock';
+  return true;
+}
+function canWritePortalKey(role, key) {
+  if (APP_ADMIN_ONLY_KEYS.has(key) || APP_DIRECTORY_KEYS.has(key)) return role === 'admin' || role === 'developer';
+  if (APP_STONE_KEYS.has(key)) return role === 'admin' || role === 'developer' || role === 'stone_stock';
+  return true;
+}
+function sanitizeDirectoryValue(value) {
+  const cleanRecord = record => {
+    if (!record || typeof record !== 'object' || Array.isArray(record)) return record;
+    const clean = {};
+    for (const [field, item] of Object.entries(record)) {
+      if (DIRECTORY_PUBLIC_FIELDS.has(field)) clean[field] = item;
+    }
+    return clean;
+  };
+  if (Array.isArray(value)) return value.map(cleanRecord);
+  if (value && typeof value === 'object') {
+    const clean = {};
+    for (const [key, item] of Object.entries(value)) clean[key] = cleanRecord(item);
+    return clean;
+  }
+  return value;
+}
+
 app.get('/api/inventory', requireAuth, wrap(async (req, res) => {
   const rows = await many('SELECT key, value, version, updated_at FROM portal_data ORDER BY key');
   const data = {}, versions = {}, updatedAt = {};
   for (const row of rows) {
-    data[row.key] = row.value;
-    versions[row.key] = Number(row.version);
-    updatedAt[row.key] = Number(row.updated_at);
+    const key = row.key;
+    if (!INVENTORY_KEYS.has(key) && !isSharedAppKey(key)) continue;
+    if (!canReadPortalKey(req.auth.role, key)) continue;
+    data[key] = APP_DIRECTORY_KEYS.has(key) && req.auth.role !== 'admin'
+      ? sanitizeDirectoryValue(row.value) : row.value;
+    versions[key] = Number(row.version);
+    updatedAt[key] = Number(row.updated_at);
   }
   res.set('Cache-Control', 'no-store').json({ data, versions, updatedAt });
 }));
 
 app.put('/api/inventory/:key', requireAuth, wrap(async (req, res) => {
   const key = String(req.params.key || '');
-  if (!INVENTORY_KEYS.has(key)) return res.status(400).json({ error: 'Unknown inventory data key' });
+  if (!INVENTORY_KEYS.has(key) && !isSharedAppKey(key)) return res.status(400).json({ error: 'Unknown shared data key' });
+  if (!canWritePortalKey(req.auth.role, key)) return res.status(403).json({ error: 'You cannot modify this shared data collection' });
   const body = req.body || {};
   if (!Object.prototype.hasOwnProperty.call(body, 'value') ||
       !Number.isSafeInteger(Number(body.expectedVersion)) || Number(body.expectedVersion) < 0) {
@@ -387,6 +444,8 @@ app.put('/api/inventory/:key', requireAuth, wrap(async (req, res) => {
   const expectedVersion = Number(body.expectedVersion);
   const json = JSON.stringify(body.value);
   if (json === undefined) return res.status(400).json({ error: 'value must be JSON serializable' });
+  if (Buffer.byteLength(json, 'utf8') > 12 * 1024 * 1024)
+    return res.status(413).json({ error: 'Shared data collection is too large' });
 
   const saved = await one(
     `INSERT INTO portal_data (key, value, version, updated_by, updated_at)
@@ -415,6 +474,31 @@ app.put('/api/inventory/:key', requireAuth, wrap(async (req, res) => {
     ok: true, key: saved.key, value: saved.value,
     version: Number(saved.version), updatedAt: Number(saved.updated_at)
   });
+}));
+
+app.delete('/api/inventory/:key', requireAuth, wrap(async (req, res) => {
+  const key = String(req.params.key || '');
+  if (!isSharedAppKey(key)) return res.status(400).json({ error: 'Only shared app collections can be deleted here' });
+  if (!canWritePortalKey(req.auth.role, key)) return res.status(403).json({ error: 'You cannot delete this shared data collection' });
+  const expectedVersion = Number(req.query.expectedVersion);
+  if (!Number.isSafeInteger(expectedVersion) || expectedVersion < 0)
+    return res.status(400).json({ error: 'A non-negative expectedVersion is required' });
+
+  const removed = await one(
+    'DELETE FROM portal_data WHERE key=$1 AND version=$2 RETURNING key',
+    [key, expectedVersion]
+  );
+  if (!removed) {
+    const current = await one('SELECT value, version, updated_at FROM portal_data WHERE key=$1', [key]);
+    if (!current && expectedVersion === 0) return res.json({ ok:true, key, deleted:true, version:0 });
+    return res.status(409).json({
+      error:'Shared data changed in another browser. Refresh before deleting.',
+      value: current ? current.value : null,
+      version: current ? Number(current.version) : 0,
+      updatedAt: current ? Number(current.updated_at) : null
+    });
+  }
+  res.set('Cache-Control', 'no-store').json({ ok:true, key, deleted:true, version:0 });
 }));
 
 /* ------------------------------------------------------------------
