@@ -43,7 +43,7 @@ jobs:
 
       - name: Configure Railway API
         env:
-          RAILWAY_URL: ${{ vars.RAILWAY_URL }}
+          RAILWAY_URL: https://test-production-313c31af.up.railway.app
         run: |
           URL="${RAILWAY_URL:-https://test-production-313c31af.up.railway.app}"
           printf 'window.GP_API_BASE = "%s";\n' "${URL%/}" > _site/config.js
