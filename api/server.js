@@ -404,7 +404,7 @@ if (SERVE_UI) {
     fs.readFile(file, 'utf8', (err, html) => {
       if (err) return next();
       if (!html.includes('/cloud-sync.js')) {
-        html = html.replace(/<\\/head>/i, '<script src="/cloud-sync.js"></script>\\n</head>');
+        html = html.replace(/<\/head>/i, '<script src="/cloud-sync.js"></script>\\n</head>');
       }
       res.set({ 'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-store, no-cache, must-revalidate' });
       res.send(html);
@@ -427,7 +427,7 @@ app.use('/api', (req, res) => res.status(404).json({ error:'Not found' }));
 app.use((req, res) => {
   if (SERVE_UI && req.method === 'GET' && !path.extname(req.path)) return fs.readFile(path.join(UI_DIR, 'index.html'), 'utf8', (err, html) => {
     if (err) return res.status(404).json({ error:'Not found' });
-    if (!html.includes('/cloud-sync.js')) html = html.replace(/<\\/head>/i, '<script src="/cloud-sync.js"></script>\\n</head>');
+    if (!html.includes('/cloud-sync.js')) html = html.replace(/<\/head>/i, '<script src="/cloud-sync.js"></script>\\n</head>');
     res.set({ 'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-store, no-cache, must-revalidate' });
     res.send(html);
   });
