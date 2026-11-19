@@ -413,6 +413,25 @@ Store.flush = async function () {
     return true;
 };
 
+// Keep pending shared writes from being lost during normal in-app navigation.
+document.addEventListener('click', function (event) {
+    const link = event.target && event.target.closest ? event.target.closest('a[href]') : null;
+    if (!link || link.target || link.origin !== window.location.origin) return;
+    if (!Object.keys(GP_SHARED_STATE.queues).length) return;
+    event.preventDefault();
+    const destination = link.href;
+    Store.flush().then(function () { window.location.assign(destination); }).catch(function () {
+        if (typeof showToast === 'function') showToast('Save is still pending. Please check your connection and try again.', 'error');
+    });
+}, true);
+window.addEventListener('beforeunload', function (event) {
+    if (Object.keys(GP_SHARED_STATE.queues).length) {
+        event.preventDefault();
+        event.returnValue = '';
+    }
+});
+
+
 // ---------- HELPERS ----------
 function showToast(msg, type = '') {
     let toast = document.getElementById('toastMsg');
