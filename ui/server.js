@@ -43,7 +43,7 @@ function serveFile(req, res, file) {
       // Inject before page scripts so localStorage is hydrated before legacy pages read it.
       return fs.readFile(file, 'utf8', (readErr, html) => {
         if (readErr) return send(res, 500, 'Unable to read page', { 'Content-Type':'text/plain; charset=utf-8' });
-        if (!html.includes('/cloud-sync.js')) html = html.replace(/<\\/head>/i, '<script src="/cloud-sync.js"></script>\\n</head>');
+        if (!html.includes('/cloud-sync.js')) html = html.replace(/<\/head>/i, '<script src="/cloud-sync.js"></script>\n</head>');
         const body = Buffer.from(html, 'utf8');
         headers['Content-Length'] = body.length;
         res.writeHead(200, headers);
