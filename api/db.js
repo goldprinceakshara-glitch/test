@@ -85,6 +85,15 @@ CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
   value TEXT
 );
+
+-- Shared browser data: app records previously held in each browser's localStorage.
+CREATE TABLE IF NOT EXISTS app_data (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at BIGINT NOT NULL,
+  updated_by TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_app_data_updated_at ON app_data (updated_at);
 `;
 
 async function initSchema() {
