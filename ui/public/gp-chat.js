@@ -115,7 +115,7 @@
   async function refreshChatUsers() {
     try {
       var r = await fetch(GP_CHAT_API + '/api/chat/users', { headers:{ 'Authorization':'Bearer ' + chatToken(), 'Cache-Control':'no-cache' }, cache:'no-store' });
-      if (!r.ok) return;
+      if (!r.ok) { console.warn('[GP Chat] user directory request failed (' + r.status + ')'); return; }
       var p = await r.json(); GP_CHAT_USERS = Array.isArray(p.users) ? p.users : [];
       if (started) { lastRenderedSig = ''; renderContacts(); }
     } catch(e) { console.warn('[GP Chat] user directory refresh failed', e); }
@@ -140,7 +140,7 @@
       var merged = mergeChatMessages(remote || [], local);
       localStorage.setItem(MSG_KEY, JSON.stringify(merged)); GP_CHAT_SYNC.ready = true;
       if (!Array.isArray(remote) || JSON.stringify(merged) !== JSON.stringify(remote)) queueCloudSave(merged);
-      refreshChatUsers(); setInterval(refreshCloudChat, 3500); setInterval(refreshChatUsers, 30000);
+      setInterval(refreshCloudChat, 3500);
       window.addEventListener('focus', refreshCloudChat);
     } catch(e) { console.error('[GP Chat] cloud initialization failed', e); showToast('Chat cloud sync unavailable: ' + e.message); setTimeout(function(){ if (!GP_CHAT_SYNC.ready) initCloudChat(); }, 8000); }
   }
@@ -1014,6 +1014,10 @@
     started = true;
     console.log('[GP Chat] starting for', MY_NAME, '(' + (MY_ROLE || 'no role') + ')');
     buildUI();
+    /* Load the server user directory right away, independent of message sync,
+       so the contact list is complete even if cloud message sync is slow or fails. */
+    refreshChatUsers();
+    setInterval(refreshChatUsers, 30000);
     initCloudChat();
     return true;
   }
