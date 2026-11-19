@@ -333,6 +333,67 @@ app.put('/api/settings/admin-mobile', requireAuth, requireRole('admin'), wrap(as
   res.json({ ok:true, adminMobile:v });
 }));
 
+
+/* ------------------------------------------------------------------
+   SHARED INVENTORY DATA
+   ------------------------------------------------------------------ */
+const INVENTORY_KEYS = new Set([
+  'catalogue', 'openingStock', 'stockIn', 'stockOut', 'stockReturn',
+  'parties', 'goldprince_stock_holds_v1', 'invoiceCounter', 'returnCounter'
+]);
+
+app.get('/api/inventory', requireAuth, wrap(async (req, res) => {
+  const rows = await many('SELECT key, value, version, updated_at FROM portal_data ORDER BY key');
+  const data = {}, versions = {}, updatedAt = {};
+  for (const row of rows) {
+    data[row.key] = row.value;
+    versions[row.key] = Number(row.version);
+    updatedAt[row.key] = Number(row.updated_at);
+  }
+  res.set('Cache-Control', 'no-store').json({ data, versions, updatedAt });
+}));
+
+app.put('/api/inventory/:key', requireAuth, wrap(async (req, res) => {
+  const key = String(req.params.key || '');
+  if (!INVENTORY_KEYS.has(key)) return res.status(400).json({ error: 'Unknown inventory data key' });
+  const body = req.body || {};
+  if (!Object.prototype.hasOwnProperty.call(body, 'value') ||
+      !Number.isSafeInteger(Number(body.expectedVersion)) || Number(body.expectedVersion) < 0) {
+    return res.status(400).json({ error: 'value and non-negative expectedVersion are required' });
+  }
+  const expectedVersion = Number(body.expectedVersion);
+  const json = JSON.stringify(body.value);
+  if (json === undefined) return res.status(400).json({ error: 'value must be JSON serializable' });
+
+  const saved = await one(
+    `INSERT INTO portal_data (key, value, version, updated_by, updated_at)
+     VALUES ($1, $2::jsonb, 1, $3, $4)
+     ON CONFLICT (key) DO UPDATE SET
+       value = EXCLUDED.value,
+       version = portal_data.version + 1,
+       updated_by = EXCLUDED.updated_by,
+       updated_at = EXCLUDED.updated_at
+     WHERE portal_data.version = $5
+     RETURNING key, value, version, updated_at`,
+    [key, json, req.auth.username || String(req.auth.sub), Date.now(), expectedVersion]
+  );
+
+  if (!saved) {
+    const current = await one('SELECT value, version, updated_at FROM portal_data WHERE key=$1', [key]);
+    return res.status(409).json({
+      error: 'Inventory data changed in another browser. Merge and retry.',
+      value: current ? current.value : null,
+      version: current ? Number(current.version) : 0,
+      updatedAt: current ? Number(current.updated_at) : null
+    });
+  }
+
+  res.set('Cache-Control', 'no-store').json({
+    ok: true, key: saved.key, value: saved.value,
+    version: Number(saved.version), updatedAt: Number(saved.updated_at)
+  });
+}));
+
 /* ------------------------------------------------------------------
    404 + ERRORS
    ------------------------------------------------------------------ */
