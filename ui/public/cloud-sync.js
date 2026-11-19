@@ -51,7 +51,7 @@
     return true;
   }
   function isShared(key) {
-    return /^gp_[a-z0-9_-]{1,120}$/i.test(key) && !PRIVATE[key];
+    return (/^gp_[a-z0-9_-]{1,120}$/i.test(key) || key === 'goldprince_parties' || /^orderCounter_[a-z0-9_-]+$/i.test(key)) && !PRIVATE[key];
   }
   function json(value) {
     try { return JSON.stringify(value); } catch (_) { return ''; }
@@ -71,6 +71,10 @@
         if (item.id != null) return 'id:' + item.id;
         if (item._id != null) return '_id:' + item._id;
         if (item.art != null) return 'art:' + item.art;
+        if (item.partyId != null) return 'party:' + item.partyId;
+        if (item.partyCode != null) return 'party:' + item.partyCode;
+        if (item.code != null) return 'party:' + item.code;
+        if (item.name != null) return 'name:' + String(item.name).toLowerCase();
         if (item.username != null) return 'user:' + String(item.username).toLowerCase();
       }
       return 'value:' + json(item);
