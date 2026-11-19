@@ -103,8 +103,14 @@
     if (!GP_CHAT_SYNC.ready || GP_CHAT_SYNC.queue) return;
     GP_CHAT_SYNC.queue = (async function(){
       while (GP_CHAT_SYNC.pending) { var next = GP_CHAT_SYNC.pending; GP_CHAT_SYNC.pending = null; await putChatMessages(next); }
-    })().catch(function(e){ console.error('[GP Chat] cloud save failed', e); showToast('Chat not synced: ' + e.message); })
-      .finally(function(){ GP_CHAT_SYNC.queue = null; if (GP_CHAT_SYNC.pending) queueCloudSave(GP_CHAT_SYNC.pending); });
+    })().catch(function(e){
+      console.error('[GP Chat] cloud save failed', e);
+      GP_CHAT_SYNC.pending = mergeChatMessages(GP_CHAT_SYNC.pending || [], getMessages());
+      showToast('Chat not synced yet: ' + e.message);
+    }).finally(function(){
+      GP_CHAT_SYNC.queue = null;
+      if (GP_CHAT_SYNC.pending) setTimeout(function(){ if (GP_CHAT_SYNC.ready && !GP_CHAT_SYNC.queue) queueCloudSave(GP_CHAT_SYNC.pending); }, 5000);
+    });
   }
   async function refreshChatUsers() {
     try {
