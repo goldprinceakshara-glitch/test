@@ -1,35 +1,61 @@
-# Publishes ui/public to GitHub Pages (https://<user>.github.io/<repo>/).
-# Pages is static hosting, so the pages talk to the Railway app for login/accounts.
-# Set the repo variable RAILWAY_URL (Settings -> Secrets and variables -> Actions -> Variables),
-# e.g. https://test-production-313c31af.up.railway.app   (a default is used if it is not set)
-name: Deploy to GitHub Pages
+
+name: Deploy GP Portal to GitHub Pages
+
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   workflow_dispatch:
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 concurrency:
   group: pages
   cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Write config.js
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify frontend
         run: |
-          URL="${{ vars.RAILWAY_URL }}"
-          URL="${URL:-https://test-production-313c31af.up.railway.app}"
-          printf 'window.GP_API_BASE = "%s";\n' "${URL%/}" > ui/public/config.js
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+          test -f ui/public/index.html || {
+            echo "ERROR: ui/public/index.html is missing"
+            exit 1
+          }
+
+      - name: Prepare website
+        run: |
+          mkdir -p _site
+          cp -a ui/public/. _site/
+          touch _site/.nojekyll
+
+      - name: Configure Railway API
+        env:
+          RAILWAY_URL: ${{ vars.RAILWAY_URL }}
+        run: |
+          URL="${RAILWAY_URL:-https://test-production-313c31af.up.railway.app}"
+          printf 'window.GP_API_BASE = "%s";\n' "${URL%/}" > _site/config.js
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload website
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: ui/public
-      - id: deployment
+          path: _site
+
+      - name: Deploy website
+        id: deployment
         uses: actions/deploy-pages@v4
