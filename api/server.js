@@ -373,7 +373,7 @@ const DIRECTORY_PUBLIC_FIELDS = new Set([
   'id','username','name','role','branch','section','active'
 ]);
 function isSharedAppKey(key) {
-  return typeof key === 'string' && /^gp_[a-z0-9_-]{1,120}$/i.test(key) && !PRIVATE_APP_KEYS.has(key);
+  return typeof key === 'string' && (/^gp_[a-z0-9_-]{1,120}$/i.test(key) || key === 'goldprince_parties' || /^orderCounter_[a-z0-9_-]+$/i.test(key)) && !PRIVATE_APP_KEYS.has(key);
 }
 function canReadPortalKey(role, key) {
   if (APP_ADMIN_ONLY_KEYS.has(key)) return role === 'admin' || role === 'developer';
