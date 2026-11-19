@@ -237,7 +237,9 @@ app.get('/api/accounts/counts', requireAuth, requireRole('admin','developer'), w
     else if (r.role === 'stone_stock') counts.stone += r.c;
     else if (PP_ROLES.includes(r.role)) counts.pp += r.c;
   }
-  res.json({ counts });
+  const byRole = {};
+  for (const r of rows) byRole[r.role] = r.c;
+  res.set('Cache-Control', 'no-store').json({ counts, byRole });
 }));
 
 app.post('/api/accounts', requireAuth, requireRole('admin','developer'), wrap(async (req, res) => {
