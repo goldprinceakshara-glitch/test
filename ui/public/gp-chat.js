@@ -25,6 +25,9 @@
 
   var MY_NAME = '';
   var MY_ROLE = '';
+  var GP_CHAT_USERS = [];
+  var GP_CHAT_SYNC = { version:0, pending:null, queue:null, ready:false, polling:false };
+  var GP_CHAT_API = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\\/+$/, '');
   var started = false;
 
   var SCRIPT_SRC = '';
@@ -38,13 +41,13 @@
   function saveJSON(k, v) {
     try {
       localStorage.setItem(k, JSON.stringify(v));
+      if (k === MSG_KEY) queueCloudSave(v);
       return true;
     } catch (e) {
-      // quota — try to trim oldest media messages, then retry once
       if (v && Array.isArray(v)) {
         var trimmed = v.filter(function (m) { return !m.media; });
         if (trimmed.length !== v.length) {
-          try { localStorage.setItem(k, JSON.stringify(trimmed)); return true; } catch (e2) {}
+          try { localStorage.setItem(k, JSON.stringify(trimmed)); if (k === MSG_KEY) queueCloudSave(trimmed); return true; } catch (e2) {}
         }
       }
       console.warn('[GP Chat] localStorage write failed (quota?)', e);
@@ -58,6 +61,83 @@
     });
   }
   function norm(s) { return String(s == null ? '' : s).trim().toLowerCase(); }
+
+  function mergeChatMessages(remote, local) {
+    var map = new Map();
+    (Array.isArray(remote) ? remote : []).concat(Array.isArray(local) ? local : []).forEach(function (m, i) {
+      if (!m || typeof m !== 'object') return;
+      var id = String(m.id || (String(m.ts || '') + '|' + String(m.from || '') + '|' + String(m.to || '') + '|' + String(m.text || '') + '|' + i));
+      var prior = map.get(id);
+      if (!prior) map.set(id, Object.assign({}, m));
+      else { var merged = Object.assign({}, prior, m); merged.read = !!(prior.read || m.read); map.set(id, merged); }
+    });
+    return Array.from(map.values()).sort(function (a,b) { return new Date(a.ts || 0) - new Date(b.ts || 0); }).slice(-MAX_MESSAGES);
+  }
+  function chatToken() { return localStorage.getItem('gp_jwt') || ''; }
+  async function chatSnapshot() {
+    var token = chatToken();
+    if (!token) throw new Error('Login token missing');
+    var r = await fetch(GP_CHAT_API + '/api/inventory', { headers:{ 'Authorization':'Bearer ' + token, 'Cache-Control':'no-cache' }, cache:'no-store' });
+    var p = await r.json().catch(function(){ return {}; });
+    if (!r.ok) throw new Error(p.error || ('Chat sync failed (' + r.status + ')'));
+    return p;
+  }
+  async function putChatMessages(value) {
+    var next = value;
+    for (var i=0; i<6; i++) {
+      var r = await fetch(GP_CHAT_API + '/api/inventory/' + encodeURIComponent(MSG_KEY), {
+        method:'PUT', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + chatToken() },
+        body:JSON.stringify({ value:next, expectedVersion:GP_CHAT_SYNC.version })
+      });
+      var p = await r.json().catch(function(){ return {}; });
+      if (r.status === 409) { GP_CHAT_SYNC.version = Number(p.version || 0); next = mergeChatMessages(p.value, next); continue; }
+      if (!r.ok) throw new Error(p.error || ('Chat save failed (' + r.status + ')'));
+      GP_CHAT_SYNC.version = Number(p.version || 0);
+      localStorage.setItem(MSG_KEY, JSON.stringify(p.value || next));
+      return p;
+    }
+    throw new Error('Chat changed repeatedly; retry your message');
+  }
+  function queueCloudSave(value) {
+    GP_CHAT_SYNC.pending = Array.isArray(value) ? value.slice(-MAX_MESSAGES) : [];
+    if (!GP_CHAT_SYNC.ready || GP_CHAT_SYNC.queue) return;
+    GP_CHAT_SYNC.queue = (async function(){
+      while (GP_CHAT_SYNC.pending) { var next = GP_CHAT_SYNC.pending; GP_CHAT_SYNC.pending = null; await putChatMessages(next); }
+    })().catch(function(e){ console.error('[GP Chat] cloud save failed', e); showToast('Chat not synced: ' + e.message); })
+      .finally(function(){ GP_CHAT_SYNC.queue = null; if (GP_CHAT_SYNC.pending) queueCloudSave(GP_CHAT_SYNC.pending); });
+  }
+  async function refreshChatUsers() {
+    try {
+      var r = await fetch(GP_CHAT_API + '/api/chat/users', { headers:{ 'Authorization':'Bearer ' + chatToken(), 'Cache-Control':'no-cache' }, cache:'no-store' });
+      if (!r.ok) return;
+      var p = await r.json(); GP_CHAT_USERS = Array.isArray(p.users) ? p.users : [];
+      if (started) { lastRenderedSig = ''; renderContacts(); }
+    } catch(e) { console.warn('[GP Chat] user directory refresh failed', e); }
+  }
+  async function refreshCloudChat() {
+    if (!GP_CHAT_SYNC.ready || GP_CHAT_SYNC.polling || document.visibilityState === 'hidden' || GP_CHAT_SYNC.queue || GP_CHAT_SYNC.pending) return;
+    GP_CHAT_SYNC.polling = true;
+    try {
+      var p = await chatSnapshot(), remote = p.data && p.data[MSG_KEY];
+      var version = Number(p.versions && p.versions[MSG_KEY] || 0);
+      if (Array.isArray(remote) && version > GP_CHAT_SYNC.version) {
+        GP_CHAT_SYNC.version = version; localStorage.setItem(MSG_KEY, JSON.stringify(remote));
+        lastRenderedSig = ''; if (activeContact) renderThread(); renderContacts(); refreshBadge();
+      }
+    } catch(e) { console.warn('[GP Chat] cloud refresh failed', e); }
+    finally { GP_CHAT_SYNC.polling = false; }
+  }
+  async function initCloudChat() {
+    try {
+      var p = await chatSnapshot(), remote = p.data && p.data[MSG_KEY], local = getMessages();
+      GP_CHAT_SYNC.version = Number(p.versions && p.versions[MSG_KEY] || 0);
+      var merged = mergeChatMessages(remote || [], local);
+      localStorage.setItem(MSG_KEY, JSON.stringify(merged)); GP_CHAT_SYNC.ready = true;
+      if (!Array.isArray(remote) || JSON.stringify(merged) !== JSON.stringify(remote)) queueCloudSave(merged);
+      refreshChatUsers(); setInterval(refreshCloudChat, 3500); setInterval(refreshChatUsers, 30000);
+      window.addEventListener('focus', refreshCloudChat);
+    } catch(e) { console.error('[GP Chat] cloud initialization failed', e); showToast('Chat cloud sync unavailable: ' + e.message); }
+  }
   function nowISO() { return new Date().toISOString(); }
   function fmtTime(iso) {
     var d = new Date(iso);
@@ -173,6 +253,9 @@
       }
       return [];
     }
+
+    /* Server directory is authoritative across browsers; local lists remain a fallback. */
+    GP_CHAT_USERS.forEach(function (u) { push(uname(u), u && u.role, u && u.branch); });
 
     /* Core users: admin / developer / branch_incharge / user / workshop */
     list('gp_portal_users').forEach(function (u) {
@@ -579,8 +662,10 @@
 
       var meta = esc(fmtTime(m.ts));
       if (out) meta += receiptHTML(m);
+      var sender = out ? 'You' : (m.from || 'Unknown user');
 
-      return '<div class="' + cls + '">' + body +
+      return '<div class="' + cls + '">' +
+               '<div class="sender-name">' + esc(sender) + '</div>' + body +
                '<div class="meta">' + meta + '</div>' +
              '</div>';
     }).join('');
@@ -923,6 +1008,7 @@
     started = true;
     console.log('[GP Chat] starting for', MY_NAME, '(' + (MY_ROLE || 'no role') + ')');
     buildUI();
+    initCloudChat();
     return true;
   }
 
