@@ -192,7 +192,7 @@ h1 img{height:90px;width:auto;border-radius:8px}
    ========================================================== */
 (function () {
   try {
-    var raw = sessionStorage.getItem('gp_logged_user');
+    var raw = sessionStorage.getItem('gp_logged_user') || localStorage.getItem('gp_logged_user');
     if (!raw) return;
     var s = JSON.parse(raw);
     if (!s || typeof s !== 'object' || !s.username || !s.role) {
@@ -372,8 +372,11 @@ function handleLogin() {
         whatsapp: mobileOnly,
         loginAt:  Date.now()
       };
-      try { sessionStorage.setItem('gp_logged_user', JSON.stringify(sessionData)); }
-      catch (e) { showMessage('Could not save session. Please try again.', true); return; }
+      try {
+        var savedSession = JSON.stringify(sessionData);
+        sessionStorage.setItem('gp_logged_user', savedSession);
+        localStorage.setItem('gp_logged_user', savedSession);
+      } catch (e) { showMessage('Could not save session. Please try again.', true); return; }
 
       showMessage('Login successful! Redirecting...', false);
       setTimeout(function () { redirectByRole(u.role); }, 500);
@@ -510,11 +513,13 @@ function retryLoginAfterApproval() {
       var phoneStr   = u.phone || '';
       var mobileOnly = String(phoneStr).replace(/\D/g,'');
       if (mobileOnly.length > 10) mobileOnly = mobileOnly.slice(-10);
-      sessionStorage.setItem('gp_logged_user', JSON.stringify({
+      var approvedSession = JSON.stringify({
         username: u.username, role: u.role, branch: u.branch || '',
         section: u.section || '', phone: phoneStr,
         mobile: mobileOnly, whatsapp: mobileOnly, loginAt: Date.now()
-      }));
+      });
+      sessionStorage.setItem('gp_logged_user', approvedSession);
+      localStorage.setItem('gp_logged_user', approvedSession);
       showMessage('Logged in! Redirecting…', false);
       setTimeout(function () { redirectByRole(u.role); }, 500);
     } else {
