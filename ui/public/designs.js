@@ -1156,6 +1156,9 @@ function openAllotCadModal(id){
   if (hint) hint.classList.add('hidden');
   syncCadDesignerDirectory().then(function(list){
     if (hint) hint.classList.toggle('hidden', list.length > 0);
+    var search = document.getElementById('cadDesignerSearch');
+    var selected = document.getElementById('cadDesignerValue');
+    if (search && selected && !selected.value) search.dispatchEvent(new Event('input', { bubbles:true }));
   });
 }
 document.getElementById('closeAllotCadModal').addEventListener('click', function(){ document.getElementById('allotCadModal').classList.add('hidden'); pendingAllotCadId = null; });
