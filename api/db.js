@@ -7,20 +7,33 @@ const bcrypt = require('bcryptjs');
 // BIGINT (OID 20) comes back from pg as a string by default — we store epoch-ms in BIGINT columns.
 types.setTypeParser(20, v => Number(v));
 
+// Prefer Railway's individual Postgres references when present. This avoids
+// malformed DATABASE_URL interpolation and keeps credentials in Railway variables.
+const hasDiscreteDbConfig = Boolean(
+  process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD && process.env.PGDATABASE
+);
 const DATABASE_URL = process.env.DATABASE_URL;
-if (!DATABASE_URL) {
-  console.error('[db] DATABASE_URL is not set. On Railway: API service → Variables → DATABASE_URL = ${{Postgres.DATABASE_URL}}');
+if (!hasDiscreteDbConfig && !DATABASE_URL) {
+  console.error('[db] Set DATABASE_URL or PGHOST/PGUSER/PGPASSWORD/PGDATABASE on the API service.');
   process.exit(1);
 }
 
 // Railway private network (*.railway.internal) and localhost need no SSL; the public proxy does.
-const host = (() => { try { return new URL(DATABASE_URL).hostname; } catch (e) { return ''; } })();
+const host = hasDiscreteDbConfig
+  ? process.env.PGHOST
+  : (() => { try { return new URL(DATABASE_URL).hostname; } catch (e) { return ''; } })();
 const useSsl = process.env.PGSSL
   ? process.env.PGSSL === 'true'
   : !(host === 'localhost' || host === '127.0.0.1' || host.endsWith('.railway.internal'));
 
 const pool = new Pool({
-  connectionString: DATABASE_URL,
+  ...(hasDiscreteDbConfig ? {
+    host: process.env.PGHOST,
+    port: Number(process.env.PGPORT || 5432),
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
+    database: process.env.PGDATABASE
+  } : { connectionString: DATABASE_URL }),
   ssl: useSsl ? { rejectUnauthorized: false } : false,
   max: 10
 });
