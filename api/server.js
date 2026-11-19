@@ -340,12 +340,62 @@ app.put('/api/settings/admin-mobile', requireAuth, requireRole('admin'), wrap(as
    INTERNAL CHAT DIRECTORY
    ------------------------------------------------------------------ */
 app.get('/api/chat/users', requireAuth, wrap(async (req, res) => {
-  const users = await many(
+  // Include authenticated accounts and legacy portal user directories.
+  // Older portal pages still save some user groups in portal_data rather than
+  // the accounts table, so reading accounts alone hides those people in chat.
+  const accountRows = await many(
     'SELECT username, role, branch FROM accounts WHERE active=1 ORDER BY role, username'
   );
-  res.set('Cache-Control', 'no-store').json({
-    users: users.map(u => ({ username:u.username, role:u.role, branch:u.branch || '' }))
-  });
+  const directoryKeys = [
+    'gp_portal_users', 'gp_designer_users', 'gp_cad_designer_users',
+    'gp_post_production_users', 'gp_stone_stock_users'
+  ];
+  const directoryRows = await many(
+    'SELECT key, value FROM portal_data WHERE key = ANY($1::text[])',
+    [directoryKeys]
+  );
+
+  const byUsername = new Map();
+  const addUser = (record, fallbackRole, fallbackUsername) => {
+    if (!record || typeof record !== 'object' || Array.isArray(record)) return;
+    const username = String(record.username || record.userName || record.name ||
+      record.user || record.id || fallbackUsername || '').trim();
+    if (!username || record.active === false || record.active === 0) return;
+    const key = username.toLowerCase();
+    if (!byUsername.has(key)) {
+      byUsername.set(key, {
+        username,
+        role: String(record.role || record.userRole || record.type || fallbackRole || 'user'),
+        branch: String(record.branch || '')
+      });
+    }
+  };
+
+  // Prefer canonical account records when a user exists in both stores.
+  accountRows.forEach(u => addUser(u, u.role));
+  const fallbackRoles = {
+    gp_portal_users: 'user',
+    gp_designer_users: 'designer',
+    gp_cad_designer_users: 'cad_designer',
+    gp_post_production_users: 'post_production',
+    gp_stone_stock_users: 'stone_stock'
+  };
+  for (const row of directoryRows) {
+    const value = row.value;
+    const fallbackRole = fallbackRoles[row.key] || 'user';
+    if (Array.isArray(value)) {
+      value.forEach(record => addUser(record, fallbackRole));
+    } else if (value && typeof value === 'object') {
+      for (const [username, record] of Object.entries(value)) {
+        addUser(record, fallbackRole, username);
+      }
+    }
+  }
+
+  const users = Array.from(byUsername.values()).sort((a, b) =>
+    a.role.localeCompare(b.role) || a.username.localeCompare(b.username)
+  );
+  res.set('Cache-Control', 'no-store').json({ users });
 }));
 
 /* ------------------------------------------------------------------
