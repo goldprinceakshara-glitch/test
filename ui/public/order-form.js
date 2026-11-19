@@ -2860,4 +2860,592 @@
     });
   }
 
-  /* (Pending split count + transfer helpers, pending render...) */
+  function partSuffix(idx) {
+    return String.fromCharCode(65 + idx);
+  }
+
+  function showPendingTransferBar(orderId) {
+    var bar = $id('pendingTransferBar');
+    var label = $id('ptbOrderLabel');
+    var sel = $id('ptbWorkshopSelect');
+    if (!bar || !label) return;
+
+    if (!orderId) {
+      pendingSelectedId = null;
+      _lastSplitBarOrderId = null;
+      bar.classList.add('hidden');
+      var scc = $id('ptbSplitCount'); if (scc) scc.value = '1';
+      pendingSplitParts = [];
+      pendingSplitPartWorkshops = [];
+      renderPendingSplitUI();
+      return;
+    }
+
+    var orders = _readJSON(ORDERS_KEY, []);
+    var o = orders.find(function (x) { return x.id === orderId; });
+    if (!o) { pendingSelectedId = null; bar.classList.add('hidden'); return; }
+
+    var orderChanged = (_lastSplitBarOrderId !== orderId);
+    _lastSplitBarOrderId = orderId;
+    pendingSelectedId = orderId;
+    label.textContent = (o.orderNo || '—') + '  ·  ' + (o.partyName || '—') +
+                       '  ·  currently in ' + (o.workshop || '—');
+    if (sel) sel.value = '';
+    bar.classList.remove('hidden');
+    var st = $id('pendingStatus'); if (st) st.textContent = '';
+
+    if (orderChanged) {
+      var sc = $id('ptbSplitCount'); if (sc) sc.value = '1';
+      pendingSplitParts = [];
+      pendingSplitPartWorkshops = [];
+      renderPendingSplitUI();
+    }
+  }
+
+  function renderPendingOrders() {
+    if (!pendingList) return;
+    var all = getPendingOrders();
+    populatePendingFilterOptions(all);
+
+    var pending = applyPendingFilters(all);
+
+    var summaryEl = $id('pfSummary');
+    if (summaryEl) {
+      var totalQty = pending.reduce(function (s, o) { return s + Number(o.totalQty || 0); }, 0);
+      var totalWt  = pending.reduce(function (s, o) { return s + Number(o.totalWeight || 0); }, 0);
+      var active   = Object.keys(pendingFilters).filter(function (k) { return pendingFilters[k]; }).length;
+      var prioCount = pending.filter(function (o) { return o.priority; }).length;
+      summaryEl.innerHTML =
+        '<b>' + pending.length + '</b> of <b>' + all.length + '</b> order(s) shown' +
+        (active ? ' — filtered by <b>' + active + '</b> field(s)' : '') +
+        ' &nbsp;·&nbsp; Qty <b>' + formatNumber(totalQty) + '</b>' +
+        ' &nbsp;·&nbsp; Weight <b>' + formatNumber2(totalWt) + ' g</b>' +
+        (prioCount
+          ? ' &nbsp;·&nbsp; <b style="color:#b26a00">★ ' + prioCount + ' priority</b>'
+          : '');
+    }
+
+    if (!all.length) {
+      pendingList.innerHTML =
+        '<div class="empty-list">No pending orders. Estimations appear here after you forward them to a workshop. ' +
+        'Orders the branch has already dispatched to HO are moved to <b>Received Orders</b>.</div>';
+      showPendingTransferBar(null);
+      return;
+    }
+    if (!pending.length) {
+      pendingList.innerHTML = '<div class="pending-filter-empty">No orders match the current filters. Try adjusting or clicking RESET.</div>';
+      showPendingTransferBar(null);
+      return;
+    }
+
+    pending.sort(function (a, b) {
+      return new Date(b.forwardedAt || b.confirmedAt || 0) - new Date(a.forwardedAt || a.confirmedAt || 0);
+    });
+
+    var html = '<div class="list-table"><table><thead><tr>'
+             +   '<th>ORDER NO.</th>'
+             +   '<th>EST. NO.</th>'
+             +   '<th>PARTY</th>'
+             +   '<th>WORKSHOP</th>'
+             +   '<th>GROUP</th>'
+             +   '<th>QTY</th>'
+             +   '<th>WT (g)</th>'
+             +   '<th>DATE</th>'
+             +   '<th>ACTION</th>'
+             + '</tr></thead><tbody>';
+
+    pending.forEach(function (o) {
+      var iso = orderDateIso(o);
+      var selected = (pendingSelectedId === o.id);
+      var partChip = '';
+      if (o.partInfo) {
+        partChip = o.partInfo.isOriginal
+          ? '<span class="part-chip part-original">ORIG</span>'
+          : '<span class="part-chip">P' + o.partInfo.part + '/' + o.partInfo.of + '</span>';
+      }
+      var prBadge = o.priority ? '<span class="priority-badge">Priority</span>' : '';
+      var prBtnCls = 'priority-btn' + (o.priority ? ' is-priority' : '');
+      var prBtnLabel = o.priority ? '★ Priority' : '☆ Priority';
+      html += '<tr class="clickable-row' + (selected ? ' selected-row' : '') + (o.priority ? ' priority-row' : '') + '" data-pid="' + escapeAttr(o.id) + '">'
+           +   '<td><b>' + escapeHtml(o.orderNo || '—') + '</b>' + partChip + prBadge + '</td>'
+           +   '<td>' + escapeHtml(o.estimateNo || '—') + '</td>'
+           +   '<td>' + escapeHtml(o.partyName || '—') + '</td>'
+           +   '<td>' + escapeHtml(o.workshop || '—') + '</td>'
+           +   '<td>' + escapeHtml(o.productGroup || '—') + '</td>'
+           +   '<td>' + formatNumber(o.totalQty) + '</td>'
+           +   '<td>' + formatNumber2(o.totalWeight) + '</td>'
+           +   '<td>' + (iso ? formatDate(iso) : '—') + '</td>'
+           +   '<td>'
+           +     '<button type="button" class="link-button" data-pselect="' + escapeAttr(o.id) + '">Manage</button> '
+           +     '<button type="button" class="' + prBtnCls + '" data-priority="' + escapeAttr(o.id) + '">' + prBtnLabel + '</button>'
+           +   '</td>'
+           + '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    pendingList.innerHTML = html;
+
+    pendingList.querySelectorAll('[data-pid]').forEach(function (tr) {
+      tr.addEventListener('click', function (e) {
+        if (e.target.tagName === 'BUTTON') return;
+        showPendingTransferBar(tr.dataset.pid);
+        renderPendingOrders();
+      });
+    });
+    pendingList.querySelectorAll('[data-pselect]').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        showPendingTransferBar(b.dataset.pselect);
+        renderPendingOrders();
+      });
+    });
+    pendingList.querySelectorAll('[data-priority]').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        togglePendingPriority(b.dataset.priority);
+      });
+    });
+
+    if (pendingSelectedId) showPendingTransferBar(pendingSelectedId);
+  }
+
+  /* ============================================================
+     PRIORITY TOGGLE & NOTIFICATION
+     ============================================================ */
+  function togglePendingPriority(orderId) {
+    if (!orderId) return;
+    var orders = _readJSON(ORDERS_KEY, []);
+    if (!Array.isArray(orders)) orders = [];
+    var idx = orders.findIndex(function (o) { return o.id === orderId; });
+    if (idx === -1) { alert('Order not found.'); return; }
+    var o = orders[idx];
+    o.priority = !o.priority;
+    o.priorityAt = o.priority ? new Date().toISOString() : null;
+    o.priorityBy = o.priority ? ((session && session.username) || 'HO') : null;
+    orders[idx] = o;
+    saveJSON(ORDERS_KEY, orders);
+
+    var st = $id('pendingStatus');
+    if (st) {
+      st.textContent = o.priority
+        ? '★ Order ' + (o.orderNo || '') + ' marked as PRIORITY.'
+        : '☆ Priority removed from order ' + (o.orderNo || '') + '.';
+    }
+    
+    // WhatsApp Notification to Logged-in User & Internal Chat
+    if (o.priority && session && session.phone) {
+      var phone = String(session.phone).replace(/\D/g, '');
+      if (phone.length === 10) phone = '91' + phone; // Add country code for India
+      
+      var msg = '*★ PRIORITY ORDER ALERT ★*\n\n'
+              + 'Order No: ' + (o.orderNo || '') + '\n'
+              + 'Party: ' + (o.partyName || '') + '\n'
+              + 'Group: ' + (o.productGroup || '') + '\n'
+              + 'Qty: ' + formatNumber(o.totalQty) + ' pcs\n'
+              + 'Wt: ' + formatNumber2(o.totalWeight) + ' g\n'
+              + 'Workshop: ' + (o.workshop || '') + '\n\n'
+              + 'Please prioritize this order in production.';
+              
+      // 1. Open WhatsApp link
+      if (phone.length >= 10) {
+        var waUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+        window.open(waUrl, '_blank');
+      } else {
+        // Fallback if phone is missing, open general WhatsApp with text
+        window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+      }
+
+      // 2. Add to Internal Chat (gp-chat.js integration)
+      try {
+        var chatLog = _readJSON('gp_internal_notifications', []);
+        if (!Array.isArray(chatLog)) chatLog = [];
+        chatLog.push({
+          id: 'notif_' + Date.now(),
+          to: o.workshop || 'All',
+          from: 'SYSTEM',
+          message: '★ PRIORITY ORDER: ' + (o.orderNo || '') + ' for ' + (o.partyName || ''),
+          type: 'priority_alert',
+          timestamp: Date.now()
+        });
+        // Keep last 100
+        if (chatLog.length > 100) chatLog = chatLog.slice(chatLog.length - 100);
+        saveJSON('gp_internal_notifications', chatLog);
+      } catch(e) { console.warn('Could not save internal chat notification', e); }
+    }
+    
+    renderPendingOrders();
+  }
+
+  function transferPendingOrder() {
+    if (!pendingSelectedId) { alert('Select an order row first.'); return; }
+
+    var count = getPendingSplitCount();
+
+    if (count <= 1) {
+      var sel = $id('ptbWorkshopSelect');
+      var target = sel ? String(sel.value || '').trim() : '';
+      if (!target) { alert('Please choose a workshop to transfer to.'); sel && sel.focus(); return; }
+
+      var orders = _readJSON(ORDERS_KEY, []);
+      if (!Array.isArray(orders)) orders = [];
+      var idx = orders.findIndex(function (o) { return o.id === pendingSelectedId; });
+      if (idx === -1) { alert('Order not found.'); return; }
+
+      var o = orders[idx];
+      if (String(o.workshop || '').toLowerCase() === target.toLowerCase()) {
+        alert('Order is already in ' + target + '.'); return;
+      }
+
+      var fromWs = o.workshop || '—';
+      if (!confirm('Transfer order ' + (o.orderNo || '') + '\nfrom  ' + fromWs + '\nto  ' + target + ' ?')) return;
+
+      o.transfers = Array.isArray(o.transfers) ? o.transfers : [];
+      o.transfers.push({
+        from: fromWs,
+        to: target,
+        at: new Date().toISOString(),
+        by: (session && session.username) || 'HO'
+      });
+      o.workshop = target;
+      o.updatedAt = new Date().toISOString();
+
+      orders[idx] = o;
+      saveJSON(ORDERS_KEY, orders);
+
+      var st = $id('pendingStatus');
+      if (st) st.textContent = '✅ Order ' + (o.orderNo || '') + ' transferred from ' + fromWs + ' → ' + target + '.';
+
+      pendingSelectedId = null;
+      _lastSplitBarOrderId = null;
+      showPendingTransferBar(null);
+      renderPendingOrders();
+      return;
+    }
+
+    var val = validatePendingSplit();
+    if (!val.ok) {
+      alert('Split configuration is not valid:\n\n' + val.msg);
+      return;
+    }
+
+    var orders2 = _readJSON(ORDERS_KEY, []);
+    if (!Array.isArray(orders2)) orders2 = [];
+    var idx2 = orders2.findIndex(function (o) { return o.id === pendingSelectedId; });
+    if (idx2 === -1) { alert('Order not found.'); return; }
+
+    var original = orders2[idx2];
+    var baseOrderNo = String(original.orderNo || '');
+    var nowIso = new Date().toISOString();
+    var username = (session && session.username) || 'HO';
+
+    var partsCreated = [];
+
+    for (var p = 0; p < pendingSplitParts.length; p++) {
+      var part = pendingSplitParts[p];
+      var partWs = pendingSplitPartWorkshops[p];
+      if (!partWs) { alert('Part ' + (p + 1) + ': workshop not set.'); return; }
+
+      var partItems = [];
+      (original.items || []).forEach(function (it) {
+        var art = String(it.artNo);
+        var qtyInPart = Number(part.quantities[art] || 0);
+        if (qtyInPart <= 0) return;
+        partItems.push({
+          artNo: it.artNo,
+          name: it.name,
+          heightInch: it.heightInch,
+          sizeMm: it.sizeMm,
+          group: it.group,
+          sheet: it.sheet,
+          weight: Number(it.weight || 0),
+          quantity: qtyInPart,
+          totalWeight: Number(it.weight || 0) * qtyInPart,
+          image: it.image || ''
+        });
+      });
+
+      var coalesced = [], byArt = {};
+      partItems.forEach(function (x) {
+        var k = String(x.artNo);
+        if (byArt[k]) {
+          byArt[k].quantity += x.quantity;
+          byArt[k].totalWeight += x.totalWeight;
+        } else {
+          byArt[k] = x;
+          coalesced.push(x);
+        }
+      });
+
+      var partQty = coalesced.reduce(function (s, x) { return s + Number(x.quantity || 0); }, 0);
+      var partWt  = coalesced.reduce(function (s, x) { return s + Number(x.totalWeight || 0); }, 0);
+
+      var splitOrder = JSON.parse(JSON.stringify(original));
+      splitOrder.id          = 'ord_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '_S' + (p + 1);
+      splitOrder.orderNo     = baseOrderNo + '/' + partSuffix(p);
+      splitOrder.workshop    = partWs;
+      splitOrder.items       = coalesced;
+      splitOrder.totalQty    = partQty;
+      splitOrder.totalWeight = partWt;
+      splitOrder.updatedAt   = nowIso;
+      splitOrder.partInfo    = {
+        part: p + 1,
+        of: pendingSplitParts.length,
+        splitOf: original.estimateNo || null,
+        parentOrderNo: baseOrderNo,
+        isOriginal: false,
+        workshop: partWs
+      };
+      splitOrder.transfers = Array.isArray(original.transfers) ? original.transfers.slice() : [];
+      splitOrder.transfers.push({
+        from: original.workshop || '—',
+        to: partWs,
+        at: nowIso,
+        by: username,
+        kind: 'split',
+        part: p + 1
+      });
+
+      partsCreated.push(splitOrder);
+    }
+
+    if (!confirm(
+      'Split order ' + baseOrderNo + ' into ' + partsCreated.length + ' part(s)?\n\n' +
+      partsCreated.map(function (o) { return '  ' + o.orderNo + '  →  ' + o.workshop + '  (qty ' + o.totalQty + ')'; }).join('\n') +
+      '\n\nThe original order ' + baseOrderNo + ' will be replaced by these parts.'
+    )) return;
+
+    orders2.splice(idx2, 1);
+    partsCreated.forEach(function (po) { orders2.push(po); });
+    saveJSON(ORDERS_KEY, orders2);
+
+    var st2 = $id('pendingStatus');
+    if (st2) {
+      st2.textContent = '✅ Order ' + baseOrderNo + ' split into ' + partsCreated.length +
+                       ' part(s): ' + partsCreated.map(function (o) { return o.orderNo + ' → ' + o.workshop; }).join('  |  ');
+    }
+
+    pendingSelectedId = null;
+    _lastSplitBarOrderId = null;
+    showPendingTransferBar(null);
+    renderPendingOrders();
+  }
+
+  function cancelPendingOrder() {
+    if (!pendingSelectedId) { alert('Select an order row first.'); return; }
+
+    var orders = _readJSON(ORDERS_KEY, []);
+    if (!Array.isArray(orders)) orders = [];
+    var idx = orders.findIndex(function (o) { return o.id === pendingSelectedId; });
+    if (idx === -1) { alert('Order not found.'); return; }
+
+    var o = orders[idx];
+    var reason = prompt(
+      'Cancel order ' + (o.orderNo || '') + ' (' + (o.partyName || '') + ')?\n\n' +
+      'Enter a reason (optional):', ''
+    );
+    if (reason === null) return;
+    if (!confirm('Confirm CANCEL of order ' + (o.orderNo || '') + '?\nThis removes it from Pending Orders.')) return;
+
+    o.status      = 'cancelled';
+    o.cancelledAt = new Date().toISOString();
+    o.cancelledBy = (session && session.username) || 'HO';
+    o.cancelReason = reason || '';
+    orders[idx] = o;
+    saveJSON(ORDERS_KEY, orders);
+
+    var st = $id('pendingStatus');
+    if (st) st.textContent = '🗑 Order ' + (o.orderNo || '') + ' cancelled.';
+
+    pendingSelectedId = null;
+    _lastSplitBarOrderId = null;
+    showPendingTransferBar(null);
+    renderPendingOrders();
+  }
+
+  (function wirePendingControls() {
+    var map = {
+      pfParty: 'party', pfWorkshop: 'workshop', pfGroup: 'group',
+      pfFromDate: 'from', pfToDate: 'to'
+    };
+    Object.keys(map).forEach(function (id) {
+      var el = $id(id); if (!el) return;
+      var key = map[id];
+      var evt = (el.tagName === 'SELECT') ? 'change' : 'input';
+      el.addEventListener(evt, function () {
+        pendingFilters[key] = el.value || '';
+        renderPendingOrders();
+      });
+    });
+
+    var prSel = $id('pfPriority');
+    if (prSel) prSel.addEventListener('change', function () {
+      pendingFilters.priority = prSel.value || '';
+      renderPendingOrders();
+    });
+
+    var resetBtn = $id('pfResetBtn');
+    if (resetBtn) resetBtn.addEventListener('click', function () {
+      pendingFilters = { party: '', workshop: '', group: '', from: '', to: '', priority: '' };
+      ['pfParty', 'pfWorkshop', 'pfGroup', 'pfFromDate', 'pfToDate', 'pfPriority'].forEach(function (id) {
+        var el = $id(id); if (el) el.value = '';
+      });
+      renderPendingOrders();
+    });
+
+    var transferBtn = $id('ptbTransferBtn');
+    if (transferBtn) transferBtn.addEventListener('click', transferPendingOrder);
+
+    var cancelBtn = $id('ptbCancelBtn');
+    if (cancelBtn) cancelBtn.addEventListener('click', cancelPendingOrder);
+
+    var closeBarBtn = $id('ptbCloseBtn');
+    if (closeBarBtn) closeBarBtn.addEventListener('click', function () {
+      _lastSplitBarOrderId = null;
+      showPendingTransferBar(null);
+      renderPendingOrders();
+    });
+
+    var splitCountEl = $id('ptbSplitCount');
+    if (splitCountEl) {
+      splitCountEl.addEventListener('change', function () {
+        resetPendingSplitState();
+      });
+    }
+    var aq = $id('ptbSplitAutoByQtyBtn');
+    if (aq) aq.addEventListener('click', function () {
+      if (pendingSplitParts.length > 1) autoSplitPendingByQty();
+    });
+    var aa = $id('ptbSplitAutoByArtBtn');
+    if (aa) aa.addEventListener('click', function () {
+      if (pendingSplitParts.length > 1) autoSplitPendingByArt();
+    });
+    var an = $id('ptbSplitAutoByNameBtn');
+    if (an) an.addEventListener('click', function () {
+      if (pendingSplitParts.length > 1) autoSplitPendingByName();
+    });
+    var rs = $id('ptbSplitResetBtn');
+    if (rs) rs.addEventListener('click', function () {
+      resetPendingSplitState();
+    });
+  })();
+
+  if (pendingTopBtn) pendingTopBtn.addEventListener('click', function () {
+    pendingSelectedId = null;
+    _lastSplitBarOrderId = null;
+    showPendingTransferBar(null);
+    renderPendingOrders();
+    pendingModal.classList.remove('hidden');
+  });
+  if (closePending) closePending.addEventListener('click', function () {
+    pendingModal.classList.add('hidden');
+    pendingSelectedId = null;
+    _lastSplitBarOrderId = null;
+    showPendingTransferBar(null);
+  });
+
+  /* ============================================================
+     TOP BAR — new estimation
+     ============================================================ */
+  if (newEstimationTopBtn) newEstimationTopBtn.addEventListener('click', function () {
+    resetFormToStart();
+  });
+
+  /* ============================================================
+     NOTE field — Enter jumps focus to the NEXT button
+     ============================================================ */
+  (function wireNoteEnterToNext() {
+    var note = document.getElementById('note');
+    var next = document.getElementById('nextBtn');
+    if (!note || !next) return;
+
+    note.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      if (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
+
+      e.preventDefault();
+      next.focus();
+    });
+  })();
+
+  /* ============================================================
+     INIT
+     ============================================================ */
+  if (groupSelect) {
+    currentGroupFilter = String(groupSelect.value || '3D IDOLS').toUpperCase();
+  }
+  loadProductCatalog();
+  renderItems();
+  renderPartyList('');
+
+  console.log('[order-form.js] Ready.');
+  console.log('[order-form.js] Existing estimations:',
+              (_readJSON(ESTIMATIONS_KEY, []) || []).length);
+  console.log('[order-form.js] Existing orders:',
+              (_readJSON(ORDERS_KEY, []) || []).length);
+
+})();
+
+/* ============================================================
+   PARTY STEP — Enter key moves to next field (like Tab)
+   ============================================================ */
+(function wireEnterToTabInPartyStep() {
+  var step = document.getElementById('partyStep');
+  if (!step) return;
+
+  function shouldSkip(el) {
+    if (!el) return true;
+    var tag = (el.tagName || '').toUpperCase();
+    if (tag === 'TEXTAREA') return true;
+    if (tag === 'BUTTON')   return true;
+    if (el.type === 'hidden') return true;
+    if (el.id === 'partyClearBtn') return true;
+    return false;
+  }
+
+  function isPartyListOpen() {
+    var list = document.getElementById('partyList');
+    return !!(list && list.classList.contains('show'));
+  }
+
+  step.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+    if (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
+
+    var target = e.target;
+    if (shouldSkip(target)) return;
+
+    if (target.id === 'partySearchInput' && isPartyListOpen()) return;
+
+    var focusables = Array.prototype.slice.call(
+      step.querySelectorAll(
+        'input:not([type="hidden"]):not([disabled]):not([readonly]), ' +
+        'select:not([disabled]), ' +
+        'textarea:not([disabled]), ' +
+        'button:not([disabled])'
+      )
+    ).filter(function (el) {
+      if (el.offsetParent === null) return false;
+      if (el.id === 'partyClearBtn') return false;
+      if (el.type === 'hidden') return false;
+      if (el.readOnly) return false;
+      return true;
+    });
+
+    var idx = focusables.indexOf(target);
+    if (idx === -1) return;
+
+    e.preventDefault();
+
+    if (idx < focusables.length - 1) {
+      var next = focusables[idx + 1];
+      next.focus();
+      if (typeof next.select === 'function' &&
+          (next.tagName === 'INPUT' || next.tagName === 'TEXTAREA')) {
+        try { next.select(); } catch (err) {}
+      }
+    } else {
+      var nextBtnEl = document.getElementById('nextBtn');
+      if (nextBtnEl) nextBtnEl.focus();
+    }
+  }, true);
+})();
