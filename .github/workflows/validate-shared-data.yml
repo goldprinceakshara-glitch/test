@@ -1,0 +1,57 @@
+name: Validate shared browser data
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "api/server.js"
+      - "ui/public/cloud-sync.js"
+      - ".github/workflows/pages.yml"
+      - ".github/workflows/validate-shared-data.yml"
+  push:
+    branches: [main]
+    paths:
+      - "api/server.js"
+      - "ui/public/cloud-sync.js"
+      - ".github/workflows/pages.yml"
+      - ".github/workflows/validate-shared-data.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check api/server.js
+          node --check ui/public/cloud-sync.js
+
+      - name: Verify Pages bridge injection
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          site = Path("_site")
+          site.mkdir(exist_ok=True)
+          for source in Path("ui/public").glob("*.html"):
+              html = source.read_text(encoding="utf-8")
+              if "cloud-sync.js" not in html:
+                  html, count = re.subn(
+                      r"</head>",
+                      '<script src="cloud-sync.js"></script>\n</head>',
+                      html,
+                      count=1,
+                      flags=re.IGNORECASE,
+                  )
+                  if count != 1:
+                      raise SystemExit(f"Could not inject bridge into {source}")
+              (site / source.name).write_text(html, encoding="utf-8")
+          if not (Path("ui/public") / "cloud-sync.js").is_file():
+              raise SystemExit("cloud-sync.js is missing")
+          pages = list(site.glob("*.html"))
+          if not pages or any("cloud-sync.js" not in p.read_text(encoding="utf-8") for p in pages):
+              raise SystemExit("At least one HTML page is missing the bridge")
+          print(f"Validated bridge injection on {len(pages)} HTML pages")
+          PY
