@@ -34,6 +34,7 @@
   var pending = Object.create(null);
   var queues = Object.create(null);
   var syncedToken = '';
+  var pollBusy = false;
 
   function token() {
     try { return localStorage.getItem('gp_jwt') || ''; } catch (_) { return ''; }
@@ -51,7 +52,7 @@
     return true;
   }
   function isShared(key) {
-    return (/^gp_[a-z0-9_-]{1,120}$/i.test(key) || key === 'goldprince_parties' || /^orderCounter_[a-z0-9_-]+$/i.test(key)) && !PRIVATE[key];
+    return (/^gp_[a-z0-9_-]{1,120}$/i.test(key) || key === 'goldprince_parties' || /^orderCounter_[a-z0-9 _-]{1,80}$/i.test(key)) && !PRIVATE[key];
   }
   function json(value) {
     try { return JSON.stringify(value); } catch (_) { return ''; }
@@ -252,13 +253,16 @@
     } catch (_) {}
   }
   function poll() {
-    if (!token()) return;
+    if (!token() || pollBusy || Object.keys(queues).length) return;
+    pollBusy = true;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', API, true);
     xhr.setRequestHeader('Authorization', 'Bearer ' + token());
     xhr.setRequestHeader('Cache-Control', 'no-cache');
     xhr.onreadystatechange = function () {
-      if (xhr.readyState !== 4 || xhr.status < 200 || xhr.status >= 300) return;
+      if (xhr.readyState !== 4) return;
+      pollBusy = false;
+      if (xhr.status < 200 || xhr.status >= 300) return;
       var snapshot;
       try { snapshot = JSON.parse(xhr.responseText); } catch (_) { return; }
       var remote = snapshot.data || {}, remoteVersions = snapshot.versions || {};
@@ -289,7 +293,7 @@
         if (!queues[key] && canWrite(key)) schedule(key, pending[key]);
       });
     };
-    try { xhr.send(null); } catch (_) {}
+    try { xhr.send(null); } catch (_) { pollBusy = false; }
   }
 
   // Hydrate before page scripts run when a token already exists. After login, the
