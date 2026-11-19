@@ -31,12 +31,27 @@ function serveFile(req, res, file) {
     const ext = path.extname(file).toLowerCase();
     const headers = {
       'Content-Type': MIME[ext] || 'application/octet-stream',
-      'Content-Length': st.size,
       'Cache-Control': ext === '.html' ? 'no-store, no-cache, must-revalidate' : 'public, max-age=300',
       'X-Content-Type-Options': 'nosniff'
     };
+    if (req.method === 'HEAD') {
+      headers['Content-Length'] = st.size;
+      res.writeHead(200, headers);
+      return res.end();
+    }
+    if (ext === '.html') {
+      // Inject before page scripts so localStorage is hydrated before legacy pages read it.
+      return fs.readFile(file, 'utf8', (readErr, html) => {
+        if (readErr) return send(res, 500, 'Unable to read page', { 'Content-Type':'text/plain; charset=utf-8' });
+        if (!html.includes('/cloud-sync.js')) html = html.replace(/<\/head>/i, '<script src="/cloud-sync.js"></script>\n</head>');
+        const body = Buffer.from(html, 'utf8');
+        headers['Content-Length'] = body.length;
+        res.writeHead(200, headers);
+        res.end(body);
+      });
+    }
+    headers['Content-Length'] = st.size;
     res.writeHead(200, headers);
-    if (req.method === 'HEAD') return res.end();
     fs.createReadStream(file).on('error', () => res.destroy()).pipe(res);
   });
 }
@@ -47,7 +62,7 @@ function proxyApi(req, res, pathAndQuery) {
   const json = (code, obj) => send(res, code, JSON.stringify(obj), { 'Content-Type':'application/json; charset=utf-8', 'Cache-Control':'no-store' });
   if (!API_URL) return json(502, { error:'API_URL is not set on the ui service. Set it to the API address (https://<api-domain>) and redeploy.' });
   const chunks = []; let size = 0, tooBig = false;
-  req.on('data', c => { size += c.length; if (size > 2 * 1024 * 1024) { tooBig = true; req.destroy(); } else chunks.push(c); });
+  req.on('data', c => { size += c.length; if (size > 20 * 1024 * 1024) { tooBig = true; req.destroy(); } else chunks.push(c); });
   req.on('error', () => {});
   req.on('end', async () => {
     if (tooBig) return json(413, { error:'Request too large' });
