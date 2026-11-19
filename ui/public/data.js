@@ -279,7 +279,7 @@ const GP_SHARED_KEYS = [
     'parties', 'goldprince_stock_holds_v1', 'invoiceCounter', 'returnCounter'
 ];
 const GP_SHARED_STATE = { versions: {}, pending: {}, queues: {}, errors: {} };
-const GP_API_ORIGIN = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\\/+$/, '');
+const GP_API_ORIGIN = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\/+$/, '');
 
 function gpClone(value) {
     return value == null ? value : JSON.parse(JSON.stringify(value));
