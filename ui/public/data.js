@@ -319,7 +319,7 @@ function gpMergeShared(key, remoteValue, localValue) {
     return gpClone(remoteValue);
 }
 
-async function gpPutShared(key, value) {
+async function gpPutShared(key, value, allowMergeOnConflict) {
     let nextValue = gpClone(value);
     for (let attempt = 0; attempt < 5; attempt++) {
         const token = localStorage.getItem('gp_jwt') || '';
@@ -330,6 +330,9 @@ async function gpPutShared(key, value) {
         });
         const data = await response.json().catch(() => ({}));
         if (response.status === 409) {
+            if (!allowMergeOnConflict) {
+                throw new Error('This ' + key + ' data changed in another browser. Reload this page before saving again.');
+            }
             GP_SHARED_STATE.versions[key] = Number(data.version || 0);
             nextValue = gpMergeShared(key, data.value, nextValue);
             localStorage.setItem(key, JSON.stringify(nextValue));
@@ -392,7 +395,7 @@ async function gpLoadSharedData() {
         localStorage.setItem(key, JSON.stringify(merged));
         if (!hasRemote || JSON.stringify(merged) !== JSON.stringify(remote[key])) writes.push([key, merged]);
     });
-    for (const [key, value] of writes) await gpPutShared(key, value);
+    for (const [key, value] of writes) await gpPutShared(key, value, true);
     return { ok: true, migratedKeys: writes.map(x => x[0]) };
 }
 
