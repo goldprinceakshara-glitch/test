@@ -104,7 +104,7 @@ function syncCadDesignerDirectory(){
   var token = '';
   try { token = localStorage.getItem('gp_jwt') || ''; } catch(e){}
   if (!token) return Promise.resolve(getCadDesigners());
-  var apiBase = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\\/+$/, '');
+  var apiBase = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\/+$/, '');
   CAD_DIRECTORY_SYNC_PROMISE = fetch(apiBase + '/api/chat/users', {
     method: 'GET',
     headers: { 'Authorization': 'Bearer ' + token, 'Cache-Control': 'no-cache' }
