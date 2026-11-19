@@ -60,7 +60,19 @@
 
 <div class="toast-msg" id="toastMsg"></div>
 
+<script src="config.js"></script>
 <script src="data.js"></script>
-<script src="balanceStock.js"></script>
+<script>
+Store.ready.then(function () {
+  var pageScript = document.createElement('script');
+  pageScript.src = 'balanceStock.js';
+  document.body.appendChild(pageScript);
+}).catch(function (error) {
+  var notice = document.createElement('div');
+  notice.style.cssText = 'margin:20px;padding:16px;background:#fff0f3;color:#8b003f;border:1px solid #e6a5bf;border-radius:10px;font-weight:600';
+  notice.textContent = 'Shared inventory could not load: ' + (error && error.message ? error.message : 'Please refresh or log in again.');
+  document.body.appendChild(notice);
+});
+</script>
 </body>
 </html>
