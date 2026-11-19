@@ -367,13 +367,13 @@ const APP_ADMIN_ONLY_KEYS = new Set([
 const APP_STONE_KEYS = new Set([
   'gp_stone_catalogue','gp_stone_opening','gp_stone_purchase_orders',
   'gp_stone_issue_orders','gp_stone_return_orders','gp_stone_damage',
-  'gp_stone_purchase_return','gp_stone_lowstock_dismissed'
+  'gp_stone_purchase_return'
 ]);
 const DIRECTORY_PUBLIC_FIELDS = new Set([
   'id','username','name','role','branch','section','active'
 ]);
 function isSharedAppKey(key) {
-  return typeof key === 'string' && (/^gp_[a-z0-9_-]{1,120}$/i.test(key) || key === 'goldprince_parties' || /^orderCounter_[a-z0-9_-]+$/i.test(key)) && !PRIVATE_APP_KEYS.has(key);
+  return typeof key === 'string' && (/^gp_[a-z0-9_-]{1,120}$/i.test(key) || key === 'goldprince_parties' || /^orderCounter_[a-z0-9 _-]{1,80}$/i.test(key)) && !PRIVATE_APP_KEYS.has(key);
 }
 function canReadPortalKey(role, key) {
   if (APP_ADMIN_ONLY_KEYS.has(key)) return role === 'admin' || role === 'developer';
