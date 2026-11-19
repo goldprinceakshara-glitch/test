@@ -43,7 +43,7 @@ const corsOrigin = !corsList ? '*' : (origin, cb) => {
 const app = express();
 app.set('trust proxy', 1);                       // Railway sits behind a proxy → real client IP in req.ip
 app.use(cors({ origin: corsOrigin, credentials: false }));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '20mb' }));
 app.use(morgan('tiny'));
 
 const wrap = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
