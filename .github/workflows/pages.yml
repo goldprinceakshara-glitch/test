@@ -48,7 +48,7 @@ jobs:
               if "cloud-sync.js" not in html:
                   html, count = re.subn(
                       r"</head>",
-                      '<script src="cloud-sync.js"></script>\\n</head>',
+                      '<script src="cloud-sync.js"></script>\n</head>',
                       html,
                       count=1,
                       flags=re.IGNORECASE,
