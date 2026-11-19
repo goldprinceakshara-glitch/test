@@ -36,14 +36,11 @@ function toIso(str) {
    RETURN REFERENCE GENERATOR
    ============================================================ */
 function getNextReturnNo() {
-    const counter = parseInt(localStorage.getItem('returnCounter') || '1000');
-    const next = counter + 1;
-    return `RET-${next}`;
+    return Store.getNextReturnNo();
 }
 
 function commitReturnNo() {
-    const counter = parseInt(localStorage.getItem('returnCounter') || '1000');
-    localStorage.setItem('returnCounter', String(counter + 1));
+    return Store.commitReturnNo();
 }
 
 /* ============================================================
