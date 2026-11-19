@@ -826,7 +826,7 @@ document.getElementById('logoutBtn').addEventListener('click', function () {
   if (!confirm('Log out of GP Portal?')) return;
   window.__GP_LOGGING_OUT__ = true;
   try { sessionStorage.clear(); } catch (e) {}
-  try { localStorage.removeItem('gp_logged_user'); } catch (e) {}
+  try { localStorage.removeItem('gp_logged_user'); localStorage.removeItem('gp_jwt'); } catch (e) {}
   var target = 'index.html?t=' + Date.now() + '&logout=1';
   window.location.href = target;
   setTimeout(function () {
