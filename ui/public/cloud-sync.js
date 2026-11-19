@@ -14,6 +14,7 @@
   var busy = false;
   var pending = Object.create(null);
   var timer = 0;
+  var syncedToken = '';
 
   function token() { try { return localStorage.getItem('gp_jwt') || ''; } catch (_) { return ''; } }
   function isShared(k) { return /^gp_[a-z0-9_-]{1,120}$/i.test(k) && !PRIVATE[k]; }
@@ -42,7 +43,7 @@
   function same(a, b) { try { return JSON.stringify(a) === JSON.stringify(b); } catch (_) { return false; } }
   function mergeArray(local, remote) {
     var out = [], seen = Object.create(null);
-    (Array.isArray(remote) ? remote : []).concat(Array.isArray(local) ? local : []).forEach(function (item) {
+    (Array.isArray(local) ? local : []).concat(Array.isArray(remote) ? remote : []).forEach(function (item) {
       var id = item && typeof item === 'object' && (item.id != null ? 'id:' + item.id : item._id != null ? '_id:' + item._id : null);
       var key = id || JSON.stringify(item);
       if (!seen[key]) { seen[key] = true; out.push(item); }
@@ -67,7 +68,7 @@
         var merged = mergeArray(lv, remote[k].value);
         if (!same(merged, remote[k].value)) upload[k] = merged;
       } else if (lv && remote[k].value && typeof lv === 'object' && typeof remote[k].value === 'object' && !Array.isArray(lv) && !Array.isArray(remote[k].value)) {
-        var obj = Object.assign({}, lv, remote[k].value);
+        var obj = Object.assign({}, remote[k].value, lv);
         if (!same(obj, remote[k].value)) upload[k] = obj;
       }
     });
@@ -107,8 +108,16 @@
     timer = setTimeout(flush, 250);
   }
 
-  // Hydrate synchronously before legacy inline scripts and page bundles read localStorage.
-  initialSync();
+  // Login stores the token after this script loads; sync once a valid session appears.
+  function ensureInitialSync() {
+    var current = token();
+    if (current && current !== syncedToken) {
+      initialSync();
+      syncedToken = current;
+    }
+  }
+  // Hydrate synchronously when already signed in, before page scripts read localStorage.
+  ensureInitialSync();
 
   var nativeSet = Storage.prototype.setItem;
   var nativeRemove = Storage.prototype.removeItem;
@@ -133,12 +142,19 @@
 
   // Poll other devices. Do not overwrite a key changed locally since the last poll.
   setInterval(function () {
+    ensureInitialSync();
     if (!token() || busy) return;
     var xhr = request('GET', undefined, false);
     if (!xhr) return;
     xhr.onreadystatechange = function () {
       if (xhr.readyState !== 4 || xhr.status < 200 || xhr.status >= 300) return;
       var data; try { data = JSON.parse(xhr.responseText).items || {}; } catch (_) { return; }
+      Object.keys(knownRemote).forEach(function (k) {
+        if (!Object.prototype.hasOwnProperty.call(data, k) && localStorage.getItem(k) === lastLocal[k]) {
+          try { nativeRemove.call(localStorage, k); } catch (_) {}
+          delete knownRemote[k]; delete lastLocal[k];
+        }
+      });
       Object.keys(data).forEach(function (k) {
         var remote = JSON.stringify(data[k].value);
         var localNow = localStorage.getItem(k);
