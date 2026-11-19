@@ -13,9 +13,10 @@ const Store = {
             { art: 'A103', name: 'Ganesha 3D', avgWeight: 150, category: '3D Idols', group: 'GJ', size: '7', image: 'https://placehold.co/60x60?text=GJ' },
         ];
         localStorage.setItem('catalogue', JSON.stringify(defaultCatalogue));
+        gpSaveShared('catalogue', defaultCatalogue);
         return defaultCatalogue;
     },
-    setCatalogue(data) { localStorage.setItem('catalogue', JSON.stringify(data)); },
+    setCatalogue(data) { localStorage.setItem('catalogue', JSON.stringify(data)); return gpSaveShared('catalogue', data); },
 
     // -------- OPENING STOCK --------
     getOpeningStock() {
@@ -29,17 +30,18 @@ const Store = {
             { art: 'B202', name: 'Meenakari Earrings', qty: 20, weight: 600, group: 'Meenakari' },
         ];
         localStorage.setItem('openingStock', JSON.stringify(defaultOpening));
+        gpSaveShared('openingStock', defaultOpening);
         return defaultOpening;
     },
-    setOpeningStock(data) { localStorage.setItem('openingStock', JSON.stringify(data)); },
+    setOpeningStock(data) { localStorage.setItem('openingStock', JSON.stringify(data)); return gpSaveShared('openingStock', data); },
 
     // -------- STOCK IN --------
     getStockIn() { return JSON.parse(localStorage.getItem('stockIn') || '[]'); },
-    setStockIn(data) { localStorage.setItem('stockIn', JSON.stringify(data)); },
+    setStockIn(data) { localStorage.setItem('stockIn', JSON.stringify(data)); return gpSaveShared('stockIn', data); },
 
     // -------- STOCK OUT --------
     getStockOut() { return JSON.parse(localStorage.getItem('stockOut') || '[]'); },
-    setStockOut(data) { localStorage.setItem('stockOut', JSON.stringify(data)); },
+    setStockOut(data) { localStorage.setItem('stockOut', JSON.stringify(data)); return gpSaveShared('stockOut', data); },
 
     // -------- ESTIMATION (formerly Invoice) NUMBER --------
     getNextInvoiceNo() {
@@ -52,11 +54,22 @@ const Store = {
     commitInvoiceNo() {
         const counter = parseInt(localStorage.getItem('invoiceCounter') || '0');
         localStorage.setItem('invoiceCounter', String(counter + 1));
+        gpSaveShared('invoiceCounter', counter + 1);
+    },
+
+    getNextReturnNo() {
+        const counter = parseInt(localStorage.getItem('returnCounter') || '1000', 10);
+        return 'RET-' + (counter + 1);
+    },
+    commitReturnNo() {
+        const counter = parseInt(localStorage.getItem('returnCounter') || '1000', 10);
+        localStorage.setItem('returnCounter', String(counter + 1));
+        return gpSaveShared('returnCounter', counter + 1);
     },
 
     // -------- STOCK RETURN --------
     getStockReturn() { return JSON.parse(localStorage.getItem('stockReturn') || '[]'); },
-    setStockReturn(data) { localStorage.setItem('stockReturn', JSON.stringify(data)); },
+    setStockReturn(data) { localStorage.setItem('stockReturn', JSON.stringify(data)); return gpSaveShared('stockReturn', data); },
 
     // -------- PARTY MASTER --------
     _normalizeParty(p) {
@@ -112,9 +125,10 @@ const Store = {
             { id: 'P003', name: 'Krishna Handicrafts', address: '8 Park Street, Kolkata, WB 700016', cell: '9988776655' },
         ];
         localStorage.setItem('parties', JSON.stringify(defaultParties));
+        gpSaveShared('parties', defaultParties);
         return defaultParties;
     },
-    setParties(data) { localStorage.setItem('parties', JSON.stringify(data)); },
+    setParties(data) { localStorage.setItem('parties', JSON.stringify(data)); return gpSaveShared('parties', data); },
     getPartyById(id) { return this.getParties().find(p => p.id === id); },
 
     // -------- STOCK HOLD --------
@@ -122,7 +136,7 @@ const Store = {
         try { return JSON.parse(localStorage.getItem('goldprince_stock_holds_v1') || '{}') || {}; }
         catch (e) { return {}; }
     },
-    setHolds(obj) { localStorage.setItem('goldprince_stock_holds_v1', JSON.stringify(obj || {})); },
+    setHolds(obj) { localStorage.setItem('goldprince_stock_holds_v1', JSON.stringify(obj || {})); return gpSaveShared('goldprince_stock_holds_v1', obj || {}); },
     getHoldsForParty(partyId) {
         const all = this.getHolds();
         return Array.isArray(all[partyId]) ? all[partyId] : [];
@@ -256,6 +270,147 @@ const Store = {
             qty: r.qty - (r.heldQty || 0)
         }));
     }
+};
+
+
+/* ---------- RAILWAY SHARED-DATA BRIDGE ---------- */
+const GP_SHARED_KEYS = [
+    'catalogue', 'openingStock', 'stockIn', 'stockOut', 'stockReturn',
+    'parties', 'goldprince_stock_holds_v1', 'invoiceCounter', 'returnCounter'
+];
+const GP_SHARED_STATE = { versions: {}, pending: {}, queues: {}, errors: {} };
+const GP_API_ORIGIN = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\\/+$/, '');
+
+function gpClone(value) {
+    return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+function gpMergeShared(key, remoteValue, localValue) {
+    if (remoteValue === undefined || remoteValue === null) return gpClone(localValue);
+    if (localValue === undefined || localValue === null) return gpClone(remoteValue);
+    if (key === 'invoiceCounter' || key === 'returnCounter') return Math.max(Number(remoteValue) || 0, Number(localValue) || 0);
+    if (key === 'goldprince_stock_holds_v1') {
+        const out = gpClone(remoteValue) || {};
+        Object.entries(localValue || {}).forEach(([partyId, items]) => {
+            const combined = Array.isArray(out[partyId]) ? out[partyId].slice() : [];
+            const seen = new Set(combined.map(x => JSON.stringify(x)));
+            (Array.isArray(items) ? items : []).forEach(item => {
+                const signature = JSON.stringify(item);
+                if (!seen.has(signature)) { seen.add(signature); combined.push(gpClone(item)); }
+            });
+            out[partyId] = combined;
+        });
+        return out;
+    }
+    if (Array.isArray(remoteValue) && Array.isArray(localValue)) {
+        if (key === 'catalogue' || key === 'parties') {
+            const idField = key === 'catalogue' ? 'art' : 'id';
+            const map = new Map();
+            remoteValue.forEach(item => map.set(String(item && item[idField] || ''), gpClone(item)));
+            localValue.forEach(item => {
+                const id = String(item && item[idField] || '');
+                if (id && !map.has(id)) map.set(id, gpClone(item));
+            });
+            return Array.from(map.values());
+        }
+        const out = remoteValue.map(gpClone), seen = new Set(out.map(x => JSON.stringify(x)));
+        localValue.forEach(item => { const signature = JSON.stringify(item); if (!seen.has(signature)) { seen.add(signature); out.push(gpClone(item)); } });
+        return out;
+    }
+    return gpClone(remoteValue);
+}
+
+async function gpPutShared(key, value) {
+    let nextValue = gpClone(value);
+    for (let attempt = 0; attempt < 5; attempt++) {
+        const token = localStorage.getItem('gp_jwt') || '';
+        const response = await fetch(GP_API_ORIGIN + '/api/inventory/' + encodeURIComponent(key), {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ value: nextValue, expectedVersion: Number(GP_SHARED_STATE.versions[key] || 0) })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.status === 409) {
+            GP_SHARED_STATE.versions[key] = Number(data.version || 0);
+            nextValue = gpMergeShared(key, data.value, nextValue);
+            localStorage.setItem(key, JSON.stringify(nextValue));
+            continue;
+        }
+        if (!response.ok) throw new Error(data.error || ('Shared data save failed (' + response.status + ')'));
+        GP_SHARED_STATE.versions[key] = Number(data.version || 0);
+        GP_SHARED_STATE.errors[key] = null;
+        return data;
+    }
+    throw new Error('Shared data kept changing in other browsers. Please retry this save.');
+}
+
+function gpSaveShared(key, value) {
+    if (!GP_SHARED_KEYS.includes(key)) return Promise.resolve();
+    localStorage.setItem(key, JSON.stringify(value));
+    GP_SHARED_STATE.pending[key] = gpClone(value);
+    if (!GP_SHARED_STATE.queues[key]) {
+        GP_SHARED_STATE.queues[key] = (async function () {
+            while (Object.prototype.hasOwnProperty.call(GP_SHARED_STATE.pending, key)) {
+                const next = GP_SHARED_STATE.pending[key];
+                delete GP_SHARED_STATE.pending[key];
+                await gpPutShared(key, next);
+            }
+        })().catch(function (error) {
+            GP_SHARED_STATE.errors[key] = error;
+            console.error('[GP Portal] shared data save failed for ' + key, error);
+            if (typeof showToast === 'function') showToast('Could not save ' + key + ' to shared database. Check connection and retry.', 'error');
+            throw error;
+        }).finally(function () { delete GP_SHARED_STATE.queues[key]; });
+        GP_SHARED_STATE.queues[key].catch(function () {});
+    }
+    return GP_SHARED_STATE.queues[key];
+}
+
+async function gpLoadSharedData() {
+    const token = localStorage.getItem('gp_jwt') || '';
+    if (!token) { const error = new Error('Your login session is missing. Please log in again.'); error.status = 401; throw error; }
+    const response = await fetch(GP_API_ORIGIN + '/api/inventory', {
+        headers: { 'Authorization': 'Bearer ' + token, 'Cache-Control': 'no-cache' }, cache: 'no-store'
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) { const error = new Error(payload.error || ('Could not load shared data (' + response.status + ')')); error.status = response.status; throw error; }
+
+    const remote = payload.data || {};
+    GP_SHARED_STATE.versions = payload.versions || {};
+    const local = {};
+    GP_SHARED_KEYS.forEach(key => {
+        const raw = localStorage.getItem(key);
+        if (raw !== null) { try { local[key] = JSON.parse(raw); } catch (e) {} }
+    });
+    const legacyParties = [].concat(Store._readPartiesFromKey('goldprince_parties'), Store._readPartiesFromKey('gp_party_master'));
+    if (legacyParties.length) local.parties = gpMergeShared('parties', local.parties || [], legacyParties);
+
+    const writes = [];
+    GP_SHARED_KEYS.forEach(key => {
+        const hasRemote = Object.prototype.hasOwnProperty.call(remote, key), hasLocal = Object.prototype.hasOwnProperty.call(local, key);
+        if (!hasRemote && !hasLocal) return;
+        const merged = hasRemote && hasLocal ? gpMergeShared(key, remote[key], local[key]) : gpClone(hasRemote ? remote[key] : local[key]);
+        localStorage.setItem(key, JSON.stringify(merged));
+        if (!hasRemote || JSON.stringify(merged) !== JSON.stringify(remote[key])) writes.push([key, merged]);
+    });
+    for (const [key, value] of writes) await gpPutShared(key, value);
+    return { ok: true, migratedKeys: writes.map(x => x[0]) };
+}
+
+Store.ready = gpLoadSharedData().catch(function (error) {
+    console.error('[GP Portal] shared data initialization failed', error);
+    if (error && error.status === 401) {
+        try { sessionStorage.clear(); } catch (e) {}
+        try { localStorage.removeItem('gp_jwt'); } catch (e) {}
+        window.location.replace('index.html?session=expired&t=' + Date.now());
+    }
+    throw error;
+});
+Store.flush = async function () {
+    const queues = Object.values(GP_SHARED_STATE.queues);
+    if (queues.length) await Promise.all(queues);
+    const failed = Object.values(GP_SHARED_STATE.errors).find(Boolean);
+    if (failed) throw failed;
+    return true;
 };
 
 // ---------- HELPERS ----------
