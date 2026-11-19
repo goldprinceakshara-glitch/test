@@ -85,6 +85,15 @@ CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
   value TEXT
 );
+
+CREATE TABLE IF NOT EXISTS portal_data (
+  key          TEXT PRIMARY KEY,
+  value        JSONB NOT NULL,
+  version      BIGINT NOT NULL DEFAULT 1,
+  updated_by   TEXT NOT NULL,
+  updated_at   BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_portal_data_updated_at ON portal_data (updated_at);
 `;
 
 async function initSchema() {
