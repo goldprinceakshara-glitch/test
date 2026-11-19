@@ -26,6 +26,8 @@
     gp_stone_purchase_return:1, gp_stone_lowstock_dismissed:1
   };
 
+  var nativeSet = Storage.prototype.setItem;
+  var nativeRemove = Storage.prototype.removeItem;
   var knownRemote = Object.create(null);
   var versions = Object.create(null);
   var lastLocal = Object.create(null);
@@ -161,8 +163,9 @@
         setLocal(key, remoteValue);
       } else if (Object.prototype.hasOwnProperty.call(local, key)) {
         var merged = mergeValue(key, remoteValue, local[key]);
-        if (!same(merged, remoteValue) && canWrite(key)) putSync(key, merged, versions[key]);
-        else setLocal(key, merged);
+        if (!same(merged, remoteValue) && canWrite(key)) {
+          if (!putSync(key, merged, versions[key])) pending[key] = merged;
+        } else setLocal(key, merged);
       } else {
         setLocal(key, remoteValue);
       }
@@ -170,7 +173,7 @@
 
     Object.keys(local).forEach(function (key) {
       if (Object.prototype.hasOwnProperty.call(remote, key) || !canWrite(key)) return;
-      putSync(key, local[key], 0);
+      if (!putSync(key, local[key], 0)) pending[key] = local[key];
     });
 
     for (var j = 0; j < localStorage.length; j++) {
@@ -278,6 +281,9 @@
         knownRemote[key] = value;
         versions[key] = Number(remoteVersions[key] || 0);
       });
+      Object.keys(pending).forEach(function (key) {
+        if (!queues[key] && canWrite(key)) schedule(key, pending[key]);
+      });
     };
     try { xhr.send(null); } catch (_) {}
   }
@@ -287,8 +293,6 @@
   var current = token();
   if (current && initialSync()) syncedToken = current;
 
-  var nativeSet = Storage.prototype.setItem;
-  var nativeRemove = Storage.prototype.removeItem;
   Storage.prototype.setItem = function (key, value) {
     nativeSet.call(this, key, value);
     if (this === localStorage && isShared(String(key))) {
