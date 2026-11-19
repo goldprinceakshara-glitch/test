@@ -136,7 +136,7 @@
       if (!Array.isArray(remote) || JSON.stringify(merged) !== JSON.stringify(remote)) queueCloudSave(merged);
       refreshChatUsers(); setInterval(refreshCloudChat, 3500); setInterval(refreshChatUsers, 30000);
       window.addEventListener('focus', refreshCloudChat);
-    } catch(e) { console.error('[GP Chat] cloud initialization failed', e); showToast('Chat cloud sync unavailable: ' + e.message); }
+    } catch(e) { console.error('[GP Chat] cloud initialization failed', e); showToast('Chat cloud sync unavailable: ' + e.message); setTimeout(function(){ if (!GP_CHAT_SYNC.ready) initCloudChat(); }, 8000); }
   }
   function nowISO() { return new Date().toISOString(); }
   function fmtTime(iso) {
