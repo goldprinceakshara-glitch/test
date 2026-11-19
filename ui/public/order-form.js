@@ -128,7 +128,7 @@
     'goldprince_stage2_history_v1'
   ];
   var GP_ORDER_SHARED = { versions:{}, base:{}, pending:{}, queues:{}, ready:false, pollBusy:false };
-  var GP_ORDER_API = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\\/+$/, '');
+  var GP_ORDER_API = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\/+$/, '');
 
   function gpOrderClone(value) {
     return value == null ? value : JSON.parse(JSON.stringify(value));
