@@ -1419,6 +1419,19 @@
                 Object.keys(productCatalogByGroup).join(', '));
   }
 
+  // When the shared catalogue is refreshed from Railway, rebuild the in-memory
+  // product index as well as localStorage. Without this, an already-open Order
+  // Form keeps showing the old Art No. list even though the new data has arrived.
+  var GP_ORDER_CATALOGUE_KEYS = [
+    CATALOGUE_KEY, CATALOGUE_UPDATES_KEY
+  ].concat(CATALOGUE_EXTRA_KEYS);
+  window.addEventListener('gp:shared-data-changed', function (event) {
+    var key = event && event.detail && event.detail.key;
+    if (GP_ORDER_CATALOGUE_KEYS.indexOf(key) === -1) return;
+    loadProductCatalog();
+    if (artNoInput && artNoInput.value.trim()) updatePreviewFromArt();
+  });
+
   function rebuildArtDatalist() {
     if (!artList) return;
     var arts = (productCatalogByGroup[currentGroupFilter] || []).slice();
