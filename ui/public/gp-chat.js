@@ -27,7 +27,7 @@
   var MY_ROLE = '';
   var GP_CHAT_USERS = [];
   var GP_CHAT_SYNC = { version:0, pending:null, queue:null, ready:false, polling:false };
-  var GP_CHAT_API = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\\/+$/, '');
+  var GP_CHAT_API = String(window.GP_API_BASE || 'https://test-production-313c31af.up.railway.app').replace(/\/+$/, '');
   var started = false;
 
   var SCRIPT_SRC = '';
