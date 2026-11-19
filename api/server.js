@@ -339,7 +339,16 @@ app.put('/api/settings/admin-mobile', requireAuth, requireRole('admin'), wrap(as
    ------------------------------------------------------------------ */
 const INVENTORY_KEYS = new Set([
   'catalogue', 'openingStock', 'stockIn', 'stockOut', 'stockReturn',
-  'parties', 'goldprince_stock_holds_v1', 'invoiceCounter', 'returnCounter'
+  'parties', 'goldprince_stock_holds_v1', 'invoiceCounter', 'returnCounter',
+  // Order Form and production workflow data shared across browsers.
+  'goldprince_estimations', 'goldprince_orders_v3', 'goldprince_completed_v1',
+  'goldprince_stage_history_v1', 'goldprince_stock_sends_v1',
+  'goldprince_stage2_orders_v1', 'goldprince_stage2_history_v1',
+  'goldprince_catalogue', 'goldprince_catalogue_updates_v1',
+  'goldprince_catalogue_3D_PREMIUM_IDOLS', 'goldprince_premium_catalogue',
+  'goldprince_catalogue_3D_IDOLS', 'goldprince_catalogue_2D_IDOLS',
+  'goldprince_catalogue_JEWELLERY', 'goldprince_catalogue_GOD_FRAMES',
+  'goldprince_parties', 'gp_party_master', 'gp_internal_notifications'
 ]);
 
 app.get('/api/inventory', requireAuth, wrap(async (req, res) => {
