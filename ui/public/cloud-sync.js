@@ -20,6 +20,20 @@
   var ADMIN_ONLY = {
     gp_pending_logins:1, gp_admin_mobile:1, gp_device_access:1, gp_telegram_config:1
   };
+  // Catalogue editor data must sync across browsers just like order-form data.
+  // These keys are intentionally remote-authoritative during hydration so an old
+  // browser cache cannot overwrite a newer catalogue saved by another user.
+  var CATALOGUE_KEYS = {
+    goldprince_catalogue:1,
+    goldprince_catalogue_updates_v1:1,
+    goldprince_catalogue_3D_PREMIUM_IDOLS:1,
+    goldprince_premium_catalogue:1,
+    goldprince_catalogue_3D_IDOLS:1,
+    goldprince_catalogue_2D_IDOLS:1,
+    goldprince_catalogue_JEWELLERY:1,
+    goldprince_catalogue_GOD_FRAMES:1
+  };
+
   var STONE_ONLY = {
     gp_stone_catalogue:1, gp_stone_opening:1, gp_stone_purchase_orders:1,
     gp_stone_issue_orders:1, gp_stone_return_orders:1, gp_stone_damage:1,
@@ -52,7 +66,7 @@
     return true;
   }
   function isShared(key) {
-    return (/^gp_[a-z0-9_-]{1,120}$/i.test(key) || key === 'goldprince_parties' || /^orderCounter_[a-z0-9 _-]{1,80}$/i.test(key)) && !PRIVATE[key];
+    return CATALOGUE_KEYS[key] || ((/^gp_[a-z0-9_-]{1,120}$/i.test(key) || key === 'goldprince_parties' || /^orderCounter_[a-z0-9 _-]{1,80}$/i.test(key)) && !PRIVATE[key]);
   }
   function json(value) {
     try { return JSON.stringify(value); } catch (_) { return ''; }
@@ -163,7 +177,10 @@
       if (!isShared(key)) return;
       var remoteValue = remote[key];
       knownRemote[key] = json(remoteValue);
-      if (DIRECTORY[key] && !privileged()) {
+      if (CATALOGUE_KEYS[key]) {
+        // Catalogue pages and order forms must start from the newest shared version.
+        setLocal(key, remoteValue);
+      } else if (DIRECTORY[key] && !privileged()) {
         // Non-admin users receive a redacted directory from the API; use that safe copy locally.
         setLocal(key, remoteValue);
       } else if (Object.prototype.hasOwnProperty.call(local, key)) {
@@ -276,7 +293,7 @@
         if (!isShared(key)) return;
         var value = json(remote[key]), localNow = localStorage.getItem(key);
         if (value !== knownRemote[key]) {
-          if (DIRECTORY[key] && !privileged()) {
+          if (CATALOGUE_KEYS[key] || (DIRECTORY[key] && !privileged())) {
             setLocal(key, remote[key]);
           } else if (localNow === lastLocal[key] || (localNow === null && lastLocal[key] === undefined)) {
             setLocal(key, remote[key]);
